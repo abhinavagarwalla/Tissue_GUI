@@ -16,7 +16,7 @@ os.environ['PYQTGRAPH_QT_LIB'] = 'PyQt5'
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1306, 647)
+        MainWindow.resize(1138, 606)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -41,24 +41,42 @@ class Ui_MainWindow(object):
         self.info.setObjectName("info")
         self.verticalLayout.addWidget(self.info)
         self.widget1 = QtWidgets.QWidget(self.centralWidget)
-        self.widget1.setGeometry(QtCore.QRect(240, 50, 1011, 511))
+        self.widget1.setGeometry(QtCore.QRect(240, 50, 861, 431))
         self.widget1.setObjectName("widget1")
         self.image_layout = QtWidgets.QHBoxLayout(self.widget1)
         self.image_layout.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
         self.image_layout.setContentsMargins(5, 5, 5, 5)
         self.image_layout.setSpacing(6)
         self.image_layout.setObjectName("image_layout")
-        self.orig_image = QtWidgets.QLabel(self.widget1)
-        self.orig_image.setEnabled(True)
+        self.scrollArea = QtWidgets.QScrollArea(self.widget1)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.scrollArea.sizePolicy().hasHeightForWidth())
+        self.scrollArea.setSizePolicy(sizePolicy)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents_3 = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents_3.setGeometry(QtCore.QRect(0, 0, 421, 419))
+        self.scrollAreaWidgetContents_3.setObjectName("scrollAreaWidgetContents_3")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents_3)
+        self.verticalLayout_2.setContentsMargins(11, 11, 11, 11)
+        self.verticalLayout_2.setSpacing(6)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.orig_image = QtWidgets.QLabel(self.scrollAreaWidgetContents_3)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.orig_image.sizePolicy().hasHeightForWidth())
         self.orig_image.setSizePolicy(sizePolicy)
         self.orig_image.setObjectName("orig_image")
-        self.image_layout.addWidget(self.orig_image)
+        self.verticalLayout_2.addWidget(self.orig_image)
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents_3)
+        self.image_layout.addWidget(self.scrollArea)
         self.overlay_image = QtWidgets.QLabel(self.widget1)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.overlay_image.sizePolicy().hasHeightForWidth())
@@ -66,7 +84,7 @@ class Ui_MainWindow(object):
         self.overlay_image.setObjectName("overlay_image")
         self.image_layout.addWidget(self.overlay_image)
         self.widget2 = QtWidgets.QWidget(self.centralWidget)
-        self.widget2.setGeometry(QtCore.QRect(20, 510, 166, 33))
+        self.widget2.setGeometry(QtCore.QRect(330, 490, 166, 33))
         self.widget2.setObjectName("widget2")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.widget2)
         self.horizontalLayout.setContentsMargins(5, 5, 5, 5)
@@ -80,7 +98,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.zoom_out)
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1306, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1138, 21))
         self.menuBar.setObjectName("menuBar")
         self.menuWindow = QtWidgets.QMenu(self.menuBar)
         self.menuWindow.setObjectName("menuWindow")
@@ -103,8 +121,8 @@ class Ui_MainWindow(object):
         self.zoom_in.clicked.connect(self.zoom_in_ops)
         self.zoom_out.clicked.connect(self.zoom_out_ops)
 
-        # self.orig_image.setBackgroundRole(QtGui.QPalette.Dark)
-        # self.orig_image.setScaledContents(True)
+        self.orig_image.setBackgroundRole(QtGui.QPalette.Dark)
+        self.orig_image.setScaledContents(True)
         # self.scrollArea.setWidgetResizable(True)
 
     def retranslateUi(self, MainWindow):
@@ -122,26 +140,28 @@ class Ui_MainWindow(object):
     def get_file(self):
         print("Reached Callback")
         fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "*.tif")
-        self.ImageView = SlImage(fname[0],self.orig_image.height(), self.orig_image.width())
+        self.ori = SlImage(fname[0])
+        self.orimap = QPixmap.fromImage(self.ori.read_first())
         self.scale = 1.
         self.if_image = True
-        self.setImage(self.ImageView.read_first())
-
-    def setImage(self, image):
-        self.orimap = QPixmap.fromImage(image)
-        # self.orig_image.setPixmap(self.orimap.scaled(self.orig_image.size(), QtCore.Qt.KeepAspectRatio))
-        self.orig_image.setPixmap(self.orimap)
+        self.orig_image.setPixmap(self.orimap.scaled(self.orig_image.size(), QtCore.Qt.KeepAspectRatio))
 
     def zoom_in_ops(self):
         if self.if_image:
-            factor = 2
-            self.setImage(self.ImageView.get_image(factor))
-            # factor = 1.2
-            # self.scale = factor*self.scale
-            # self.orig_image.resize(self.scale*self.orig_image.pixmap().size())
+            factor = 1.2
+            self.scale = factor*self.scale
+            self.orig_image.resize(self.scale*self.orig_image.pixmap().size())
+            self.adjustScrollBar(self.scrollArea.horizontalScrollBar(), factor)
+            self.adjustScrollBar(self.scrollArea.verticalScrollBar(), factor)
 
     def zoom_out_ops(self):
         if self.if_image:
             factor = 0.8
             self.scale = factor * self.scale
             self.orig_image.resize(self.scale * self.orig_image.pixmap().size())
+            self.adjustScrollBar(self.scrollArea.horizontalScrollBar(), factor)
+            self.adjustScrollBar(self.scrollArea.verticalScrollBar(), factor)
+
+    def adjustScrollBar(self, scrollBar, factor):
+        scrollBar.setValue(int(factor * scrollBar.value()
+                               + ((factor - 1) * scrollBar.pageStep() / 2)))
