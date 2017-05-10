@@ -24,6 +24,7 @@ class SlImage():
         self.zoomlevel = None                                   ##For storing the current zoom level
         self.coor_cur_h, self.coor_cur_w = None, None           ##Actual coordinates in the current view
         self.coor_low_h, self.coor_low_w = None, None           ##Actual coordinates in the lowest view
+        print(self.leveldim)
 
     def read_first(self):
         self.curim = self.wsiObj.read_region((0,0), self.level, self.wsiObj.level_dimensions[self.level])
@@ -228,6 +229,18 @@ class SlImage():
         if method==0:
             print("Inside Segmentation")
             self.overlayObj = SegMaskByPixel(filename, self.bb_height, self.bb_width)
-            im = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth, self.imheight)
-            im.show()
-            return ImageQt(im)
+            self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth, self.imheight)
+            self.overlay_on_orig_image()
+            return ImageQt(self.overlayim)
+
+    def update_overlay(self):
+        self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
+                                                     self.imheight)
+        self.overlay_on_orig_image()
+        return ImageQt(self.overlayim)
+
+    def overlay_on_orig_image(self):
+
+        # im = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level, (self.imwidth, self.imheight))
+        # self.wsiObj.read_region((0,0), 0, self.leveldim[0]).show()
+        self.overlayim = Image.blend(self.curim, self.overlayim, 0.5)

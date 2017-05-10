@@ -176,6 +176,7 @@ class Ui_MainWindow(object):
     def intialize_signals_slots(self):
         # Bind all the signal and slots here
         self.if_image = False
+        self.if_image_overlay = False
         self.load_image.clicked.connect(self.get_file)
         self.load_overlay.clicked.connect(self.get_file_overlay)
         self.zoom_in.clicked.connect(self.zoom_in_ops)
@@ -231,29 +232,38 @@ class Ui_MainWindow(object):
             fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "*.tif")
             tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentIndex())
             self.setImageOverlay(tim)
+            self.if_image_overlay = True
 
     def pan_left_ops(self):
         if self.if_image:
             self.pan_left.setEnabled(False)
             self.setImage(self.ImageView.pan(direction='left', step=self.spinBox.value()/100.))
+            if self.if_image_overlay:
+                self.setImageOverlay(self.ImageView.update_overlay())
             self.pan_left.setEnabled(True)
 
     def pan_right_ops(self):
         if self.if_image:
             self.pan_right.setEnabled(False)
             self.setImage(self.ImageView.pan(direction='right', step=self.spinBox.value()/100.))
+            if self.if_image_overlay:
+                self.setImageOverlay(self.ImageView.update_overlay())
             self.pan_right.setEnabled(True)
 
     def pan_up_ops(self):
         if self.if_image:
             self.pan_up.setEnabled(False)
             self.setImage(self.ImageView.pan(direction='up', step=self.spinBox.value()/100.))
+            if self.if_image_overlay:
+                self.setImageOverlay(self.ImageView.update_overlay())
             self.pan_up.setEnabled(True)
 
     def pan_down_ops(self):
         if self.if_image:
             self.pan_down.setEnabled(False)
             self.setImage(self.ImageView.pan(direction='down', step=self.spinBox.value()/100.))
+            if self.if_image_overlay:
+                self.setImageOverlay(self.ImageView.update_overlay())
             self.pan_down.setEnabled(True)
 
     def setImage(self, image):
@@ -270,6 +280,9 @@ class Ui_MainWindow(object):
             self.zoom_in.setEnabled(False)
             factor = 2
             self.setImage(self.ImageView.get_image_in(factor))
+            print("Started Zooming into Overlay")
+            if self.if_image_overlay:
+                self.setImageOverlay(self.ImageView.update_overlay())
             self.zoom_in.setEnabled(True)
             # factor = 1.2
             # self.scale = factor*self.scale
@@ -281,4 +294,6 @@ class Ui_MainWindow(object):
             self.zoom_out.setEnabled(False)
             factor = 2
             self.setImage(self.ImageView.get_image_out(factor))
+            if self.if_image_overlay:
+                self.setImageOverlay(self.ImageView.update_overlay())
             self.zoom_out.setEnabled(True)

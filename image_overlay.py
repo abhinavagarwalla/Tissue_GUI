@@ -7,15 +7,13 @@ class SegMaskByPixel():
         self.bb_width = bb_width
         self.nlevel = self.wsiObj.level_count
         self.leveldim = self.wsiObj.level_dimensions
+        print(self.nlevel)
+        print(self.leveldim)
 
     def get_overlay(self, level, coorw, coorh, width, height):
-        centerh = coorh + height / 2
-        centerw = coorw + width / 2
-        left = int(centerw - self.bb_width / 4)
-        top = int(centerh - self.bb_height / 4)
-        coor_low_w = pow(2, level)*left
-        coor_low_h = pow(2, level)*top
+        coor_low_w = pow(2, level) * coorw
+        coor_low_h = pow(2, level) * coorh
 
-        im = self.wsiObj.read_region((coor_low_w, coor_low_h), 0, (width, height))
+        im = self.wsiObj.read_region((coor_low_w, coor_low_h), level, (width, height))
         # self.wsiObj.read_region((0,0), 0, self.leveldim[0]).show()
         return im
