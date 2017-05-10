@@ -21,78 +21,252 @@ class SlImage():
         self.bb_width = bb_width
         self.level = self.wsiObj.level_count - 1
         self.leveldim = self.wsiObj.level_dimensions
-        self.imheight = None
-        self.imwidth = None
-        self.starth = None
-        self.startw = None
-        self.curim = None
+        self.imheight, self.imwidth = None, None                ##width, height for the current view
+        self.starth, self.startw = None, None                   ##Start h,m for the current view
+        self.curim = None                                       ##Stores the current view of the image
+        self.orim = None                                        ##Here the lowest level image stored and displayed
+        self.zoomlevel = None                                   ##For storing the current zoom level
+        self.coor_cur_h, self.coor_cur_w = None, None           ##Actual coordinates in the current view
+        self.coor_low_h, self.coor_low_w = None, None           ##Actual coordinates in the lowest view
 
     def read_first(self):
         self.curim = self.wsiObj.read_region((0,0), self.level, self.wsiObj.level_dimensions[self.level])
+        self.orim = self.curim.copy()
         print(self.curim.size)
-        self.imheight = self.curim.size[0]
-        self.imwidth = self.curim.size[1]
-        if self.wsiObj.level_dimensions[self.level][0] < self.bb_height or self.wsiObj.level_dimensions[self.level][1] < self.bb_width:
-            pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
-            self.starth = int((pim.size[0]-self.curim.size[0])/2)
-            self.startw = int((pim.size[1]-self.curim.size[1])/2)
-            pim.paste(self.curim, (self.starth, self.startw))
-            return ImageQt(pim)
-        # return ImageQt(im)
 
-    def get_image(self, factor=2):
+        self.imheight = self.curim.size[1]
+        self.imwidth = self.curim.size[0]
+        self.zoomlevel = 1.0
+        self.coor_cur_h, self.coor_cur_w = 0, 0
+        self.coor_low_h, self.coor_low_w = 0, 0
+        if self.wsiObj.level_dimensions[self.level][1] < self.bb_height or self.wsiObj.level_dimensions[self.level][0] < self.bb_width:
+            pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
+            self.startw = int((pim.size[0]-self.curim.size[0])/2)
+            self.starth = int((pim.size[1]-self.curim.size[1])/2)
+            pim.paste(self.curim, (self.startw, self.starth))
+            # pim.show()
+            return ImageQt(self.orim), ImageQt(pim)
+        return ImageQt(self.curim)
+
+    def get_image_in(self, factor=2):
+        self.zoomlevel *= factor
         if self.imheight*factor < self.bb_height and self.imwidth*factor < self.bb_width:
             pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
-            self.curim = self.curim.resize(factor*self.curim.size, Image.ANTIALIAS)
+            self.curim = self.curim.resize((2*self.curim.size[0], 2*self.curim.size[1]), Image.ANTIALIAS)
             self.imheight *= factor
             self.imwidth *= factor
-            pim.paste(self.curim, (int((pim.size[0] - self.curim.size[0]) / 2), int((pim.size[1] - self.curim.size[1]) / 2)))
+            self.startw = int((pim.size[0] - self.curim.size[0]) / 2)
+            self.starth = int((pim.size[1] - self.curim.size[1]) / 2)
+            pim.paste(self.curim, (self.startw, self.starth))
             return ImageQt(pim)
         if self.imheight*factor >= self.bb_height:
             if self.imwidth*factor >= self.bb_width:
                 print("Inside Popular condition")
-                left = int((self.bb_width) / 4)
-                top = int((self.bb_height) / 4)
-                right = int(3*(self.bb_width) / 4)
-                bottom = int(3*(self.bb_height) / 4)
+                centerh = self.coor_cur_h + self.imheight / 2
+                centerw = self.coor_cur_w + self.imwidth / 2
+                left = int(centerw - self.bb_width/4)
+                top = int(centerh - self.bb_height/4)
+
+                if self.level:
+                    self.level -= 1
+                    self.coor_cur_h = 2 * top
+                    self.coor_cur_w = 2 * left
+                    self.coor_low_h = int(pow(2, self.level) * self.coor_cur_h)
+                    self.coor_low_w = int(pow(2, self.level) * self.coor_cur_w)
+                    # self.curim.show()
+                    self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
+                                                         (self.bb_width, self.bb_height))
+                    self.imheight, self.imwidth = self.bb_height, self.bb_width
+                    self.starth, self.startw = 0, 0
+                    return ImageQt(self.curim)
+                else:
+                    return ImageQt(self.curim)
+            else:
+                print("I am in height condition")
+                pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
+                centerh = self.imheight/2
+                left = 0
+                top = int(centerh - self.bb_height/ 4)
+                if self.level:
+                    self.level -= 1
+                    self.coor_cur_h = 2 * top
+                    self.coor_cur_w = 2 * left
+                    self.coor_low_h = int(pow(2, self.level) * self.coor_cur_h)
+                    self.coor_low_w = int(pow(2, self.level) * self.coor_cur_w)
+                    self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level, (self.imwidth*2, self.bb_height))
+
+                    self.imheight = self.bb_height
+                    self.imwidth *= 2
+                    self.startw = int((pim.size[0] - self.curim.size[0]) / 2)
+                    self.starth = 0
+                    pim.paste(self.curim,(self.startw, 0))
+                    return ImageQt(pim)
+                else:
+                    return ImageQt(self.curim)
+        if self.imwidth*factor >= self.bb_width:
+            print("I am in width condition")
+            print(self.imwidth, self.bb_width)
+            pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
+            centerw = self.imwidth/2
+            left = centerw - int(self.bb_width/4)
+            top = 0
+            if self.level:
+                self.level -= 1
+                self.coor_cur_h = 2 * top
+                self.coor_cur_w = 2 * left
+                self.coor_low_h = int(pow(2, self.level) * self.coor_cur_h)
+                self.coor_low_w = int(pow(2, self.level) * self.coor_cur_w)
+                self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
+                                                     (self.bb_width, 2*self.im_height))
+
+                self.imheight *= 2
+                self.imwidth = self.bb_width
+                self.startw = 0
+                self.starth = int((pim.size[1] - self.curim.size[1]) / 2)
+                pim.paste(self.curim, (0, self.starth))
+                return ImageQt(pim)
+            else:
+                return ImageQt(self.curim)
+
+    def get_image_out(self, factor=2):
+        self.zoomlevel /= factor
+        if self.imheight < self.bb_height and self.imwidth < self.bb_width:
+            pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
+            self.curim = self.curim.resize((self.curim.size[0]/2, self.curim.size[1]/2), Image.ANTIALIAS)
+            self.imheight /= factor
+            self.imwidth /= factor
+            self.startw = int((pim.size[0] - self.curim.size[0]) / 2)
+            self.starth = int((pim.size[1] - self.curim.size[1]) / 2)
+            pim.paste(self.curim, (self.startw, self.starth))
+            return ImageQt(pim)
+        if self.imheight >= self.bb_height:
+            if self.imwidth >= self.bb_width:
+                print("Out: Inside Popular condition")
+                centerh = self.coor_cur_h + self.imheight / 2
+                centerw = self.coor_cur_w + self.imwidth / 2
+                if self.level!=self.wsiObj.level_count-1:
+                    self.level += 1
+                    self.coor_cur_h = int(centerh/2 - self.bb_height/2)
+                    self.coor_cur_w = int(centerw/2 - self.bb_width/2)
+                    self.coor_low_h = int(pow(2, self.level) * self.coor_cur_h)
+                    self.coor_low_w = int(pow(2, self.level) * self.coor_cur_w)
+                    self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
+                                                         (self.bb_width, self.bb_height))
+                    print("REgion Processing Complete")
+                    self.imheight, self.imwidth = self.bb_height, self.bb_width
+                    self.starth, self.startw = 0, 0
+                    return ImageQt(self.curim)
+                else:
+                    return ImageQt(self.curim)
+            else:
+                print("I am in height condition")
+                pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
+                centerh = self.coor_cur_h + self.imheight / 2
+                centerw = self.coor_cur_w + self.imwidth / 2
+                if self.level != self.wsiObj.level_count - 1:
+                    self.level += 1
+                    self.coor_cur_h = int(centerh / 2 - self.bb_height / 2)
+                    self.coor_cur_w = int(centerw / 2 - self.imwidth / 4)
+                    self.coor_low_h = pow(2, self.level) * self.coor_cur_h
+                    self.coor_low_w = pow(2, self.level) * self.coor_cur_w
+                    self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level, (self.imwidth/2, self.bb_height))
+
+                    self.imheight = self.bb_height
+                    self.imwidth /= 2
+                    self.startw = int((pim.size[0] - self.curim.size[0]) / 2)
+                    self.starth = 0
+                    pim.paste(self.curim,(self.startw, 0))
+                    return ImageQt(pim)
+                else:
+                    return ImageQt(self.curim)
+        if self.imwidth >= self.bb_width:
+            print("I am in width condition")
+            print(self.imwidth, self.bb_width)
+            pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
+            centerh = self.coor_cur_h + self.imheight / 2
+            centerw = self.coor_cur_w + self.imwidth / 2
+
+            if self.level != self.wsiObj.level_count - 1:
+                self.level += 1
+                self.coor_cur_h = int(centerh / 2 - self.imheight / 4)
+                self.coor_cur_w = int(centerw / 2 - self.bb_width / 2)
+                self.coor_low_h = pow(2, self.level) * self.coor_cur_h
+                self.coor_low_w = pow(2, self.level) * self.coor_cur_w
+                self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
+                                                     (self.bb_width, self.imheight/2))
+
+                self.imheight /= 2
+                self.imwidth = self.bb_width
+                self.startw = 0
+                self.starth = int((pim.size[1] - self.curim.size[1]) / 2)
+                pim.paste(self.curim, (0, self.starth))
+                return ImageQt(pim)
+            else:
+                return ImageQt(self.curim)
+
+    def get_image_in_temp(self, factor=2):
+        self.zoomlevel *= factor
+        if self.imheight*factor < self.bb_height and self.imwidth*factor < self.bb_width:
+            pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
+            self.curim = self.curim.resize((2*self.curim.size[0], 2*self.curim.size[1]), Image.ANTIALIAS)
+            self.imheight *= factor
+            self.imwidth *= factor
+            self.startw = int((pim.size[0] - self.curim.size[0]) / 2)
+            self.starth = int((pim.size[1] - self.curim.size[1]) / 2)
+            pim.paste(self.curim, (self.startw, self.starth))
+            return ImageQt(pim)
+        if self.imheight*factor >= self.bb_height:
+            if self.imwidth*factor >= self.bb_width:
+                print("Inside Popular condition")
+                centerh = self.imheight / 2
+                centerw = self.imwidth / 2
+                left = centerw - int((self.bb_width) / 4)
+                top = centerh - int((self.bb_height) / 4)
+                right = centerw + int(self.bb_width / 4)
+                bottom = centerh + int(self.bb_height / 4)
                 self.curim = self.curim.crop((left, top, right, bottom))
                 ## Add code to check if another level is needed
-                self.curim = self.curim.resize(factor * self.curim.size, Image.ANTIALIAS)
-                self.imheight = self.bb_height
-                self.imwidth = self.bb_width
+                self.curim = self.curim.resize((self.bb_width, self.bb_height), Image.ANTIALIAS)
+                self.imheight, self.imwidth = self.bb_height, self.bb_width
+                self.starth, self.startw = 0, 0
                 return ImageQt(self.curim)
             else:
                 print("I am in height condition")
                 pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
+                centerh = self.imheight/2
                 left = 0
-                top = int((self.bb_height) / 4)
-                right = self.bb_width
-                bottom = int(3 * (self.bb_height) / 4)
+                top = centerh - int((self.bb_height) / 4)
+                right = self.imwidth
+                bottom = centerh + int((self.bb_height) / 4)
                 self.curim = self.curim.crop((left, top, right, bottom))
+                print("Proceed to cropping")
                 ## Add code to check if another level is needed
-                self.curim = self.curim.resize(factor * self.curim.size, Image.ANTIALIAS)
+                self.curim = self.curim.resize((2*self.curim.size[0], self.bb_height), Image.ANTIALIAS)
                 self.imheight = self.bb_height
                 self.imwidth *= factor
-                pim.paste(self.curim,(0, int((pim.size[1] - self.curim.size[1]) / 2)))
+                self.startw = int((pim.size[0] - self.curim.size[0]) / 2)
+                self.starth = 0
+                pim.paste(self.curim,(self.startw, 0))
                 return ImageQt(pim)
         if self.imwidth*factor >= self.bb_width:
             print("I am in width condition")
+            print(self.imwidth, self.bb_width)
             pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
-            left = int(self.bb_width/4)
+            centerw = self.imwidth/2
+            left = centerw - int(self.bb_width/4)
             top = 0
-            right = int((3*self.bb_width)/4)
-            bottom = self.bb_height
+            right = centerw + int(self.bb_width/4)
+            bottom = self.imheight
             self.curim.show()
             self.curim = self.curim.crop((left, top, right, bottom))
-            print("Crop completed")
-            self.curim.show()
             ## Add code to check if another level is needed
-            self.curim = self.curim.resize((2*self.curim.size[1], 2*self.curim.size[0]), Image.ANTIALIAS)
+            self.curim = self.curim.resize((self.bb_width, 2*self.curim.size[1]), Image.ANTIALIAS)
             print("Resizing done")
             self.imheight *= factor
             self.imwidth = self.bb_width
-            pim.paste(self.curim, (int((pim.size[0] - self.curim.size[0]) / 2), 0))
-            pim.show()
+            self.startw = 0
+            self.starth = int((pim.size[1] - self.curim.size[1]) / 2)
+            pim.paste(self.curim, (0, self.starth))
             return ImageQt(pim)
 
 # def main2():
