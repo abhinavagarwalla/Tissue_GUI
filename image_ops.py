@@ -228,7 +228,7 @@ class SlImage():
         print(method)
         if method==0:
             print("Inside Segmentation")
-            self.overlayObj = SegMaskByPixel(filename, self.bb_height, self.bb_width)
+            self.overlayObj = SegMaskByPixel(filename, self.wsiObj, self.bb_height, self.bb_width)
             self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth, self.imheight)
             self.overlay_on_orig_image()
             return ImageQt(self.overlayim)
