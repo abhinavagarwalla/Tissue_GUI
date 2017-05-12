@@ -246,4 +246,4 @@ class SlImage():
         return ImageQt(self.overlayim)
 
     def overlay_on_orig_image(self):
-        self.overlayim = Image.blend(self.curim, self.overlayim, 0.5)
+        self.overlayim = Image.blend(self.curim, self.overlayim, 0.7)
