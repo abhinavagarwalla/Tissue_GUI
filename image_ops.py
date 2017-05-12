@@ -203,44 +203,47 @@ class SlImage():
                 return ImageQt(self.curim)
 
     def pan(self, direction=None, step=0.05):
+        if_updated = False
         if direction == 'left':
             if int(self.coor_cur_w - step*self.bb_width) < self.leveldim[self.level][0] and self.coor_cur_w>step*self.bb_width:
                 self.coor_cur_w = int(self.coor_cur_w - step*self.bb_width)
                 self.coor_low_w = pow(2, self.level) * self.coor_cur_w
+                if_updated = True
         if direction == 'right':
             if int(self.coor_cur_w + step*self.bb_width + self.bb_width) < self.leveldim[self.level][0]:
                 self.coor_cur_w = int(self.coor_cur_w + step*self.bb_width)
                 self.coor_low_w = pow(2, self.level) * self.coor_cur_w
+                if_updated = True
         if direction == 'up':
             if int(self.coor_cur_h - step*self.bb_height) < self.leveldim[self.level][1] and self.coor_cur_h>step*self.bb_height:
                 self.coor_cur_h = int(self.coor_cur_h - step*self.bb_height)
                 self.coor_low_h = pow(2, self.level) * self.coor_cur_h
+                if_updated = True
         if direction == 'down':
             if int(self.coor_cur_h + step*self.bb_height + self.bb_height) < self.leveldim[self.level][1]:
                 self.coor_cur_h = int(self.coor_cur_h + step*self.bb_height)
                 self.coor_low_h = pow(2, self.level) * self.coor_cur_h
+                if_updated = True
         if direction:
             self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                  (self.bb_width, self.bb_height))
-        return ImageQt(self.curim)
+        return ImageQt(self.curim), if_updated
 
-    def read_first_overlay(self, filename, method=None):
+    def read_first_overlay(self, filename, method=None, method_update="init"):
         print(method)
         if method==0:
             print("Inside Segmentation")
             self.overlayObj = SegMaskByPixel(filename, self.wsiObj, self.bb_height, self.bb_width)
-            self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth, self.imheight)
+            self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
+                                                         self.imheight, method_update)
             self.overlay_on_orig_image()
             return ImageQt(self.overlayim)
 
-    def update_overlay(self):
+    def update_overlay(self, method_update="init", step=None):
         self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
-                                                     self.imheight)
+                                                     self.imheight, method_update, step)
         self.overlay_on_orig_image()
         return ImageQt(self.overlayim)
 
     def overlay_on_orig_image(self):
-
-        # im = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level, (self.imwidth, self.imheight))
-        # self.wsiObj.read_region((0,0), 0, self.leveldim[0]).show()
         self.overlayim = Image.blend(self.curim, self.overlayim, 0.5)

@@ -228,55 +228,60 @@ class Ui_MainWindow(object):
 
     def get_file(self):
         fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "*.tif")
-        print(self.orig_image.height(), self.orig_image.width())
-        print(self.overlay_image.height(), self.overlay_image.width())
-        self.ImageView = SlImage(fname[0],self.orig_image.height(), self.orig_image.width())
-        self.scale = 1.
-        self.if_image = True
-        orim, curim = self.ImageView.read_first()
-        self.setImage(curim)
-        self.orimap = QPixmap.fromImage(orim)
-        self.info.setPixmap(self.orimap)
-        self.current_level.setText(str(self.ImageView.level))
+        if fname[0]:
+            self.ImageView = SlImage(fname[0],self.orig_image.height(), self.orig_image.width())
+            self.scale = 1.
+            self.if_image = True
+            orim, curim = self.ImageView.read_first()
+            self.setImage(curim)
+            self.orimap = QPixmap.fromImage(orim)
+            self.info.setPixmap(self.orimap)
+            self.current_level.setText(str(self.ImageView.level))
 
     def get_file_overlay(self):
         print("Reached Callback")
         if self.if_image:
-            fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "*.tif")
-            tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentIndex())
-            self.setImageOverlay(tim)
-            self.if_image_overlay = True
+            fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data",
+                                                "(*.tif *.png)")
+            if fname[0]:
+                tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentIndex())
+                self.setImageOverlay(tim)
+                self.if_image_overlay = True
 
     def pan_left_ops(self):
         if self.if_image:
             self.pan_left.setEnabled(False)
-            self.setImage(self.ImageView.pan(direction='left', step=self.spinBox.value()/100.))
-            if self.if_image_overlay:
-                self.setImageOverlay(self.ImageView.update_overlay())
+            im, updated = self.ImageView.pan(direction='left', step=self.spinBox.value() / 100.)
+            self.setImage(im)
+            if self.if_image_overlay and updated:
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="left", step=self.spinBox.value()/100.))
             self.pan_left.setEnabled(True)
 
     def pan_right_ops(self):
         if self.if_image:
             self.pan_right.setEnabled(False)
-            self.setImage(self.ImageView.pan(direction='right', step=self.spinBox.value()/100.))
-            if self.if_image_overlay:
-                self.setImageOverlay(self.ImageView.update_overlay())
+            im, updated = self.ImageView.pan(direction='right', step=self.spinBox.value() / 100.)
+            self.setImage(im)
+            if self.if_image_overlay and updated:
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="right", step=self.spinBox.value()/100.))
             self.pan_right.setEnabled(True)
 
     def pan_up_ops(self):
         if self.if_image:
             self.pan_up.setEnabled(False)
-            self.setImage(self.ImageView.pan(direction='up', step=self.spinBox.value()/100.))
-            if self.if_image_overlay:
-                self.setImageOverlay(self.ImageView.update_overlay())
+            im, updated = self.ImageView.pan(direction='up', step=self.spinBox.value() / 100.)
+            self.setImage(im)
+            if self.if_image_overlay and updated:
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="up", step=self.spinBox.value()/100.))
             self.pan_up.setEnabled(True)
 
     def pan_down_ops(self):
         if self.if_image:
             self.pan_down.setEnabled(False)
-            self.setImage(self.ImageView.pan(direction='down', step=self.spinBox.value()/100.))
-            if self.if_image_overlay:
-                self.setImageOverlay(self.ImageView.update_overlay())
+            im, updated = self.ImageView.pan(direction='down', step=self.spinBox.value()/100.)
+            self.setImage(im)
+            if self.if_image_overlay and updated:
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="down", step=self.spinBox.value()/100.))
             self.pan_down.setEnabled(True)
 
     def setImage(self, image):
@@ -295,7 +300,7 @@ class Ui_MainWindow(object):
             self.setImage(self.ImageView.get_image_in(factor))
             print("Started Zooming into Overlay")
             if self.if_image_overlay:
-                self.setImageOverlay(self.ImageView.update_overlay())
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_in"))
             self.current_level.setText(str(self.ImageView.level))
             self.zoom_in.setEnabled(True)
             # factor = 1.2
@@ -309,6 +314,6 @@ class Ui_MainWindow(object):
             factor = 2
             self.setImage(self.ImageView.get_image_out(factor))
             if self.if_image_overlay:
-                self.setImageOverlay(self.ImageView.update_overlay())
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_out"))
             self.current_level.setText(str(self.ImageView.level))
             self.zoom_out.setEnabled(True)
