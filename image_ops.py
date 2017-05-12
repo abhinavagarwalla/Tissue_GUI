@@ -8,7 +8,8 @@ import math
 # import tensorflow as tf
 from PIL.ImageQt import ImageQt
 from PIL import ImageOps, Image
-from image_overlay import SegMaskByPixel
+from image_overlay_segmask import SegMaskByPixel
+from image_overlay_tumor_region import TumorRegion
 
 class SlImage():
     def __init__(self, filename, bb_height, bb_width):
@@ -238,10 +239,17 @@ class SlImage():
                                                          self.imheight, method_update)
             self.overlay_on_orig_image()
             return ImageQt(self.overlayim)
+        if method==3:
+            print("Tumor Regions")
+            self.overlayObj = TumorRegion(filename, self.wsiObj, self.bb_height, self.bb_width)
+            self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
+                                                         self.imheight, method_update)
+            self.overlay_on_orig_image()
+            return ImageQt(self.overlayim)
 
     def update_overlay(self, method_update="init", step=None):
         self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
-                                                     self.imheight, method_update, step)
+                                                         self.imheight, method_update, step)
         self.overlay_on_orig_image()
         return ImageQt(self.overlayim)
 

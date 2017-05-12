@@ -3,7 +3,6 @@ import numpy as np
 from multiprocessing import Pool
 from itertools import permutations
 from functools import partial
-# from pathos.multiprocessing import ProcessingPool as Pool
 from PIL import Image
 
 class SegMaskByPixel():
@@ -35,7 +34,6 @@ class SegMaskByPixel():
         self.clevel, self.olevel = None, None
         self.hratio, self.wratio = None, None
         self.wsidim = [wsiObj.level_dimensions[i] for i in range(len(wsiObj.level_dimensions))]
-        self.levelfetch = self.nlevel-1
         self.overlayim = None
         if self.type=="Image":
             for i in range(len(self.wsidim)):

@@ -241,8 +241,12 @@ class Ui_MainWindow(object):
     def get_file_overlay(self):
         print("Reached Callback")
         if self.if_image:
-            fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data",
-                                                "(*.tif *.png)")
+            if self.overlay_method.currentIndex()==0:
+                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data",
+                                                    "(*.tif *.png)")
+            elif self.overlay_method.currentIndex()==3:
+                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File",
+                                                    "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "(*.mat)")
             if fname[0]:
                 tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentIndex())
                 self.setImageOverlay(tim)
