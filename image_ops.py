@@ -7,7 +7,7 @@ import sys
 import math
 # import tensorflow as tf
 from PIL.ImageQt import ImageQt
-from PIL import ImageOps, Image
+from PIL import ImageOps, Image, ImageDraw
 from image_overlay_segmask import SegMaskByPixel
 from image_overlay_tumor_region import TumorRegion
 
@@ -44,7 +44,7 @@ class SlImage():
             pim.paste(self.curim, (self.startw, self.starth))
             # pim.show()
             return ImageQt(self.orim), ImageQt(pim)
-        return ImageQt(self.curim)
+        return ImageQt(self.orim), ImageQt(self.curim)
 
     def get_image_in(self, factor=2):
         self.zoomlevel *= factor
@@ -232,14 +232,14 @@ class SlImage():
 
     def read_first_overlay(self, filename, method=None, method_update="init"):
         print(method)
-        if method==0:
+        if method=="Segmentation Mask (by Pixel)":
             print("Inside Segmentation")
             self.overlayObj = SegMaskByPixel(filename, self.wsiObj, self.bb_height, self.bb_width)
             self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
                                                          self.imheight, method_update)
             self.overlay_on_orig_image()
             return ImageQt(self.overlayim)
-        if method==3:
+        if method=="Tumor Region":
             print("Tumor Regions")
             self.overlayObj = TumorRegion(filename, self.wsiObj, self.bb_height, self.bb_width)
             self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
@@ -255,3 +255,12 @@ class SlImage():
 
     def overlay_on_orig_image(self):
         self.overlayim = Image.blend(self.curim, self.overlayim, 0.7)
+
+    def get_info(self):
+        ocvim = cv.cvtColor(np.array(self.orim), cv.COLOR_RGB2BGR)
+        left = int(pow(2, self.level-len(self.leveldim)+1) * self.coor_cur_w)
+        top = int(pow(2, self.level-len(self.leveldim)+1) * self.coor_cur_h)
+        width = int(pow(2, self.level-len(self.leveldim)+1) * self.imwidth)
+        height = int(pow(2, self.level-len(self.leveldim)+1) * self.imheight)
+        cv.rectangle(ocvim, (left, top), (left+width, top+height),(0,0,0),1)
+        return ImageQt(Image.fromarray(ocvim).convert("RGBA"))

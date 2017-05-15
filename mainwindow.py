@@ -22,7 +22,9 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
+        MainWindow.setMouseTracking(True)
         self.centralWidget = QtWidgets.QWidget(MainWindow)
+        self.centralWidget.setMouseTracking(True)
         self.centralWidget.setObjectName("centralWidget")
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.centralWidget)
         self.horizontalLayout_4.setContentsMargins(11, 11, 11, 11)
@@ -125,6 +127,7 @@ class Ui_MainWindow(object):
         self.overlay_method.addItem("")
         self.overlay_method.addItem("")
         self.overlay_method.addItem("")
+        self.overlay_method.addItem("")
         self.horizontalLayout_3.addWidget(self.overlay_method)
         self.load_overlay = QtWidgets.QPushButton(self.centralWidget)
         self.load_overlay.setObjectName("load_overlay")
@@ -148,6 +151,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.orig_image.sizePolicy().hasHeightForWidth())
         self.orig_image.setSizePolicy(sizePolicy)
         self.orig_image.setMinimumSize(QtCore.QSize(512, 512))
+        self.orig_image.setMouseTracking(True)
         self.orig_image.setObjectName("orig_image")
         self.horizontalLayout_2.addWidget(self.orig_image)
         self.overlay_image = QtWidgets.QLabel(self.centralWidget)
@@ -202,6 +206,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setToolTip(_translate("MainWindow", "Inside Main Window"))
         self.load_image.setText(_translate("MainWindow", "Load Image"))
         self.save_image.setText(_translate("MainWindow", "PushButton"))
         self.info.setText(_translate("MainWindow", "TextLabel"))
@@ -215,9 +220,10 @@ class Ui_MainWindow(object):
         self.pan_down.setText(_translate("MainWindow", "Down"))
         self.pan_step.setText(_translate("MainWindow", "Pan Step (%)"))
         self.overlay_method.setItemText(0, _translate("MainWindow", "Segmentation Mask (by Pixel)"))
-        self.overlay_method.setItemText(1, _translate("MainWindow", "Segmentation Mask (By Patch)"))
-        self.overlay_method.setItemText(2, _translate("MainWindow", "Nuclei Position"))
-        self.overlay_method.setItemText(3, _translate("MainWindow", "Tumor Region"))
+        self.overlay_method.setItemText(1, _translate("MainWindow", "Tumor Region"))
+        self.overlay_method.setItemText(2, _translate("MainWindow", "Heatmap"))
+        self.overlay_method.setItemText(3, _translate("MainWindow", "Nuclei Position"))
+        self.overlay_method.setItemText(4, _translate("MainWindow", "Segmentation Mask (By Patch)"))
         self.load_overlay.setText(_translate("MainWindow", "Load Overlay"))
         self.checkBox.setText(_translate("MainWindow", "CheckBox"))
         self.checkBox_2.setText(_translate("MainWindow", "CheckBox"))
@@ -225,6 +231,9 @@ class Ui_MainWindow(object):
         self.overlay_image.setToolTip(_translate("MainWindow", "\"Where are you?\""))
         self.overlay_image.setText(_translate("MainWindow", "Overlay Image"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
+
+    def mouseMoveEvent(self, event):
+        print('mouseMoveEvent: x={:d}, y={:d}'.format(event.x(), event.y()))
 
     def get_file(self):
         fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "*.tif")
@@ -234,21 +243,24 @@ class Ui_MainWindow(object):
             self.if_image = True
             orim, curim = self.ImageView.read_first()
             self.setImage(curim)
-            self.orimap = QPixmap.fromImage(orim)
-            self.info.setPixmap(self.orimap)
+            self.updateInfo(orim)
             self.current_level.setText(str(self.ImageView.level))
+
+    def updateInfo(self, image):
+        orimap = QPixmap.fromImage(image)
+        self.info.setPixmap(orimap)
 
     def get_file_overlay(self):
         print("Reached Callback")
         if self.if_image:
-            if self.overlay_method.currentIndex()==0:
+            if self.overlay_method.currentText()=="Segmentation Mask (by Pixel)":
                 fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data",
                                                     "(*.tif *.png)")
-            elif self.overlay_method.currentIndex()==3:
+            elif self.overlay_method.currentText()=="Tumor Region":
                 fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File",
                                                     "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "(*.mat)")
             if fname[0]:
-                tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentIndex())
+                tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText())
                 self.setImageOverlay(tim)
                 self.if_image_overlay = True
 
@@ -257,6 +269,7 @@ class Ui_MainWindow(object):
             self.pan_left.setEnabled(False)
             im, updated = self.ImageView.pan(direction='left', step=self.spinBox.value() / 100.)
             self.setImage(im)
+            self.updateInfo(self.ImageView.get_info())
             if self.if_image_overlay and updated:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="left", step=self.spinBox.value()/100.))
             self.pan_left.setEnabled(True)
@@ -266,6 +279,7 @@ class Ui_MainWindow(object):
             self.pan_right.setEnabled(False)
             im, updated = self.ImageView.pan(direction='right', step=self.spinBox.value() / 100.)
             self.setImage(im)
+            self.updateInfo(self.ImageView.get_info())
             if self.if_image_overlay and updated:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="right", step=self.spinBox.value()/100.))
             self.pan_right.setEnabled(True)
@@ -275,6 +289,7 @@ class Ui_MainWindow(object):
             self.pan_up.setEnabled(False)
             im, updated = self.ImageView.pan(direction='up', step=self.spinBox.value() / 100.)
             self.setImage(im)
+            self.updateInfo(self.ImageView.get_info())
             if self.if_image_overlay and updated:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="up", step=self.spinBox.value()/100.))
             self.pan_up.setEnabled(True)
@@ -284,6 +299,7 @@ class Ui_MainWindow(object):
             self.pan_down.setEnabled(False)
             im, updated = self.ImageView.pan(direction='down', step=self.spinBox.value()/100.)
             self.setImage(im)
+            self.updateInfo(self.ImageView.get_info())
             if self.if_image_overlay and updated:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="down", step=self.spinBox.value()/100.))
             self.pan_down.setEnabled(True)
@@ -302,6 +318,7 @@ class Ui_MainWindow(object):
             self.zoom_in.setEnabled(False)
             factor = 2
             self.setImage(self.ImageView.get_image_in(factor))
+            self.updateInfo(self.ImageView.get_info())
             print("Started Zooming into Overlay")
             if self.if_image_overlay:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_in"))
@@ -317,6 +334,7 @@ class Ui_MainWindow(object):
             self.zoom_out.setEnabled(False)
             factor = 2
             self.setImage(self.ImageView.get_image_out(factor))
+            self.updateInfo(self.ImageView.get_info())
             if self.if_image_overlay:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_out"))
             self.current_level.setText(str(self.ImageView.level))

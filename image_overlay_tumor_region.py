@@ -3,8 +3,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 from scipy.io import loadmat
 from shapely.geometry import Polygon, MultiPolygon
-import pickle as pkl
-import cv2
+import cv2 as cv
 
 class TumorRegion():
     def __init__(self, filename, wsiObj, bb_height, bb_width):
@@ -38,14 +37,14 @@ class TumorRegion():
                             rel_img_coords = np.array(region_intersect[kp].exterior.coords)-(self.coor_low_w, self.coor_low_h)
                             pcoors = np.array(rel_img_coords/pow(2, self.clevel)).astype(np.int32).reshape((-1, 1, 2))
                             # cv2.fillPoly(pim, [pcoors], (255, 255, 255))
-                            pim = cv2.polylines(pim, [pcoors], True, (0, 255, 0), 1)
+                            pim = cv.polylines(pim, [pcoors], True, (0, 255, 0), 1)
                             print("Multi Polygon Filling completed")
                     else:
                         print("Simple Polygon Case", len(region_intersect.exterior.coords))
                         rel_img_coords = np.array(region_intersect.exterior.coords) - (self.coor_low_w, self.coor_low_h)
                         pcoors = np.array(rel_img_coords/pow(2, self.clevel)).astype(np.int32).reshape((-1, 1, 2))
                         # cv2.fillPoly(pim, [pcoors], (255, 255, 255))
-                        pim = cv2.polylines(pim, [pcoors], True, (0, 255, 0), 1)
+                        pim = cv.polylines(pim, [pcoors], True, (0, 255, 0), 1)
                         print("Normal Polygon Filling completed")
 
         self.overlayim = Image.fromarray(pim).convert("RGBA")
