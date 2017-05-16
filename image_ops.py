@@ -43,8 +43,8 @@ class SlImage():
             self.starth = int((pim.size[1]-self.curim.size[1])/2)
             pim.paste(self.curim, (self.startw, self.starth))
             # pim.show()
-            return ImageQt(self.orim), ImageQt(pim)
-        return ImageQt(self.orim), ImageQt(self.curim)
+            return ImageQt(self.orim), ImageQt(pim), self.level
+        return ImageQt(self.orim), ImageQt(self.curim), self.level
 
     def get_image_in(self, factor=2):
         self.zoomlevel *= factor
@@ -203,7 +203,7 @@ class SlImage():
             else:
                 return ImageQt(self.curim)
 
-    def pan(self, direction=None, step=0.05):
+    def pan(self, direction=None, step=0.05, value_x=None, value_y=None):
         if_updated = False
         if direction == 'left':
             if int(self.coor_cur_w - step*self.bb_width) < self.leveldim[self.level][0] and self.coor_cur_w>step*self.bb_width:
@@ -225,10 +225,33 @@ class SlImage():
                 self.coor_cur_h = int(self.coor_cur_h + step*self.bb_height)
                 self.coor_low_h = pow(2, self.level) * self.coor_cur_h
                 if_updated = True
+        if direction == 'mouse':
+            if value_x != None:
+                if value_y != None:
+                    if self.check_boundaries(self.coor_cur_w + value_x, self.coor_cur_h + value_y,
+                                             self.leveldim[self.level][0], self.leveldim[self.level][1],
+                                             self.bb_width, self.bb_height):
+                            self.coor_cur_w = int(self.coor_cur_w + value_x)
+                            self.coor_low_w = pow(2, self.level) * self.coor_cur_w
+
+                            self.coor_cur_h = int(self.coor_cur_h + value_y)
+                            self.coor_low_h = pow(2, self.level) * self.coor_cur_h
+                            if_updated = True
         if direction:
             self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                  (self.bb_width, self.bb_height))
         return ImageQt(self.curim), if_updated
+
+    def check_boundaries(self, w, h, W, H, imw, imh):
+        if w>W or w<0:
+            return False
+        if h>H or h<0:
+            return False
+        if w+imw>W:
+            return False
+        if h+imh>H:
+            return False
+        return True
 
     def read_first_overlay(self, filename, method=None, method_update="init"):
         print(method)
@@ -263,4 +286,16 @@ class SlImage():
         width = int(pow(2, self.level-len(self.leveldim)+1) * self.imwidth)
         height = int(pow(2, self.level-len(self.leveldim)+1) * self.imheight)
         cv.rectangle(ocvim, (left, top), (left+width, top+height),(0,0,0),1)
+        ocvim = cv.cvtColor(np.array(ocvim), cv.COLOR_BGR2RGB)
         return ImageQt(Image.fromarray(ocvim).convert("RGBA"))
+
+    def random_seek(self, w, h):
+        width = int(pow(2, self.level - len(self.leveldim) + 1) * self.imwidth)
+        height = int(pow(2, self.level - len(self.leveldim) + 1) * self.imheight)
+        self.coor_cur_w = pow(2, len(self.leveldim) - 1 - self.level) * int(w-width/2)
+        self.coor_cur_h = pow(2, len(self.leveldim) - 1 - self.level) * int(h-height/2)
+        self.coor_low_w = pow(2, self.level) * self.coor_cur_w
+        self.coor_low_h = pow(2, self.level) * self.coor_cur_h
+        self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
+                                             (self.bb_width, self.bb_height))
+        return ImageQt(self.curim)
