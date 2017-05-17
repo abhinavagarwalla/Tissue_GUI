@@ -7,7 +7,7 @@ import sys
 import math
 # import tensorflow as tf
 from PIL.ImageQt import ImageQt
-from PIL import ImageOps, Image, ImageDraw
+from PIL import ImageOps, Image, ImageDraw, ImageChops
 from image_overlay_segmask import SegMaskByPixel
 from image_overlay_tumor_region import TumorRegion
 
@@ -267,17 +267,24 @@ class SlImage():
             self.overlayObj = TumorRegion(filename, self.wsiObj, self.bb_height, self.bb_width)
             self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
                                                          self.imheight, method_update)
-            self.overlay_on_orig_image()
+            self.overlay_on_orig_image(method=1)
             return ImageQt(self.overlayim)
 
     def update_overlay(self, method_update="init", step=None):
         self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
                                                          self.imheight, method_update, step)
-        self.overlay_on_orig_image()
+        if isinstance(self.overlayObj, TumorRegion):
+            self.overlay_on_orig_image(method=1)
+        elif isinstance(self.overlayObj, SegMaskByPixel):
+            self.overlay_on_orig_image()
         return ImageQt(self.overlayim)
 
-    def overlay_on_orig_image(self):
-        self.overlayim = Image.blend(self.curim, self.overlayim, 0.7)
+    def overlay_on_orig_image(self, method=0):
+        if method==0:
+            self.overlayim = Image.blend(self.curim, self.overlayim, 0.7)
+        else:
+            self.overlayim = ImageChops.multiply(self.curim, self.overlayim)
+
 
     def get_info(self):
         ocvim = cv.cvtColor(np.array(self.orim), cv.COLOR_RGB2BGR)
@@ -289,11 +296,12 @@ class SlImage():
         ocvim = cv.cvtColor(np.array(ocvim), cv.COLOR_BGR2RGB)
         return ImageQt(Image.fromarray(ocvim).convert("RGBA"))
 
-    def random_seek(self, w, h):
+    def random_seek(self, w, h, isize):
+        print(w, isize.width(), (isize.width()-self.leveldim[-1][0])/2, h, isize.height(), (isize.height()-self.leveldim[-1][1])/2)
         width = int(pow(2, self.level - len(self.leveldim) + 1) * self.imwidth)
         height = int(pow(2, self.level - len(self.leveldim) + 1) * self.imheight)
-        self.coor_cur_w = pow(2, len(self.leveldim) - 1 - self.level) * int(w-width/2)
-        self.coor_cur_h = pow(2, len(self.leveldim) - 1 - self.level) * int(h-height/2)
+        self.coor_cur_w = pow(2, len(self.leveldim) - 1 - self.level) * int(w - (width/2) - (isize.width()-self.leveldim[-1][0])/2)
+        self.coor_cur_h = pow(2, len(self.leveldim) - 1 - self.level) * int(h - (height/2) - (isize.height()-self.leveldim[-1][1])/2)
         self.coor_low_w = pow(2, self.level) * self.coor_cur_w
         self.coor_low_h = pow(2, self.level) * self.coor_cur_h
         self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,

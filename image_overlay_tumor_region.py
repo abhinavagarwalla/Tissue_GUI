@@ -16,6 +16,7 @@ class TumorRegion():
         self.npolygons = len(self.low_polygons)
 
     def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None):
+        print("Started Getting Overlay")
         self.clevel = level-1
         self.coor_low_w = pow(2, self.clevel) * coorw
         self.coor_low_h = pow(2, self.clevel) * coorh
@@ -25,27 +26,25 @@ class TumorRegion():
                        (self.coor_low_w + self.low_width, self.coor_low_h + self.low_height),
                        (self.coor_low_w, self.coor_low_h + self.low_height)])
 
-        pim = np.zeros((height, width, 3), np.uint8)
+        pim = np.ones((height, width, 3), np.uint8)
+        pim *= 255
 
         for i in range(self.npolygons):
             if self.low_polygons[i].is_valid and imp.intersects(self.low_polygons[i]):
                 region_intersect = imp.intersection(self.low_polygons[i])
                 if region_intersect.is_valid:
                     if isinstance(region_intersect, MultiPolygon):
-                        print("Handling MultiPolygon Case")
                         for kp in range(len(region_intersect)):
                             rel_img_coords = np.array(region_intersect[kp].exterior.coords)-(self.coor_low_w, self.coor_low_h)
                             pcoors = np.array(rel_img_coords/pow(2, self.clevel)).astype(np.int32).reshape((-1, 1, 2))
                             # cv2.fillPoly(pim, [pcoors], (255, 255, 255))
-                            pim = cv.polylines(pim, [pcoors], True, (0, 255, 0), 1)
-                            print("Multi Polygon Filling completed")
-                    else:
-                        print("Simple Polygon Case", len(region_intersect.exterior.coords))
+                            pim = cv.polylines(pim, [pcoors], True, (0, 255, 0), 3)
+                    elif isinstance(region_intersect, Polygon):
                         rel_img_coords = np.array(region_intersect.exterior.coords) - (self.coor_low_w, self.coor_low_h)
                         pcoors = np.array(rel_img_coords/pow(2, self.clevel)).astype(np.int32).reshape((-1, 1, 2))
                         # cv2.fillPoly(pim, [pcoors], (255, 255, 255))
-                        pim = cv.polylines(pim, [pcoors], True, (0, 255, 0), 1)
-                        print("Normal Polygon Filling completed")
-
+                        pim = cv.polylines(pim, [pcoors], True, (0, 255, 0), 3)
+                    else:
+                        pass
         self.overlayim = Image.fromarray(pim).convert("RGBA")
         return self.overlayim
