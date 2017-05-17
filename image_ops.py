@@ -26,6 +26,8 @@ class SlImage():
         self.coor_cur_h, self.coor_cur_w = None, None           ##Actual coordinates in the current view
         self.coor_low_h, self.coor_low_w = None, None           ##Actual coordinates in the lowest view
         print(self.leveldim)
+        self.overlayObj = dict()
+        self.overlayim = dict()
 
     def read_first(self):
         self.curim = self.wsiObj.read_region((0,0), self.level, self.wsiObj.level_dimensions[self.level])
@@ -253,37 +255,51 @@ class SlImage():
             return False
         return True
 
-    def read_first_overlay(self, filename, method=None, method_update="init"):
+    def read_first_overlay(self, filename, method=None, method_update="init", states=None):
         print(method)
         if method=="Segmentation Mask (by Pixel)":
             print("Inside Segmentation")
-            self.overlayObj = SegMaskByPixel(filename, self.wsiObj, self.bb_height, self.bb_width)
-            self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
+            self.overlayObj["Seg"] = SegMaskByPixel(filename, self.wsiObj, self.bb_height, self.bb_width)
+            self.overlayim["Seg"] = self.overlayObj["Seg"].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
                                                          self.imheight, method_update)
+            print("overlaying on Orig Image")
             self.overlay_on_orig_image()
-            return ImageQt(self.overlayim)
+            return self.overlay_all(states)
         if method=="Tumor Region":
             print("Tumor Regions")
-            self.overlayObj = TumorRegion(filename, self.wsiObj, self.bb_height, self.bb_width)
-            self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
+            self.overlayObj["Reg"] = TumorRegion(filename, self.wsiObj, self.bb_height, self.bb_width)
+            self.overlayim["Reg"] = self.overlayObj["Reg"].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
                                                          self.imheight, method_update)
             self.overlay_on_orig_image(method=1)
-            return ImageQt(self.overlayim)
+            return self.overlay_all(states)
 
-    def update_overlay(self, method_update="init", step=None):
-        self.overlayim = self.overlayObj.get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
+    def update_overlay(self, method_update="init", step=None, states=None):
+        print("inside update_overlay in ImageOps ", states)
+        for k, v in states.items():
+            print(k, v)
+            if v:
+                self.overlayim[k] = self.overlayObj[k].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
                                                          self.imheight, method_update, step)
-        if isinstance(self.overlayObj, TumorRegion):
-            self.overlay_on_orig_image(method=1)
-        elif isinstance(self.overlayObj, SegMaskByPixel):
-            self.overlay_on_orig_image()
-        return ImageQt(self.overlayim)
+        return self.overlay_all(states)
+
+    def overlay_all(self, states):
+        print("Value of states: ", states)
+        self.t = self.curim.copy()
+        for k, v in states.items():
+            if v:
+                print(k, v)
+                if k=="Seg":
+                    print("Blending Image together", self.t.size, self.overlayim["Seg"].size)
+                    self.t = Image.blend(self.t, self.overlayim["Seg"], 0.7)
+                elif k=="Reg":
+                    self.t = ImageChops.multiply(self.t, self.overlayim["Reg"])
+        return ImageQt(self.t)
 
     def overlay_on_orig_image(self, method=0):
         if method==0:
-            self.overlayim = Image.blend(self.curim, self.overlayim, 0.7)
+            self.overlayim["Seg"] = Image.blend(self.curim, self.overlayim["Seg"], 0.7)
         else:
-            self.overlayim = ImageChops.multiply(self.curim, self.overlayim)
+            self.overlayim["Reg"] = ImageChops.multiply(self.curim, self.overlayim["Reg"])
 
 
     def get_info(self):

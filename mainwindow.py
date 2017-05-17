@@ -263,10 +263,6 @@ class Ui_MainWindow(object):
         self.load_overlay.clicked.connect(self.get_file_overlay)
         self.zoom_in.clicked.connect(self.zoom_in_ops)
         self.zoom_out.clicked.connect(self.zoom_out_ops)
-        # self.pan_left.clicked.connect(self.pan_left_ops)
-        # self.pan_right.clicked.connect(self.pan_right_ops)
-        # self.pan_up.clicked.connect(self.pan_up_ops)
-        # self.pan_down.clicked.connect(self.pan_down_ops)
         self.zoom_in.clicked.connect(self.updateBar)
         self.zoom_out.clicked.connect(self.updateBar)
         self.zoomBar.valueChanged.connect(self.updateBar_2)
@@ -278,6 +274,29 @@ class Ui_MainWindow(object):
         self.overlay_side_by_side.stateChanged.connect(self.overlay_state_changed)
         self.overlay_image.hide()
         self.overlay_side_by_side.setEnabled(False)
+        self.check_segmentation.setEnabled(False)
+        self.check_tumor_region.setEnabled(False)
+        self.check_heatmap.setEnabled(False)
+        self.check_nuclei.setEnabled(False)
+        self.check_others.setEnabled(False)
+        self.overlay_states = {"Seg": False, "Reg": False, "Heat": False, "Nuclei": False}
+        self.check_segmentation.stateChanged.connect(self.select_overlays)
+        self.check_tumor_region.stateChanged.connect(self.select_overlays)
+        self.check_heatmap.stateChanged.connect(self.select_overlays)
+        self.check_nuclei.stateChanged.connect(self.select_overlays)
+        self.check_others.stateChanged.connect(self.select_overlays)
+
+    def select_overlays(self):
+        snd = self.menuWindow.sender()
+        print("Inside Selecting Overlays: ", snd.text())
+        if snd.text()=="Segmentation":
+            if self.if_image_overlay:
+                self.overlay_states["Seg"] = not self.overlay_states["Seg"]
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states))
+        elif snd.text()=="Tumor Region":
+            if self.if_image_overlay:
+                self.overlay_states["Reg"] = not self.overlay_states["Reg"]
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states))
 
     def overlay_state_changed(self):
         if self.overlay_side_by_side.isChecked():
@@ -338,69 +357,35 @@ class Ui_MainWindow(object):
             if self.overlay_method.currentText()=="Segmentation Mask (by Pixel)":
                 fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data",
                                                     "(*.tif *.png)")
+                if fname[0]:
+                    tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),
+                                                            states=self.overlay_states)
+                    self.setImageOverlay(tim)
+                    self.if_image_overlay = True
+                    self.check_segmentation.setEnabled(True)
+                    self.check_segmentation.setChecked(True)
+                    self.overlay_states["Seg"] = True
             elif self.overlay_method.currentText()=="Tumor Region":
                 fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File",
                                                     "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "(*.mat)")
-            if fname[0]:
-                tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText())
-                self.setImageOverlay(tim)
-                self.if_image_overlay = True
-
-    def pan_left_ops(self):
-        if self.if_image:
-            # self.pan_left.setEnabled(False)
-            im, updated = self.ImageView.pan(direction='left', step=self.spinBox.value() / 100.)
-            self.setImage(im)
-            self.updateInfo(self.ImageView.get_info())
-            if self.if_image_overlay and updated:
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="left", step=self.spinBox.value()/100.))
-            # self.pan_left.setEnabled(True)
-
-    def pan_right_ops(self):
-        if self.if_image:
-            # self.pan_right.setEnabled(False)
-            im, updated = self.ImageView.pan(direction='right', step=self.spinBox.value() / 100.)
-            self.setImage(im)
-            self.updateInfo(self.ImageView.get_info())
-            if self.if_image_overlay and updated:
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="right", step=self.spinBox.value()/100.))
-            # self.pan_right.setEnabled(True)
-
-    def pan_up_ops(self):
-        if self.if_image:
-            # self.pan_up.setEnabled(False)
-            im, updated = self.ImageView.pan(direction='up', step=self.spinBox.value() / 100.)
-            self.setImage(im)
-            self.updateInfo(self.ImageView.get_info())
-            if self.if_image_overlay and updated:
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="up", step=self.spinBox.value()/100.))
-            # self.pan_up.setEnabled(True)
-
-    def pan_down_ops(self):
-        if self.if_image:
-            # self.pan_down.setEnabled(False)
-            im, updated = self.ImageView.pan(direction='down', step=self.spinBox.value()/100.)
-            self.setImage(im)
-            self.updateInfo(self.ImageView.get_info())
-            if self.if_image_overlay and updated:
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="down", step=self.spinBox.value()/100.))
-            # self.pan_down.setEnabled(True)
+                if fname[0]:
+                    tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),
+                                                            states=self.overlay_states)
+                    self.setImageOverlay(tim)
+                    self.if_image_overlay = True
+                    self.check_tumor_region.setEnabled(True)
+                    self.check_tumor_region.setChecked(True)
+                    self.overlay_states["Reg"] = True
 
     def pan_direction_ops(self, value):
         if self.if_image:
-            # self.pan_up.setEnabled(False)
-            # self.pan_down.setEnabled(False)
-            # self.pan_left.setEnabled(False)
-            # self.pan_right.setEnabled(False)
             im, updated = self.ImageView.pan(direction='mouse', value_x=value.x(), value_y=value.y())
             self.setImage(im)
             self.updateInfo(self.ImageView.get_info())
-            if self.if_image_overlay and updated:
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="down", step=self.spinBox.value()/100.))
-            # self.pan_up.setEnabled(True)
-            # self.pan_down.setEnabled(True)
-            # self.pan_left.setEnabled(True)
-            # self.pan_right.setEnabled(True)
+            # if self.if_image_overlay and updated:
+            if self.if_image_overlay:
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="down", step=self.spinBox.value()/100.,
+                                                                   states = self.overlay_states))
 
     def setImage(self, image):
         # self.orig_image.setPixmap(self.orimap.scaled(self.orig_image.size(), QtCore.Qt.KeepAspectRatio))
@@ -446,7 +431,7 @@ class Ui_MainWindow(object):
             self.updateInfo(self.ImageView.get_info())
             print("Started Zooming into Overlay")
             if self.if_image_overlay:
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_in"))
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_in", states = self.overlay_states))
             self.current_level.setText(str(self.ImageView.level))
             self.zoomBar.setEnabled(True)
             self.zoom_out.setEnabled(True)
@@ -462,7 +447,7 @@ class Ui_MainWindow(object):
             self.setImage(self.ImageView.get_image_out(factor))
             self.updateInfo(self.ImageView.get_info())
             if self.if_image_overlay:
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_out"))
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_out", states = self.overlay_states))
             self.current_level.setText(str(self.ImageView.level))
             self.zoomBar.setEnabled(True)
             self.zoom_in.setEnabled(True)
@@ -474,21 +459,13 @@ class Ui_MainWindow(object):
             self.zoom_in.setEnabled(False)
             self.zoom_out.setEnabled(False)
             self.zoomBar.setEnabled(False)
-            # self.pan_up.setEnabled(False)
-            # self.pan_down.setEnabled(False)
-            # self.pan_left.setEnabled(False)
-            # self.pan_right.setEnabled(False)
             print(self.info.size())
             self.setImage(self.ImageView.random_seek(event.pos().x(), event.pos().y(), self.info.size()))
             self.updateInfo(self.ImageView.get_info())
             print("Random Seek in Overlay")
             if self.if_image_overlay:
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="init"))
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states))
             self.current_level.setText(str(self.ImageView.level))
-            # self.pan_up.setEnabled(True)
-            # self.pan_down.setEnabled(True)
-            # self.pan_left.setEnabled(True)
-            # self.pan_right.setEnabled(True)
             self.zoomBar.setEnabled(True)
             self.zoom_out.setEnabled(True)
             self.zoom_in.setEnabled(True)

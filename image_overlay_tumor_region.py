@@ -37,12 +37,10 @@ class TumorRegion():
                         for kp in range(len(region_intersect)):
                             rel_img_coords = np.array(region_intersect[kp].exterior.coords)-(self.coor_low_w, self.coor_low_h)
                             pcoors = np.array(rel_img_coords/pow(2, self.clevel)).astype(np.int32).reshape((-1, 1, 2))
-                            # cv2.fillPoly(pim, [pcoors], (255, 255, 255))
                             pim = cv.polylines(pim, [pcoors], True, (0, 255, 0), 3)
                     elif isinstance(region_intersect, Polygon):
                         rel_img_coords = np.array(region_intersect.exterior.coords) - (self.coor_low_w, self.coor_low_h)
                         pcoors = np.array(rel_img_coords/pow(2, self.clevel)).astype(np.int32).reshape((-1, 1, 2))
-                        # cv2.fillPoly(pim, [pcoors], (255, 255, 255))
                         pim = cv.polylines(pim, [pcoors], True, (0, 255, 0), 3)
                     else:
                         pass
