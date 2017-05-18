@@ -86,10 +86,29 @@ class Ui_MainWindow(object):
         self.zoomBar.setObjectName("zoomBar")
         self.verticalLayout_2.addWidget(self.zoomBar)
         self.verticalLayout_4.addLayout(self.verticalLayout_2)
+        self.zoomSlider = QtWidgets.QSlider(self.vis)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.zoomSlider.sizePolicy().hasHeightForWidth())
+        self.zoomSlider.setSizePolicy(sizePolicy)
+        self.zoomSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.zoomSlider.setTickPosition(QtWidgets.QSlider.TicksAbove)
+        self.zoomSlider.setTickInterval(1)
+        self.zoomSlider.setObjectName("zoomSlider")
+        self.verticalLayout_4.addWidget(self.zoomSlider)
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setContentsMargins(5, 5, 5, 5)
         self.gridLayout.setSpacing(6)
         self.gridLayout.setObjectName("gridLayout")
+        self.current_level_label = QtWidgets.QLabel(self.vis)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.current_level_label.sizePolicy().hasHeightForWidth())
+        self.current_level_label.setSizePolicy(sizePolicy)
+        self.current_level_label.setObjectName("current_level_label")
+        self.gridLayout.addWidget(self.current_level_label, 0, 0, 1, 1)
         self.current_level = QtWidgets.QLineEdit(self.vis)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -98,29 +117,7 @@ class Ui_MainWindow(object):
         self.current_level.setSizePolicy(sizePolicy)
         self.current_level.setReadOnly(True)
         self.current_level.setObjectName("current_level")
-        self.gridLayout.addWidget(self.current_level, 1, 1, 1, 1)
-        self.current_level_label = QtWidgets.QLabel(self.vis)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.current_level_label.sizePolicy().hasHeightForWidth())
-        self.current_level_label.setSizePolicy(sizePolicy)
-        self.current_level_label.setObjectName("current_level_label")
-        self.gridLayout.addWidget(self.current_level_label, 1, 0, 1, 1)
-        self.spinBox = QtWidgets.QSpinBox(self.vis)
-        self.spinBox.setMinimum(1)
-        self.spinBox.setSingleStep(5)
-        self.spinBox.setProperty("value", 11)
-        self.spinBox.setObjectName("spinBox")
-        self.gridLayout.addWidget(self.spinBox, 0, 1, 1, 1)
-        self.pan_step = QtWidgets.QLabel(self.vis)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pan_step.sizePolicy().hasHeightForWidth())
-        self.pan_step.setSizePolicy(sizePolicy)
-        self.pan_step.setObjectName("pan_step")
-        self.gridLayout.addWidget(self.pan_step, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.current_level, 0, 1, 1, 1)
         self.verticalLayout_4.addLayout(self.gridLayout)
         self.horizontalLayout_5.addLayout(self.verticalLayout_4)
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
@@ -228,9 +225,8 @@ class Ui_MainWindow(object):
         self.info.setText(_translate("MainWindow", "TextLabel"))
         self.zoom_in.setText(_translate("MainWindow", "ZoomIn"))
         self.zoom_out.setText(_translate("MainWindow", "ZoomOut"))
-        self.current_level.setPlaceholderText(_translate("MainWindow", "NA"))
         self.current_level_label.setText(_translate("MainWindow", "Current Level"))
-        self.pan_step.setText(_translate("MainWindow", "Pan Step (%)"))
+        self.current_level.setPlaceholderText(_translate("MainWindow", "NA"))
         self.overlay_method.setItemText(0, _translate("MainWindow", "Segmentation Mask (by Pixel)"))
         self.overlay_method.setItemText(1, _translate("MainWindow", "Tumor Region"))
         self.overlay_method.setItemText(2, _translate("MainWindow", "Heatmap"))
@@ -266,6 +262,7 @@ class Ui_MainWindow(object):
         self.zoom_in.clicked.connect(self.updateBar)
         self.zoom_out.clicked.connect(self.updateBar)
         self.zoomBar.valueChanged.connect(self.updateBar_2)
+        self.zoomSlider.valueChanged.connect(self.updateBar_2)
         self.orig_image.mousePressEvent = self.mouse_orig
         self.orig_image.mouseReleaseEvent = self.mouse_orig_clear
         self.orig_image.mouseMoveEvent = self.mouse_orig
@@ -309,10 +306,12 @@ class Ui_MainWindow(object):
         if event.angleDelta().y() > 0:
             self.c_zoom_level += 1
             self.zoomBar.setValue(self.zoomBar.value() + 1)
+            self.zoomSlider.setValue(self.zoomSlider.value() + 1)
             self.zoom_in_ops()
         else:
             self.c_zoom_level -= 1
             self.zoomBar.setValue(self.zoomBar.value() - 1)
+            self.zoomSlider.setValue(self.zoomSlider.value() - 1)
             self.zoom_out_ops()
 
     def mouse_orig_clear(self, event):
@@ -344,6 +343,7 @@ class Ui_MainWindow(object):
             self.setImage(curim)
             self.updateInfo(orim)
             self.zoomBar.setMaximum(nlevel)
+            self.zoomSlider.setMaximum(nlevel)
             self.c_zoom_level = 0
             self.current_level.setText(str(self.ImageView.level))
 
@@ -384,8 +384,7 @@ class Ui_MainWindow(object):
             self.updateInfo(self.ImageView.get_info())
             # if self.if_image_overlay and updated:
             if self.if_image_overlay:
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="down", step=self.spinBox.value()/100.,
-                                                                   states = self.overlay_states))
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="down", states = self.overlay_states))
 
     def setImage(self, image):
         # self.orig_image.setPixmap(self.orimap.scaled(self.orig_image.size(), QtCore.Qt.KeepAspectRatio))
@@ -404,14 +403,18 @@ class Ui_MainWindow(object):
         if snd.text()=="ZoomIn":
             self.c_zoom_level += 1
             self.zoomBar.setValue(self.zoomBar.value() + 1)
+            self.zoomSlider.setValue(self.zoomSlider.value() + 1)
         elif snd.text()=="ZoomOut":
             self.c_zoom_level -= 1
             self.zoomBar.setValue(self.zoomBar.value() - 1)
+            self.zoomSlider.setValue(self.zoomSlider.value() - 1)
         else:
             print("SlideBar Value has been changed")
 
     def updateBar_2(self):
-        zdiff = self.c_zoom_level-self.zoomBar.value()
+        # zdiff = self.c_zoom_level-self.zoomBar.value()
+        print("inside update Bar 2", self.zoomBar.value(), self.zoomSlider.value())
+        zdiff = self.c_zoom_level - self.zoomSlider.value() - 1
         if zdiff==0:
             return
         if zdiff==-1:
