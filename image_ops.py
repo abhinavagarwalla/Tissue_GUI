@@ -10,6 +10,7 @@ from PIL.ImageQt import ImageQt
 from PIL import ImageOps, Image, ImageDraw, ImageChops
 from image_overlay_segmask import SegMaskByPixel
 from image_overlay_tumor_region import TumorRegion
+from image_overlay_heatmap import HeatMap
 
 class SlImage():
     def __init__(self, filename, bb_height, bb_width):
@@ -263,14 +264,22 @@ class SlImage():
             self.overlayim["Seg"] = self.overlayObj["Seg"].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
                                                          self.imheight, method_update)
             print("overlaying on Orig Image")
-            self.overlay_on_orig_image()
+            self.overlay_on_orig_image(state="Seg")
             return self.overlay_all(states)
         if method=="Tumor Region":
             print("Tumor Regions")
             self.overlayObj["Reg"] = TumorRegion(filename, self.wsiObj, self.bb_height, self.bb_width)
             self.overlayim["Reg"] = self.overlayObj["Reg"].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
                                                          self.imheight, method_update)
-            self.overlay_on_orig_image(method=1)
+            self.overlay_on_orig_image(state="Reg")
+            return self.overlay_all(states)
+        if method=="Heatmap":
+            print("HeatMap")
+            self.overlayObj["Heat"] = HeatMap(filename, self.wsiObj, self.bb_height, self.bb_width)
+            self.overlayim["Heat"] = self.overlayObj["Heat"].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h,
+                                                                       self.imwidth,
+                                                                       self.imheight, method_update)
+            self.overlay_on_orig_image(state="Heat")
             return self.overlay_all(states)
 
     def update_overlay(self, method_update="init", step=None, states=None):
@@ -293,14 +302,19 @@ class SlImage():
                     self.t = Image.blend(self.t, self.overlayim["Seg"], 0.7)
                 elif k=="Reg":
                     self.t = ImageChops.multiply(self.t, self.overlayim["Reg"])
+                elif k=="Heat":
+                    print(self.t.size, self.overlayim["Heat"].size, self.t.mode, self.overlayim["Heat"].mode)
+                    self.t = Image.blend(self.t, self.overlayim["Heat"], 0.6)
+        # self.t.show()
         return ImageQt(self.t)
 
-    def overlay_on_orig_image(self, method=0):
-        if method==0:
+    def overlay_on_orig_image(self, state=None):
+        if state=="Seg":
             self.overlayim["Seg"] = Image.blend(self.curim, self.overlayim["Seg"], 0.7)
-        else:
+        elif state=="Reg":
             self.overlayim["Reg"] = ImageChops.multiply(self.curim, self.overlayim["Reg"])
-
+        elif state=="Heat":
+            self.overlayim["Heat"] = ImageChops.blend(self.curim, self.overlayim["Heat"], 0.0001)
 
     def get_info(self):
         ocvim = cv.cvtColor(np.array(self.orim), cv.COLOR_RGB2BGR)

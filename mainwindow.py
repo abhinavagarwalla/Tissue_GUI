@@ -247,7 +247,6 @@ class Ui_MainWindow(object):
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
-
     def intialize_signals_slots(self):
         # Bind all the signal and slots here
         self.if_image = False
@@ -261,7 +260,7 @@ class Ui_MainWindow(object):
         self.zoom_out.clicked.connect(self.zoom_out_ops)
         self.zoom_in.clicked.connect(self.updateBar)
         self.zoom_out.clicked.connect(self.updateBar)
-        self.zoomBar.valueChanged.connect(self.updateBar_2)
+        # self.zoomBar.valueChanged.connect(self.updateBar_2)
         self.zoomSlider.valueChanged.connect(self.updateBar_2)
         self.orig_image.mousePressEvent = self.mouse_orig
         self.orig_image.mouseReleaseEvent = self.mouse_orig_clear
@@ -294,6 +293,10 @@ class Ui_MainWindow(object):
             if self.if_image_overlay:
                 self.overlay_states["Reg"] = not self.overlay_states["Reg"]
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states))
+        elif snd.text()=="HeatMap":
+            if self.if_image_overlay:
+                self.overlay_states["Heat"] = not self.overlay_states["Heat"]
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states))
 
     def overlay_state_changed(self):
         if self.overlay_side_by_side.isChecked():
@@ -304,11 +307,13 @@ class Ui_MainWindow(object):
     def wheel_zoom(self, event):
         print("Wheel Event has been called", event, event.angleDelta())
         if event.angleDelta().y() > 0:
+            print("should be zooming in")
             self.c_zoom_level += 1
             self.zoomBar.setValue(self.zoomBar.value() + 1)
             self.zoomSlider.setValue(self.zoomSlider.value() + 1)
             self.zoom_in_ops()
         else:
+            print("should be zooming out")
             self.c_zoom_level -= 1
             self.zoomBar.setValue(self.zoomBar.value() - 1)
             self.zoomSlider.setValue(self.zoomSlider.value() - 1)
@@ -364,7 +369,6 @@ class Ui_MainWindow(object):
                     self.if_image_overlay = True
                     self.check_segmentation.setEnabled(True)
                     self.check_segmentation.setChecked(True)
-                    self.overlay_states["Seg"] = True
             elif self.overlay_method.currentText()=="Tumor Region":
                 fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File",
                                                     "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "(*.mat)")
@@ -375,7 +379,16 @@ class Ui_MainWindow(object):
                     self.if_image_overlay = True
                     self.check_tumor_region.setEnabled(True)
                     self.check_tumor_region.setChecked(True)
-                    self.overlay_states["Reg"] = True
+            elif self.overlay_method.currentText()=="Heatmap":
+                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File",
+                                                    "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "(*.png)")
+                if fname[0]:
+                    tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),
+                                                            states=self.overlay_states)
+                    self.setImageOverlay(tim)
+                    self.if_image_overlay = True
+                    self.check_heatmap.setEnabled(True)
+                    self.check_heatmap.setChecked(True)
 
     def pan_direction_ops(self, value):
         if self.if_image:
@@ -413,7 +426,7 @@ class Ui_MainWindow(object):
 
     def updateBar_2(self):
         # zdiff = self.c_zoom_level-self.zoomBar.value()
-        print("inside update Bar 2", self.zoomBar.value(), self.zoomSlider.value())
+        print("inside update Bar 2", self.c_zoom_level, self.zoomBar.value(), self.zoomSlider.value())
         zdiff = self.c_zoom_level - self.zoomSlider.value() - 1
         if zdiff==0:
             return
