@@ -335,7 +335,7 @@ class Ui_MainWindow(object):
             self.prev_mouse_pos = None
 
     def get_file(self):
-        fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "*.tif")
+        fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "(*.tif *.jp2)")
         if fname[0]:
             self.ImageView = DisplayImage(fname[0],self.orig_image.height(), self.orig_image.width())
             self.scale = 1.

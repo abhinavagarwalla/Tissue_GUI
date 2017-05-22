@@ -1,20 +1,15 @@
-import os
 import cv2 as cv
 import numpy as np
-import openslide as ops
-
-import sys
-import math
-# import tensorflow as tf
 from PIL.ImageQt import ImageQt
 from PIL import ImageOps, Image, ImageDraw, ImageChops
 from image_overlay_segmask import SegMaskByPixel
 from image_overlay_tumor_region import TumorRegion
 from image_overlay_heatmap import HeatMap
+from image_slide import ImageClass
 
 class DisplayImage():
     def __init__(self, filename, bb_height, bb_width):
-        self.wsiObj = ops.OpenSlide(filename)
+        self.wsiObj = ImageClass(filename)
         self.bb_height = bb_height
         self.bb_width = bb_width
         self.level = self.wsiObj.level_count - 1
@@ -327,11 +322,17 @@ class DisplayImage():
         return ImageQt(Image.fromarray(ocvim).convert("RGBA"))
 
     def random_seek(self, w, h, isize):
-        print(w, isize.width(), (isize.width()-self.leveldim[-1][0])/2, h, isize.height(), (isize.height()-self.leveldim[-1][1])/2)
+        if int(w) > self.leveldim[-1][0]:
+            return ImageQt(self.curim)
+        if int(h - (isize.height()-self.leveldim[-1][1])/2) > self.leveldim[-1][1]:
+            return ImageQt(self.curim)
+        # print(w, isize.width(), (isize.width()-self.leveldim[-1][0])/2, h, isize.height(), (isize.height()-self.leveldim[-1][1])/2)
         width = int(pow(2, self.level - len(self.leveldim) + 1) * self.imwidth)
         height = int(pow(2, self.level - len(self.leveldim) + 1) * self.imheight)
-        self.coor_cur_w = pow(2, len(self.leveldim) - 1 - self.level) * int(w - (width/2) - (isize.width()-self.leveldim[-1][0])/2)
+        self.coor_cur_w = pow(2, len(self.leveldim) - 1 - self.level) * int(w - (width/2))# - (isize.width()-self.leveldim[-1][0])/2)
         self.coor_cur_h = pow(2, len(self.leveldim) - 1 - self.level) * int(h - (height/2) - (isize.height()-self.leveldim[-1][1])/2)
+        self.coor_cur_w = 0 if self.coor_cur_w < 0 else self.coor_cur_w
+        self.coor_cur_h = 0 if self.coor_cur_h < 0 else self.coor_cur_h
         self.coor_low_w = pow(2, self.level) * self.coor_cur_w
         self.coor_low_h = pow(2, self.level) * self.coor_cur_h
         self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
