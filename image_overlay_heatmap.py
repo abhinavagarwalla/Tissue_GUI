@@ -6,30 +6,25 @@ from shapely.geometry import Polygon, MultiPolygon
 import cv2 as cv
 import h5py
 import matplotlib.pyplot as plt
+import os
 
 class HeatMap():
     def __init__(self, filename, wsiObj, bb_height, bb_width):
-        oim = Image.open(filename)
         self.wsidim = [wsiObj.level_dimensions[i] for i in range(len(wsiObj.level_dimensions))]
         self.ovObj = []
         self.level_fetch = 0
-        print("Read Image File")
-        for i in range(len(self.wsidim)):
-            print(self.wsidim[i], oim.size, self.wsidim[i]==oim.size, self.wsidim[i]<oim.size)
-            if self.wsidim[i] > oim.size:
-                self.level_fetch = i+1
-                continue
-            # oim.save("Opened_Image_" + str(i) + ".tiff", compression="tiff_lzw")
-            # oim = oim.resize((int(oim.size[0] / 2), int(oim.size[1] / 2)), Image.BILINEAR)
-            self.ovObj.append(ops.ImageSlide("Opened_Image_" + str(i) + ".tiff"))
-            print(i-self.level_fetch)
-            self.ovObj[i-self.level_fetch].read_region((0,0), 0, (10,10))
+        tlist = os.listdir(filename)
+        for i in range(len(tlist)):
+            print(tlist[i])
+            self.ovObj.append(ops.ImageSlide(filename + "/" + tlist[i]))
+            self.ovObj[i].read_region((0,0), 0, (10,10))
 
-        del oim
-        # self.ovObj = ops.ImageSlide(filename)
+        for i in range(len(self.wsidim)):
+            if self.wsidim[i] == self.ovObj[0].level_dimensions[0]:
+                self.level_fetch = i
+                continue
+
         self.type = "Image"
-        print("Image has been read")
-        # self.nlevel = self.wsiObj.level_count
         self.leveldim = self.wsidim
         self.bb_height = bb_height
         self.bb_width = bb_width

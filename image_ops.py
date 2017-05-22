@@ -12,7 +12,7 @@ from image_overlay_segmask import SegMaskByPixel
 from image_overlay_tumor_region import TumorRegion
 from image_overlay_heatmap import HeatMap
 
-class SlImage():
+class DisplayImage():
     def __init__(self, filename, bb_height, bb_width):
         self.wsiObj = ops.OpenSlide(filename)
         self.bb_height = bb_height

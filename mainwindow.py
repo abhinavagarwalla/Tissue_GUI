@@ -9,7 +9,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtGui import QImage, QPixmap
-from image_ops import SlImage
+from image_ops import DisplayImage
 import os
 os.environ['PYQTGRAPH_QT_LIB'] = 'PyQt5'
 
@@ -81,10 +81,6 @@ class Ui_MainWindow(object):
         self.zoom_out.setObjectName("zoom_out")
         self.horizontalLayout.addWidget(self.zoom_out)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
-        self.zoomBar = QtWidgets.QScrollBar(self.vis)
-        self.zoomBar.setOrientation(QtCore.Qt.Horizontal)
-        self.zoomBar.setObjectName("zoomBar")
-        self.verticalLayout_2.addWidget(self.zoomBar)
         self.verticalLayout_4.addLayout(self.verticalLayout_2)
         self.zoomSlider = QtWidgets.QSlider(self.vis)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
@@ -92,6 +88,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.zoomSlider.sizePolicy().hasHeightForWidth())
         self.zoomSlider.setSizePolicy(sizePolicy)
+        self.zoomSlider.setPageStep(1)
         self.zoomSlider.setOrientation(QtCore.Qt.Horizontal)
         self.zoomSlider.setTickPosition(QtWidgets.QSlider.TicksAbove)
         self.zoomSlider.setTickInterval(1)
@@ -165,7 +162,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.orig_image = QtWidgets.QLabel(self.vis)
         self.orig_image.setEnabled(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
+                                           QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.orig_image.sizePolicy().hasHeightForWidth())
@@ -178,7 +176,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.orig_image)
         self.overlay_image = QtWidgets.QLabel(self.vis)
         self.overlay_image.setEnabled(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
+                                           QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.overlay_image.sizePolicy().hasHeightForWidth())
@@ -260,7 +259,6 @@ class Ui_MainWindow(object):
         self.zoom_out.clicked.connect(self.zoom_out_ops)
         self.zoom_in.clicked.connect(self.updateBar)
         self.zoom_out.clicked.connect(self.updateBar)
-        # self.zoomBar.valueChanged.connect(self.updateBar_2)
         self.zoomSlider.valueChanged.connect(self.updateBar_2)
         self.orig_image.mousePressEvent = self.mouse_orig
         self.orig_image.mouseReleaseEvent = self.mouse_orig_clear
@@ -309,13 +307,11 @@ class Ui_MainWindow(object):
         if event.angleDelta().y() > 0:
             print("should be zooming in")
             self.c_zoom_level += 1
-            self.zoomBar.setValue(self.zoomBar.value() + 1)
             self.zoomSlider.setValue(self.zoomSlider.value() + 1)
             self.zoom_in_ops()
         else:
             print("should be zooming out")
             self.c_zoom_level -= 1
-            self.zoomBar.setValue(self.zoomBar.value() - 1)
             self.zoomSlider.setValue(self.zoomSlider.value() - 1)
             self.zoom_out_ops()
 
@@ -341,13 +337,12 @@ class Ui_MainWindow(object):
     def get_file(self):
         fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "*.tif")
         if fname[0]:
-            self.ImageView = SlImage(fname[0],self.orig_image.height(), self.orig_image.width())
+            self.ImageView = DisplayImage(fname[0],self.orig_image.height(), self.orig_image.width())
             self.scale = 1.
             self.if_image = True
             orim, curim, nlevel = self.ImageView.read_first()
             self.setImage(curim)
             self.updateInfo(orim)
-            self.zoomBar.setMaximum(nlevel)
             self.zoomSlider.setMaximum(nlevel)
             self.c_zoom_level = 0
             self.current_level.setText(str(self.ImageView.level))
@@ -380,10 +375,12 @@ class Ui_MainWindow(object):
                     self.check_tumor_region.setEnabled(True)
                     self.check_tumor_region.setChecked(True)
             elif self.overlay_method.currentText()=="Heatmap":
-                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File",
-                                                    "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "(*.png)")
-                if fname[0]:
-                    tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),
+                # fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File",
+                #                                     "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "(*.png)")
+                fname = QFileDialog.getExistingDirectory(self.menuWindow, "Choose Directory",
+                                                    "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", QFileDialog.ShowDirsOnly)
+                if fname:
+                    tim = self.ImageView.read_first_overlay(fname, method=self.overlay_method.currentText(),
                                                             states=self.overlay_states)
                     self.setImageOverlay(tim)
                     self.if_image_overlay = True
@@ -415,18 +412,14 @@ class Ui_MainWindow(object):
         snd = self.menuWindow.sender()
         if snd.text()=="ZoomIn":
             self.c_zoom_level += 1
-            self.zoomBar.setValue(self.zoomBar.value() + 1)
             self.zoomSlider.setValue(self.zoomSlider.value() + 1)
         elif snd.text()=="ZoomOut":
             self.c_zoom_level -= 1
-            self.zoomBar.setValue(self.zoomBar.value() - 1)
             self.zoomSlider.setValue(self.zoomSlider.value() - 1)
         else:
             print("SlideBar Value has been changed")
 
     def updateBar_2(self):
-        # zdiff = self.c_zoom_level-self.zoomBar.value()
-        print("inside update Bar 2", self.c_zoom_level, self.zoomBar.value(), self.zoomSlider.value())
         zdiff = self.c_zoom_level - self.zoomSlider.value() - 1
         if zdiff==0:
             return
@@ -441,7 +434,6 @@ class Ui_MainWindow(object):
         if self.if_image:
             self.zoom_in.setEnabled(False)
             self.zoom_out.setEnabled(False)
-            self.zoomBar.setEnabled(False)
             factor = 2
             self.setImage(self.ImageView.get_image_in(factor))
             self.updateInfo(self.ImageView.get_info())
@@ -449,7 +441,6 @@ class Ui_MainWindow(object):
             if self.if_image_overlay:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_in", states = self.overlay_states))
             self.current_level.setText(str(self.ImageView.level))
-            self.zoomBar.setEnabled(True)
             self.zoom_out.setEnabled(True)
             self.zoom_in.setEnabled(True)
 
@@ -458,14 +449,12 @@ class Ui_MainWindow(object):
             print("Inside Zoom Out Ops")
             self.zoom_out.setEnabled(False)
             self.zoom_in.setEnabled(False)
-            self.zoomBar.setEnabled(False)
             factor = 2
             self.setImage(self.ImageView.get_image_out(factor))
             self.updateInfo(self.ImageView.get_info())
             if self.if_image_overlay:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_out", states = self.overlay_states))
             self.current_level.setText(str(self.ImageView.level))
-            self.zoomBar.setEnabled(True)
             self.zoom_in.setEnabled(True)
             self.zoom_out.setEnabled(True)
 
@@ -474,7 +463,6 @@ class Ui_MainWindow(object):
         if self.if_image:
             self.zoom_in.setEnabled(False)
             self.zoom_out.setEnabled(False)
-            self.zoomBar.setEnabled(False)
             print(self.info.size())
             self.setImage(self.ImageView.random_seek(event.pos().x(), event.pos().y(), self.info.size()))
             self.updateInfo(self.ImageView.get_info())
@@ -482,6 +470,5 @@ class Ui_MainWindow(object):
             if self.if_image_overlay:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states))
             self.current_level.setText(str(self.ImageView.level))
-            self.zoomBar.setEnabled(True)
             self.zoom_out.setEnabled(True)
             self.zoom_in.setEnabled(True)
