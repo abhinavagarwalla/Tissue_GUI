@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 from PIL.ImageQt import ImageQt
-from PIL import ImageOps, Image, ImageDraw, ImageChops
+from PIL import Image, ImageChops
 from image_overlay_segmask import SegMaskByPixel
 from image_overlay_tumor_region import TumorRegion
 from image_overlay_heatmap import HeatMap
@@ -18,10 +18,8 @@ class DisplayImage():
         self.starth, self.startw = None, None                   ##Start h,m for the current view
         self.curim = None                                       ##Stores the current view of the image
         self.orim = None                                        ##Here the lowest level image stored and displayed
-        self.zoomlevel = None                                   ##For storing the current zoom level
         self.coor_cur_h, self.coor_cur_w = None, None           ##Actual coordinates in the current view
         self.coor_low_h, self.coor_low_w = None, None           ##Actual coordinates in the lowest view
-        print(self.leveldim)
         self.overlayObj = dict()
         self.overlayim = dict()
 
@@ -32,7 +30,6 @@ class DisplayImage():
 
         self.imheight = self.curim.size[1]
         self.imwidth = self.curim.size[0]
-        self.zoomlevel = 1.0
         self.coor_cur_h, self.coor_cur_w = 0, 0
         self.coor_low_h, self.coor_low_w = 0, 0
         if self.wsiObj.level_dimensions[self.level][1] < self.bb_height or self.wsiObj.level_dimensions[self.level][0] < self.bb_width:
@@ -40,12 +37,10 @@ class DisplayImage():
             self.startw = int((pim.size[0]-self.curim.size[0])/2)
             self.starth = int((pim.size[1]-self.curim.size[1])/2)
             pim.paste(self.curim, (self.startw, self.starth))
-            # pim.show()
             return ImageQt(self.orim), ImageQt(pim), self.level
         return ImageQt(self.orim), ImageQt(self.curim), self.level
 
     def get_image_in(self, factor=2):
-        self.zoomlevel *= factor
         if self.imheight*factor < self.bb_height and self.imwidth*factor < self.bb_width:
             pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
             self.curim = self.curim.resize((2*self.curim.size[0], 2*self.curim.size[1]), Image.ANTIALIAS)
@@ -125,7 +120,6 @@ class DisplayImage():
                 return ImageQt(self.curim)
 
     def get_image_out(self, factor=2):
-        self.zoomlevel /= factor
         if self.imheight < self.bb_height and self.imwidth < self.bb_width:
             pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
             print("Inside the right box")
@@ -201,45 +195,6 @@ class DisplayImage():
             else:
                 return ImageQt(self.curim)
 
-    def pan(self, direction=None, step=0.05, value_x=None, value_y=None):
-        if_updated = False
-        if direction == 'left':
-            if int(self.coor_cur_w - step*self.bb_width) < self.leveldim[self.level][0] and self.coor_cur_w>step*self.bb_width:
-                self.coor_cur_w = int(self.coor_cur_w - step*self.bb_width)
-                self.coor_low_w = pow(2, self.level) * self.coor_cur_w
-                if_updated = True
-        if direction == 'right':
-            if int(self.coor_cur_w + step*self.bb_width + self.bb_width) < self.leveldim[self.level][0]:
-                self.coor_cur_w = int(self.coor_cur_w + step*self.bb_width)
-                self.coor_low_w = pow(2, self.level) * self.coor_cur_w
-                if_updated = True
-        if direction == 'up':
-            if int(self.coor_cur_h - step*self.bb_height) < self.leveldim[self.level][1] and self.coor_cur_h>step*self.bb_height:
-                self.coor_cur_h = int(self.coor_cur_h - step*self.bb_height)
-                self.coor_low_h = pow(2, self.level) * self.coor_cur_h
-                if_updated = True
-        if direction == 'down':
-            if int(self.coor_cur_h + step*self.bb_height + self.bb_height) < self.leveldim[self.level][1]:
-                self.coor_cur_h = int(self.coor_cur_h + step*self.bb_height)
-                self.coor_low_h = pow(2, self.level) * self.coor_cur_h
-                if_updated = True
-        if direction == 'mouse':
-            if value_x != None:
-                if value_y != None:
-                    if self.check_boundaries(self.coor_cur_w + value_x, self.coor_cur_h + value_y,
-                                             self.leveldim[self.level][0], self.leveldim[self.level][1],
-                                             self.bb_width, self.bb_height):
-                            self.coor_cur_w = int(self.coor_cur_w + value_x)
-                            self.coor_low_w = pow(2, self.level) * self.coor_cur_w
-
-                            self.coor_cur_h = int(self.coor_cur_h + value_y)
-                            self.coor_low_h = pow(2, self.level) * self.coor_cur_h
-                            if_updated = True
-        if direction:
-            self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
-                                                 (self.bb_width, self.bb_height))
-        return ImageQt(self.curim), if_updated
-
     def check_boundaries(self, w, h, W, H, imw, imh):
         if w>W or w<0:
             return False
@@ -251,6 +206,22 @@ class DisplayImage():
             return False
         return True
 
+    def pan(self, value_x=None, value_y=None):
+        if_updated = False
+        if value_x != None and value_y != None:
+            if self.check_boundaries(self.coor_cur_w + value_x, self.coor_cur_h + value_y,
+                                     self.leveldim[self.level][0], self.leveldim[self.level][1],
+                                     self.bb_width, self.bb_height):
+                    self.coor_cur_w = int(self.coor_cur_w + value_x)
+                    self.coor_low_w = pow(2, self.level) * self.coor_cur_w
+
+                    self.coor_cur_h = int(self.coor_cur_h + value_y)
+                    self.coor_low_h = pow(2, self.level) * self.coor_cur_h
+                    if_updated = True
+        self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
+                                                 (self.bb_width, self.bb_height))
+        return ImageQt(self.curim), if_updated
+
     def read_first_overlay(self, filename, method=None, method_update="init", states=None):
         print(method)
         if method=="Segmentation Mask (by Pixel)":
@@ -258,7 +229,6 @@ class DisplayImage():
             self.overlayObj["Seg"] = SegMaskByPixel(filename, self.wsiObj, self.bb_height, self.bb_width)
             self.overlayim["Seg"] = self.overlayObj["Seg"].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
                                                          self.imheight, method_update)
-            print("overlaying on Orig Image")
             self.overlay_on_orig_image(state="Seg")
             return self.overlay_all(states)
         if method=="Tumor Region":
@@ -277,10 +247,11 @@ class DisplayImage():
             self.overlay_on_orig_image(state="Heat")
             return self.overlay_all(states)
 
-    def update_overlay(self, method_update="init", step=None, states=None):
+    def update_overlay(self, method_update="init", step=None, states=None, ov_no_update=None):
         print("inside update_overlay in ImageOps ", states)
+        if ov_no_update:
+            return self.overlay_all(states)
         for k, v in states.items():
-            print(k, v)
             if v:
                 self.overlayim[k] = self.overlayObj[k].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
                                                          self.imheight, method_update, step)
@@ -299,17 +270,21 @@ class DisplayImage():
                     self.t = ImageChops.multiply(self.t, self.overlayim["Reg"])
                 elif k=="Heat":
                     print(self.t.size, self.overlayim["Heat"].size, self.t.mode, self.overlayim["Heat"].mode)
-                    self.t = Image.blend(self.t, self.overlayim["Heat"], 0.6)
+                    self.t = Image.blend(self.t, self.overlayim["Heat"], 0.4)
         # self.t.show()
         return ImageQt(self.t)
 
     def overlay_on_orig_image(self, state=None):
         if state=="Seg":
+            self.overlayim["Seg"].save("Segmentation_overlay.png")
             self.overlayim["Seg"] = Image.blend(self.curim, self.overlayim["Seg"], 0.7)
         elif state=="Reg":
+            self.overlayim["Reg"].save("Region_overlay.png")
             self.overlayim["Reg"] = ImageChops.multiply(self.curim, self.overlayim["Reg"])
         elif state=="Heat":
-            self.overlayim["Heat"] = ImageChops.blend(self.curim, self.overlayim["Heat"], 0.0001)
+            self.overlayim["Heat"].save("Heatmap_overlay.png")
+            self.overlayim["Heat"] = Image.blend(self.curim, self.overlayim["Heat"], 0.4)
+        self.curim.save("Current_Image.png")
 
     def get_info(self):
         ocvim = cv.cvtColor(np.array(self.orim), cv.COLOR_RGB2BGR)
@@ -326,11 +301,11 @@ class DisplayImage():
             return ImageQt(self.curim)
         if int(h - (isize.height()-self.leveldim[-1][1])/2) > self.leveldim[-1][1]:
             return ImageQt(self.curim)
-        # print(w, isize.width(), (isize.width()-self.leveldim[-1][0])/2, h, isize.height(), (isize.height()-self.leveldim[-1][1])/2)
         width = int(pow(2, self.level - len(self.leveldim) + 1) * self.imwidth)
         height = int(pow(2, self.level - len(self.leveldim) + 1) * self.imheight)
-        self.coor_cur_w = pow(2, len(self.leveldim) - 1 - self.level) * int(w - (width/2))# - (isize.width()-self.leveldim[-1][0])/2)
-        self.coor_cur_h = pow(2, len(self.leveldim) - 1 - self.level) * int(h - (height/2) - (isize.height()-self.leveldim[-1][1])/2)
+        self.coor_cur_w = pow(2, len(self.leveldim) - 1 - self.level) * int(w - (width/2))
+        self.coor_cur_h = pow(2, len(self.leveldim) - 1 - self.level) * \
+                          int(h - (height/2) - (isize.height()-self.leveldim[-1][1])/2)
         self.coor_cur_w = 0 if self.coor_cur_w < 0 else self.coor_cur_w
         self.coor_cur_h = 0 if self.coor_cur_h < 0 else self.coor_cur_h
         self.coor_low_w = pow(2, self.level) * self.coor_cur_w

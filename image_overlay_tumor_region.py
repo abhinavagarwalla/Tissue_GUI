@@ -1,6 +1,5 @@
-import openslide as ops
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 from scipy.io import loadmat
 from shapely.geometry import Polygon, MultiPolygon
 import cv2 as cv

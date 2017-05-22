@@ -1,8 +1,4 @@
 import openslide as ops
-import numpy as np
-from multiprocessing import Pool
-from itertools import permutations
-from functools import partial
 from PIL import Image
 
 class SegMaskByPixel():
@@ -23,7 +19,6 @@ class SegMaskByPixel():
                 except:
                     print("Undefined Behaviour or Unsupported File Format")
         else:
-            # self.ovObj = Image.open(filename) ##Normal Image Reader
             self.ovObj = ops.ImageSlide(filename)
             self.type = "Image"
             print("Image has been read")
@@ -48,24 +43,6 @@ class SegMaskByPixel():
         coor_low_h = pow(2, level) * coorh
         self.overlayim = self.ovObj.read_region((coor_low_w, coor_low_h), level, (width, height))
         return self.overlayim
-
-    def get_overlay_parallel(self, level, coorw, coorh, width, height):
-        print("Inside Parallel Implementation")
-        self.coor_low_w = pow(2, level) * coorw
-        self.coor_low_h = pow(2, level) * coorh
-        self.low_width = pow(2, level - self.levelfetch) * width
-        self.low_height = pow(2, level - self.levelfetch) * height
-        pstep = 1024
-        p = Pool()
-        ps = list(permutations(range(0, self.low_width, pstep), 2))
-        print(type(ps))
-        print(ps)
-        print(self.low_height, self.low_width)
-        # func = partial(self.get_simple_region, ovObj, coor_low_w, coor_low_h, levelfetch, low_width,
-        #                low_height)
-        imList = p.map(self, ps)
-        imList[0].show()
-        return imList
 
     def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None):
         if self.type=="OpenSlide":

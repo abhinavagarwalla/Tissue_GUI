@@ -1,17 +1,8 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'mainwindow.ui'
-#
-# Created by: PyQt5 UI code generator 5.8.2
-#
-# WARNING! All changes made in this file will be lost!
-
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QPixmap
 from image_ops import DisplayImage
 import os
-os.environ['PYQTGRAPH_QT_LIB'] = 'PyQt5'
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -66,22 +57,6 @@ class Ui_MainWindow(object):
         self.info.setObjectName("info")
         self.verticalLayout.addWidget(self.info)
         self.verticalLayout_4.addLayout(self.verticalLayout)
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_2.setContentsMargins(11, 11, 11, 11)
-        self.verticalLayout_2.setSpacing(6)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setContentsMargins(11, 11, 11, 11)
-        self.horizontalLayout.setSpacing(6)
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.zoom_in = QtWidgets.QPushButton(self.vis)
-        self.zoom_in.setObjectName("zoom_in")
-        self.horizontalLayout.addWidget(self.zoom_in)
-        self.zoom_out = QtWidgets.QPushButton(self.vis)
-        self.zoom_out.setObjectName("zoom_out")
-        self.horizontalLayout.addWidget(self.zoom_out)
-        self.verticalLayout_2.addLayout(self.horizontalLayout)
-        self.verticalLayout_4.addLayout(self.verticalLayout_2)
         self.zoomSlider = QtWidgets.QSlider(self.vis)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -162,8 +137,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.orig_image = QtWidgets.QLabel(self.vis)
         self.orig_image.setEnabled(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
-                                           QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.orig_image.sizePolicy().hasHeightForWidth())
@@ -176,8 +150,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.orig_image)
         self.overlay_image = QtWidgets.QLabel(self.vis)
         self.overlay_image.setEnabled(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
-                                           QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.overlay_image.sizePolicy().hasHeightForWidth())
@@ -222,8 +195,6 @@ class Ui_MainWindow(object):
         self.load_image.setText(_translate("MainWindow", "Load Image"))
         self.save_image.setText(_translate("MainWindow", "PushButton"))
         self.info.setText(_translate("MainWindow", "TextLabel"))
-        self.zoom_in.setText(_translate("MainWindow", "ZoomIn"))
-        self.zoom_out.setText(_translate("MainWindow", "ZoomOut"))
         self.current_level_label.setText(_translate("MainWindow", "Current Level"))
         self.current_level.setPlaceholderText(_translate("MainWindow", "NA"))
         self.overlay_method.setItemText(0, _translate("MainWindow", "Segmentation Mask (by Pixel)"))
@@ -249,17 +220,13 @@ class Ui_MainWindow(object):
     def intialize_signals_slots(self):
         # Bind all the signal and slots here
         self.if_image = False
-        self.if_image_overlay = False
+        self.if_image_overlay = 0
         self.c_zoom_level = 0
         self.prev_mouse_pos = None
         self.if_mouse_pressed = False
         self.load_image.clicked.connect(self.get_file)
         self.load_overlay.clicked.connect(self.get_file_overlay)
-        self.zoom_in.clicked.connect(self.zoom_in_ops)
-        self.zoom_out.clicked.connect(self.zoom_out_ops)
-        self.zoom_in.clicked.connect(self.updateBar)
-        self.zoom_out.clicked.connect(self.updateBar)
-        self.zoomSlider.valueChanged.connect(self.updateBar_2)
+        self.zoomSlider.valueChanged.connect(self.updateBar)
         self.orig_image.mousePressEvent = self.mouse_orig
         self.orig_image.mouseReleaseEvent = self.mouse_orig_clear
         self.orig_image.mouseMoveEvent = self.mouse_orig
@@ -280,50 +247,70 @@ class Ui_MainWindow(object):
         self.check_nuclei.stateChanged.connect(self.select_overlays)
         self.check_others.stateChanged.connect(self.select_overlays)
 
-    def select_overlays(self):
-        snd = self.menuWindow.sender()
-        print("Inside Selecting Overlays: ", snd.text())
-        if snd.text()=="Segmentation":
-            if self.if_image_overlay:
-                self.overlay_states["Seg"] = not self.overlay_states["Seg"]
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states))
-        elif snd.text()=="Tumor Region":
-            if self.if_image_overlay:
-                self.overlay_states["Reg"] = not self.overlay_states["Reg"]
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states))
-        elif snd.text()=="HeatMap":
-            if self.if_image_overlay:
-                self.overlay_states["Heat"] = not self.overlay_states["Heat"]
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states))
+    ## Functions for reading files, setting PixMaps
+    def get_file(self):
+        fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", os.getcwd(), "(*.tif *.jp2)")
+        if fname[0]:
+            self.ImageView = DisplayImage(fname[0],self.orig_image.height(), self.orig_image.width())
+            self.if_image = True
+            orim, curim, nlevel = self.ImageView.read_first()
+            self.setImage(curim)
+            self.updateInfo(orim)
+            self.zoomSlider.setMaximum(nlevel)
+            self.c_zoom_level = 0
+            self.current_level.setText(str(self.ImageView.level))
 
-    def overlay_state_changed(self):
+    def get_file_overlay(self):
+        print("Reached Overlay Callback")
+        if self.if_image:
+            if self.overlay_method.currentText()=="Segmentation Mask (by Pixel)":
+                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", os.getcwd(), "(*.tif *.png)")
+                if fname[0]:
+                    tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),
+                                                            states=self.overlay_states)
+                    self.setImageOverlay(tim)
+                    self.if_image_overlay += 1
+                    self.check_segmentation.setEnabled(True)
+                    self.check_segmentation.setChecked(True)
+            elif self.overlay_method.currentText()=="Tumor Region":
+                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", os.getcwd(), "(*.mat)")
+                if fname[0]:
+                    tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),
+                                                            states=self.overlay_states)
+                    self.setImageOverlay(tim)
+                    self.if_image_overlay += 1
+                    self.check_tumor_region.setEnabled(True)
+                    self.check_tumor_region.setChecked(True)
+            elif self.overlay_method.currentText()=="Heatmap":
+                fname = QFileDialog.getExistingDirectory(self.menuWindow, "Choose Directory", os.getcwd(),
+                                                         QFileDialog.ShowDirsOnly)
+                if fname:
+                    tim = self.ImageView.read_first_overlay(fname, method=self.overlay_method.currentText(),
+                                                            states=self.overlay_states)
+                    self.setImageOverlay(tim)
+                    self.if_image_overlay += 1
+                    self.check_heatmap.setEnabled(True)
+                    self.check_heatmap.setChecked(True)
+
+    def setImage(self, image):
+        self.orig_image.setPixmap(QPixmap.fromImage(image))
+
+    def setImageOverlay(self, image):
         if self.overlay_side_by_side.isChecked():
-            self.overlay_image.show()
+            self.overlay_image.setPixmap(QPixmap.fromImage(image))
         else:
-            self.overlay_image.hide()
+            self.orig_image.setPixmap(QPixmap.fromImage(image))
 
-    def wheel_zoom(self, event):
-        print("Wheel Event has been called", event, event.angleDelta())
-        if event.angleDelta().y() > 0:
-            print("should be zooming in")
-            self.c_zoom_level += 1
-            self.zoomSlider.setValue(self.zoomSlider.value() + 1)
-            self.zoom_in_ops()
-        else:
-            print("should be zooming out")
-            self.c_zoom_level -= 1
-            self.zoomSlider.setValue(self.zoomSlider.value() - 1)
-            self.zoom_out_ops()
+    def updateInfo(self, image):
+        self.info.setPixmap(QPixmap.fromImage(image))
 
+    ## Panning Operation
     def mouse_orig_clear(self, event):
         self.if_mouse_pressed = False
         self.prev_mouse_pos = None
 
     def mouse_orig(self, event):
-        # if event.button()==QtCore.Qt.NoButton:
-        #     print("No Button")
         if event.button()==QtCore.Qt.LeftButton:
-            print(event, event.pos())
             self.if_mouse_pressed = True
         if self.if_mouse_pressed:
             if not self.prev_mouse_pos:
@@ -334,92 +321,28 @@ class Ui_MainWindow(object):
         else:
             self.prev_mouse_pos = None
 
-    def get_file(self):
-        fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "(*.tif *.jp2)")
-        if fname[0]:
-            self.ImageView = DisplayImage(fname[0],self.orig_image.height(), self.orig_image.width())
-            self.scale = 1.
-            self.if_image = True
-            orim, curim, nlevel = self.ImageView.read_first()
-            self.setImage(curim)
-            self.updateInfo(orim)
-            self.zoomSlider.setMaximum(nlevel)
-            self.c_zoom_level = 0
-            self.current_level.setText(str(self.ImageView.level))
-
-    def updateInfo(self, image):
-        orimap = QPixmap.fromImage(image)
-        self.info.setPixmap(orimap)
-
-    def get_file_overlay(self):
-        print("Reached Callback")
-        if self.if_image:
-            if self.overlay_method.currentText()=="Segmentation Mask (by Pixel)":
-                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data",
-                                                    "(*.tif *.png)")
-                if fname[0]:
-                    tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),
-                                                            states=self.overlay_states)
-                    self.setImageOverlay(tim)
-                    self.if_image_overlay = True
-                    self.check_segmentation.setEnabled(True)
-                    self.check_segmentation.setChecked(True)
-            elif self.overlay_method.currentText()=="Tumor Region":
-                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File",
-                                                    "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "(*.mat)")
-                if fname[0]:
-                    tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),
-                                                            states=self.overlay_states)
-                    self.setImageOverlay(tim)
-                    self.if_image_overlay = True
-                    self.check_tumor_region.setEnabled(True)
-                    self.check_tumor_region.setChecked(True)
-            elif self.overlay_method.currentText()=="Heatmap":
-                # fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File",
-                #                                     "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", "(*.png)")
-                fname = QFileDialog.getExistingDirectory(self.menuWindow, "Choose Directory",
-                                                    "C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\data", QFileDialog.ShowDirsOnly)
-                if fname:
-                    tim = self.ImageView.read_first_overlay(fname, method=self.overlay_method.currentText(),
-                                                            states=self.overlay_states)
-                    self.setImageOverlay(tim)
-                    self.if_image_overlay = True
-                    self.check_heatmap.setEnabled(True)
-                    self.check_heatmap.setChecked(True)
-
     def pan_direction_ops(self, value):
         if self.if_image:
-            im, updated = self.ImageView.pan(direction='mouse', value_x=value.x(), value_y=value.y())
-            self.setImage(im)
-            self.updateInfo(self.ImageView.get_info())
-            # if self.if_image_overlay and updated:
-            if self.if_image_overlay:
-                self.setImageOverlay(self.ImageView.update_overlay(method_update="down", states = self.overlay_states))
+            im, updated = self.ImageView.pan(value_x=value.x(), value_y=value.y())
+            if updated:
+                self.setImage(im)
+                self.updateInfo(self.ImageView.get_info())
+                if self.if_image_overlay:
+                    self.setImageOverlay(self.ImageView.update_overlay(method_update="down", states = self.overlay_states))
 
-    def setImage(self, image):
-        # self.orig_image.setPixmap(self.orimap.scaled(self.orig_image.size(), QtCore.Qt.KeepAspectRatio))
-        self.orig_image.setPixmap(QPixmap.fromImage(image))
-
-    def setImageOverlay(self, image):
-        print("OverLay Image is being set")
-        if self.overlay_side_by_side.isChecked():
-            self.overlay_image.setPixmap(QPixmap.fromImage(image))
-        else:
-            self.orig_image.setPixmap(QPixmap.fromImage(image))
-        print("OverLay Image is set")
-
-    def updateBar(self):
-        snd = self.menuWindow.sender()
-        if snd.text()=="ZoomIn":
+    ## Zooming Operations
+    def wheel_zoom(self, event):
+        # print("Wheel Event has been called", event, event.angleDelta())
+        if event.angleDelta().y() > 0:
             self.c_zoom_level += 1
             self.zoomSlider.setValue(self.zoomSlider.value() + 1)
-        elif snd.text()=="ZoomOut":
+            self.zoom_in_ops()
+        else:
             self.c_zoom_level -= 1
             self.zoomSlider.setValue(self.zoomSlider.value() - 1)
-        else:
-            print("SlideBar Value has been changed")
+            self.zoom_out_ops()
 
-    def updateBar_2(self):
+    def updateBar(self):
         zdiff = self.c_zoom_level - self.zoomSlider.value() - 1
         if zdiff==0:
             return
@@ -432,43 +355,55 @@ class Ui_MainWindow(object):
 
     def zoom_in_ops(self):
         if self.if_image:
-            self.zoom_in.setEnabled(False)
-            self.zoom_out.setEnabled(False)
             factor = 2
             self.setImage(self.ImageView.get_image_in(factor))
             self.updateInfo(self.ImageView.get_info())
-            print("Started Zooming into Overlay")
             if self.if_image_overlay:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_in", states = self.overlay_states))
             self.current_level.setText(str(self.ImageView.level))
-            self.zoom_out.setEnabled(True)
-            self.zoom_in.setEnabled(True)
 
     def zoom_out_ops(self):
         if self.if_image:
-            print("Inside Zoom Out Ops")
-            self.zoom_out.setEnabled(False)
-            self.zoom_in.setEnabled(False)
             factor = 2
             self.setImage(self.ImageView.get_image_out(factor))
             self.updateInfo(self.ImageView.get_info())
             if self.if_image_overlay:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_out", states = self.overlay_states))
             self.current_level.setText(str(self.ImageView.level))
-            self.zoom_in.setEnabled(True)
-            self.zoom_out.setEnabled(True)
 
+    ## Random seek using info
     def get_random_location(self, event):
         print(event.pos())
         if self.if_image:
-            self.zoom_in.setEnabled(False)
-            self.zoom_out.setEnabled(False)
-            print(self.info.size())
+            # print(self.info.size())
             self.setImage(self.ImageView.random_seek(event.pos().x(), event.pos().y(), self.info.size()))
             self.updateInfo(self.ImageView.get_info())
             print("Random Seek in Overlay")
             if self.if_image_overlay:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states))
-            self.current_level.setText(str(self.ImageView.level))
-            self.zoom_out.setEnabled(True)
-            self.zoom_in.setEnabled(True)
+
+    ## Managing Overlays
+    def select_overlays(self):
+        snd = self.menuWindow.sender()
+        print("Inside Selecting Overlays: ", snd.text())
+        if snd.text()=="Segmentation":
+            if self.if_image_overlay:
+                self.overlay_states["Seg"] = not self.overlay_states["Seg"]
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states,
+                                                                   ov_no_update=not self.overlay_states["Seg"]))
+        elif snd.text()=="Tumor Region":
+            if self.if_image_overlay:
+                self.overlay_states["Reg"] = not self.overlay_states["Reg"]
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states,
+                                                                   ov_no_update=not self.overlay_states["Reg"]))
+        elif snd.text()=="HeatMap":
+            if self.if_image_overlay:
+                self.overlay_states["Heat"] = not self.overlay_states["Heat"]
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states,
+                                                                   ov_no_update=not self.overlay_states["Heat"]))
+
+    def overlay_state_changed(self):
+        if self.overlay_side_by_side.isChecked():
+            self.overlay_image.show()
+        else:
+            self.overlay_image.hide()
