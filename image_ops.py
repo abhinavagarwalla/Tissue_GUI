@@ -5,6 +5,7 @@ from PIL import Image, ImageChops
 from image_overlay_segmask import SegMaskByPixel
 from image_overlay_tumor_region import TumorRegion
 from image_overlay_heatmap import HeatMap
+from image_overlay_nuclei import NucleiPoints
 from image_slide import ImageClass
 
 class DisplayImage():
@@ -32,33 +33,27 @@ class DisplayImage():
         self.imwidth = self.curim.size[0]
         self.coor_cur_h, self.coor_cur_w = 0, 0
         self.coor_low_h, self.coor_low_w = 0, 0
-        if self.wsiObj.level_dimensions[self.level][1] < self.bb_height or self.wsiObj.level_dimensions[self.level][0] < self.bb_width:
-            pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
-            self.startw = int((pim.size[0]-self.curim.size[0])/2)
-            self.starth = int((pim.size[1]-self.curim.size[1])/2)
-            pim.paste(self.curim, (self.startw, self.starth))
+        if self.imheight < self.bb_height or self.imwidth < self.bb_width:
+            pim = self.pad_image()
             return ImageQt(self.orim), ImageQt(pim), self.level
         return ImageQt(self.orim), ImageQt(self.curim), self.level
 
     def get_image_in(self, factor=2):
         if self.imheight*factor < self.bb_height and self.imwidth*factor < self.bb_width:
-            pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
             self.curim = self.curim.resize((2*self.curim.size[0], 2*self.curim.size[1]), Image.ANTIALIAS)
-            self.imheight *= factor
-            self.imwidth *= factor
-            self.startw = int((pim.size[0] - self.curim.size[0]) / 2)
-            self.starth = int((pim.size[1] - self.curim.size[1]) / 2)
-            pim.paste(self.curim, (self.startw, self.starth))
-            return ImageQt(pim)
+            self.imheight = self.curim.size[1]
+            self.imwidth = self.curim.size[0]
+            if self.imheight < self.bb_height or self.imwidth < self.bb_width:
+                pim = self.pad_image()
+                return ImageQt(pim)
         if self.imheight*factor >= self.bb_height:
             if self.imwidth*factor >= self.bb_width:
                 print("Inside Popular condition")
-                centerh = self.coor_cur_h + self.imheight / 2
-                centerw = self.coor_cur_w + self.imwidth / 2
-                left = int(centerw - self.bb_width/4)
-                top = int(centerh - self.bb_height/4)
-
                 if self.level:
+                    centerh = self.coor_cur_h + self.imheight / 2
+                    centerw = self.coor_cur_w + self.imwidth / 2
+                    left = int(centerw - self.bb_width / 4)
+                    top = int(centerh - self.bb_height / 4)
                     self.level -= 1
                     self.coor_cur_h = 2 * top
                     self.coor_cur_w = 2 * left
@@ -67,41 +62,43 @@ class DisplayImage():
                     # self.curim.show()
                     self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                          (self.bb_width, self.bb_height))
-                    self.imheight, self.imwidth = self.bb_height, self.bb_width
-                    self.starth, self.startw = 0, 0
+                    self.imheight = self.curim.size[1]
+                    self.imwidth = self.curim.size[0]
+                    ##Add padding Code here
+                    if self.imheight < self.bb_height or self.imwidth < self.bb_width:
+                        pim = self.pad_image()
+                        return ImageQt(pim)
                     return ImageQt(self.curim)
                 else:
                     return ImageQt(self.curim)
             else:
                 print("I am in height condition")
-                pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
-                centerh = self.imheight/2
-                left = 0
-                top = int(centerh - self.bb_height/ 4)
                 if self.level:
+                    centerh = self.imheight / 2
+                    left = 0
+                    top = int(centerh - self.bb_height / 4)
                     self.level -= 1
                     self.coor_cur_h = 2 * top
                     self.coor_cur_w = 2 * left
                     self.coor_low_h = int(pow(2, self.level) * self.coor_cur_h)
                     self.coor_low_w = int(pow(2, self.level) * self.coor_cur_w)
-                    self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level, (self.imwidth*2, self.bb_height))
+                    self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
+                                                         (self.imwidth*2, self.bb_height))
 
-                    self.imheight = self.bb_height
-                    self.imwidth *= 2
-                    self.startw = int((pim.size[0] - self.curim.size[0]) / 2)
-                    self.starth = 0
-                    pim.paste(self.curim,(self.startw, 0))
-                    return ImageQt(pim)
+                    self.imheight = self.curim.size[1]
+                    self.imwidth = self.curim.size[0]
+                    if self.imheight < self.bb_height or self.imwidth < self.bb_width:
+                        pim = self.pad_image()
+                        return ImageQt(pim)
                 else:
                     return ImageQt(self.curim)
         if self.imwidth*factor >= self.bb_width:
             print("I am in width condition")
             print(self.imwidth, self.bb_width)
-            pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
-            centerw = self.imwidth/2
-            left = centerw - int(self.bb_width/4)
-            top = 0
             if self.level:
+                centerw = self.imwidth / 2
+                left = centerw - int(self.bb_width / 4)
+                top = 0
                 self.level -= 1
                 self.coor_cur_h = 2 * top
                 self.coor_cur_w = 2 * left
@@ -110,32 +107,29 @@ class DisplayImage():
                 self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                      (self.bb_width, 2*self.im_height))
 
-                self.imheight *= 2
-                self.imwidth = self.bb_width
-                self.startw = 0
-                self.starth = int((pim.size[1] - self.curim.size[1]) / 2)
-                pim.paste(self.curim, (0, self.starth))
-                return ImageQt(pim)
+                self.imheight = self.curim.size[1]
+                self.imwidth = self.curim.size[0]
+                if self.imheight < self.bb_height or self.imwidth < self.bb_width:
+                    pim = self.pad_image()
+                    return ImageQt(pim)
             else:
                 return ImageQt(self.curim)
 
     def get_image_out(self, factor=2):
         if self.imheight < self.bb_height and self.imwidth < self.bb_width:
-            pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
             print("Inside the right box")
             self.curim = self.curim.resize((int(self.curim.size[0]/2), int(self.curim.size[1]/2)), Image.ANTIALIAS)
-            self.imheight = int(self.imheight/factor)
-            self.imwidth = int(self.imwidth/factor)
-            self.startw = int((pim.size[0] - self.curim.size[0]) / 2)
-            self.starth = int((pim.size[1] - self.curim.size[1]) / 2)
-            pim.paste(self.curim, (self.startw, self.starth))
-            return ImageQt(pim)
+            self.imheight = self.curim.size[1]
+            self.imwidth = self.curim.size[0]
+            if self.imheight < self.bb_height or self.imwidth < self.bb_width:
+                pim = self.pad_image()
+                return ImageQt(pim)
         if self.imheight >= self.bb_height:
             if self.imwidth >= self.bb_width:
                 print("Out: Inside Popular condition")
-                centerh = self.coor_cur_h + self.imheight / 2
-                centerw = self.coor_cur_w + self.imwidth / 2
                 if self.level!=self.wsiObj.level_count-1:
+                    centerh = self.coor_cur_h + self.imheight / 2
+                    centerw = self.coor_cur_w + self.imwidth / 2
                     self.level += 1
                     self.coor_cur_h = int(centerh/2 - self.bb_height/2)
                     self.coor_cur_w = int(centerw/2 - self.bb_width/2)
@@ -144,54 +138,54 @@ class DisplayImage():
                     self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                          (self.bb_width, self.bb_height))
                     print("REgion Processing Complete")
-                    self.imheight, self.imwidth = self.bb_height, self.bb_width
-                    self.starth, self.startw = 0, 0
+                    self.imheight = self.curim.size[1]
+                    self.imwidth = self.curim.size[0]
+                    ## Add padding code here
+                    if self.imheight < self.bb_height or self.imwidth < self.bb_width:
+                        pim = self.pad_image()
+                        return ImageQt(pim)
                     return ImageQt(self.curim)
                 else:
                     return ImageQt(self.curim)
             else:
                 print("I am in height condition")
-                pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
-                centerh = self.coor_cur_h + self.imheight / 2
-                centerw = self.coor_cur_w + self.imwidth / 2
                 if self.level != self.wsiObj.level_count - 1:
+                    centerh = self.coor_cur_h + self.imheight / 2
+                    centerw = self.coor_cur_w + self.imwidth / 2
                     self.level += 1
                     self.coor_cur_h = int(centerh / 2 - self.bb_height / 2)
                     self.coor_cur_w = int(centerw / 2 - self.imwidth / 4)
                     self.coor_low_h = pow(2, self.level) * self.coor_cur_h
                     self.coor_low_w = pow(2, self.level) * self.coor_cur_w
-                    self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level, (self.imwidth/2, self.bb_height))
+                    self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
+                                                         (int(self.imwidth/2), self.bb_height))
 
-                    self.imheight = self.bb_height
-                    self.imwidth /= 2
-                    self.startw = int((pim.size[0] - self.curim.size[0]) / 2)
-                    self.starth = 0
-                    pim.paste(self.curim,(self.startw, 0))
-                    return ImageQt(pim)
+                    self.imheight = self.curim.size[1]
+                    self.imwidth = self.curim.size[0]
+                    if self.imheight < self.bb_height or self.imwidth < self.bb_width:
+                        pim = self.pad_image()
+                        return ImageQt(pim)
                 else:
                     return ImageQt(self.curim)
         if self.imwidth >= self.bb_width:
             print("I am in width condition")
             print(self.imwidth, self.bb_width)
-            pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
-            centerh = self.coor_cur_h + self.imheight / 2
-            centerw = self.coor_cur_w + self.imwidth / 2
-
             if self.level != self.wsiObj.level_count - 1:
+                centerh = self.coor_cur_h + self.imheight / 2
+                centerw = self.coor_cur_w + self.imwidth / 2
                 self.level += 1
                 self.coor_cur_h = int(centerh / 2 - self.imheight / 4)
                 self.coor_cur_w = int(centerw / 2 - self.bb_width / 2)
                 self.coor_low_h = pow(2, self.level) * self.coor_cur_h
                 self.coor_low_w = pow(2, self.level) * self.coor_cur_w
                 self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
-                                                     (self.bb_width, self.imheight/2))
+                                                     (self.bb_width, int(self.imheight/2)))
 
-                self.imheight /= 2
-                self.imwidth = self.bb_width
-                self.startw = 0
-                self.starth = int((pim.size[1] - self.curim.size[1]) / 2)
-                pim.paste(self.curim, (0, self.starth))
-                return ImageQt(pim)
+                self.imheight = self.curim.size[1]
+                self.imwidth = self.curim.size[0]
+                if self.imheight < self.bb_height or self.imwidth < self.bb_width:
+                    pim = self.pad_image()
+                    return ImageQt(pim)
             else:
                 return ImageQt(self.curim)
 
@@ -205,6 +199,19 @@ class DisplayImage():
         if h+imh>H:
             return False
         return True
+
+    def pad_image(self, image=None):
+        if image:
+            pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
+            self.startw = int((pim.size[0] - image.size[0]) / 2)
+            self.starth = int((pim.size[1] - image.size[1]) / 2)
+            pim.paste(image, (self.startw, self.starth))
+            return pim
+        pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
+        self.startw = int((pim.size[0] - self.curim.size[0]) / 2)
+        self.starth = int((pim.size[1] - self.curim.size[1]) / 2)
+        pim.paste(self.curim, (self.startw, self.starth))
+        return pim
 
     def pan(self, value_x=None, value_y=None):
         if_updated = False
@@ -220,6 +227,12 @@ class DisplayImage():
                     if_updated = True
         self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                  (self.bb_width, self.bb_height))
+        self.imheight = self.curim.size[1]
+        self.imwidth = self.curim.size[0]
+        ## Pad if smaller region
+        if self.imheight < self.bb_height or self.imwidth < self.bb_width:
+            pim = self.pad_image()
+            return ImageQt(pim), if_updated
         return ImageQt(self.curim), if_updated
 
     def read_first_overlay(self, filename, method=None, method_update="init", states=None):
@@ -231,14 +244,14 @@ class DisplayImage():
                                                          self.imheight, method_update)
             self.overlay_on_orig_image(state="Seg")
             return self.overlay_all(states)
-        if method=="Tumor Region":
+        elif method=="Tumor Region":
             print("Tumor Regions")
             self.overlayObj["Reg"] = TumorRegion(filename, self.wsiObj, self.bb_height, self.bb_width)
             self.overlayim["Reg"] = self.overlayObj["Reg"].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
                                                          self.imheight, method_update)
             self.overlay_on_orig_image(state="Reg")
             return self.overlay_all(states)
-        if method=="Heatmap":
+        elif method=="Heatmap":
             print("HeatMap")
             self.overlayObj["Heat"] = HeatMap(filename, self.wsiObj, self.bb_height, self.bb_width)
             self.overlayim["Heat"] = self.overlayObj["Heat"].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h,
@@ -246,15 +259,23 @@ class DisplayImage():
                                                                        self.imheight, method_update)
             self.overlay_on_orig_image(state="Heat")
             return self.overlay_all(states)
+        elif method=="Nuclei Position":
+            print("Nuclei Position")
+            self.overlayObj["Nuclei"] = NucleiPoints(filename, self.wsiObj, self.bb_height, self.bb_width)
+            self.overlayim["Nuclei"] = self.overlayObj["Nuclei"].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
+                                                         self.imheight, method_update)
+            self.overlay_on_orig_image(state="Nuclei")
+            return self.overlay_all(states)
 
-    def update_overlay(self, method_update="init", step=None, states=None, ov_no_update=None):
+    def update_overlay(self, method_update="init", step=None, states=None, ov_no_update=None, class_states=None):
         print("inside update_overlay in ImageOps ", states)
         if ov_no_update:
             return self.overlay_all(states)
         for k, v in states.items():
             if v:
+                print("Value of class statues: ", class_states)
                 self.overlayim[k] = self.overlayObj[k].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,
-                                                         self.imheight, method_update, step)
+                                                         self.imheight, method_update, step, class_states=class_states)
         return self.overlay_all(states)
 
     def overlay_all(self, states):
@@ -267,24 +288,37 @@ class DisplayImage():
                     print("Blending Image together", self.t.size, self.overlayim["Seg"].size)
                     self.t = Image.blend(self.t, self.overlayim["Seg"], 0.7)
                 elif k=="Reg":
-                    self.t = ImageChops.multiply(self.t, self.overlayim["Reg"])
+                    # self.t = ImageChops.multiply(self.t, self.overlayim["Reg"])
+                    self.t = Image.alpha_composite(self.t, self.overlayim["Reg"])
                 elif k=="Heat":
                     print(self.t.size, self.overlayim["Heat"].size, self.t.mode, self.overlayim["Heat"].mode)
                     self.t = Image.blend(self.t, self.overlayim["Heat"], 0.4)
-        # self.t.show()
+                elif k=="Nuclei":
+                    self.t = Image.alpha_composite(self.t, self.overlayim["Nuclei"])
+        if self.imheight < self.bb_height or self.imwidth < self.bb_width:
+            pim = self.pad_image(image=self.t)
+            pim.show()
+            return ImageQt(pim)
         return ImageQt(self.t)
 
     def overlay_on_orig_image(self, state=None):
         if state=="Seg":
-            self.overlayim["Seg"].save("Segmentation_overlay.png")
+            # self.overlayim["Seg"].save("Segmentation_overlay.png")
             self.overlayim["Seg"] = Image.blend(self.curim, self.overlayim["Seg"], 0.7)
         elif state=="Reg":
-            self.overlayim["Reg"].save("Region_overlay.png")
+            # self.overlayim["Reg"].save("Region_overlay.png")
             self.overlayim["Reg"] = ImageChops.multiply(self.curim, self.overlayim["Reg"])
         elif state=="Heat":
-            self.overlayim["Heat"].save("Heatmap_overlay.png")
+            # self.overlayim["Heat"].save("Heatmap_overlay.png")
             self.overlayim["Heat"] = Image.blend(self.curim, self.overlayim["Heat"], 0.4)
-        self.curim.save("Current_Image.png")
+        elif state=="Nuclei":
+            print("overlaying on original image", self.curim, self.overlayim["Nuclei"])
+            self.overlayim["Nuclei"] = Image.alpha_composite(self.curim, self.overlayim["Nuclei"])
+        # self.curim.save("Current_Image.png")
+
+    def get_number_classes(self):
+        if self.overlayim["Nuclei"]:
+            return self.overlayObj["Nuclei"].nclasses
 
     def get_info(self):
         ocvim = cv.cvtColor(np.array(self.orim), cv.COLOR_RGB2BGR)
@@ -312,4 +346,10 @@ class DisplayImage():
         self.coor_low_h = pow(2, self.level) * self.coor_cur_h
         self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                              (self.bb_width, self.bb_height))
+        self.imheight = self.curim.size[1]
+        self.imwidth = self.curim.size[0]
+        ##Add padding here in case of smaller region fetched
+        if self.imheight < self.bb_height or self.imwidth < self.bb_width:
+            pim = self.pad_image()
+            return ImageQt(pim)
         return ImageQt(self.curim)

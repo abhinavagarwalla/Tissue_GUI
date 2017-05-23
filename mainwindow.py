@@ -69,6 +69,36 @@ class Ui_MainWindow(object):
         self.zoomSlider.setTickInterval(1)
         self.zoomSlider.setObjectName("zoomSlider")
         self.verticalLayout_4.addWidget(self.zoomSlider)
+        self.overlay_group = QtWidgets.QGroupBox(self.vis)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.overlay_group.sizePolicy().hasHeightForWidth())
+        self.overlay_group.setSizePolicy(sizePolicy)
+        self.overlay_group.setObjectName("overlay_group")
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.overlay_group)
+        self.gridLayout_2.setContentsMargins(11, 11, 11, 11)
+        self.gridLayout_2.setSpacing(6)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.class_0 = QtWidgets.QCheckBox(self.overlay_group)
+        self.class_0.setObjectName("class_0")
+        self.gridLayout_2.addWidget(self.class_0, 0, 0, 1, 1)
+        self.class_1 = QtWidgets.QCheckBox(self.overlay_group)
+        self.class_1.setObjectName("class_1")
+        self.gridLayout_2.addWidget(self.class_1, 0, 1, 1, 1)
+        self.class_2 = QtWidgets.QCheckBox(self.overlay_group)
+        self.class_2.setObjectName("class_2")
+        self.gridLayout_2.addWidget(self.class_2, 1, 0, 1, 1)
+        self.class_3 = QtWidgets.QCheckBox(self.overlay_group)
+        self.class_3.setObjectName("class_3")
+        self.gridLayout_2.addWidget(self.class_3, 1, 1, 1, 1)
+        self.class_4 = QtWidgets.QCheckBox(self.overlay_group)
+        self.class_4.setObjectName("class_4")
+        self.gridLayout_2.addWidget(self.class_4, 2, 0, 1, 1)
+        self.class_5 = QtWidgets.QCheckBox(self.overlay_group)
+        self.class_5.setObjectName("class_5")
+        self.gridLayout_2.addWidget(self.class_5, 2, 1, 1, 1)
+        self.verticalLayout_4.addWidget(self.overlay_group)
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setContentsMargins(5, 5, 5, 5)
         self.gridLayout.setSpacing(6)
@@ -195,6 +225,13 @@ class Ui_MainWindow(object):
         self.load_image.setText(_translate("MainWindow", "Load Image"))
         self.save_image.setText(_translate("MainWindow", "PushButton"))
         self.info.setText(_translate("MainWindow", "TextLabel"))
+        self.overlay_group.setTitle(_translate("MainWindow", "GroupBox"))
+        self.class_0.setText(_translate("MainWindow", "CheckBox"))
+        self.class_1.setText(_translate("MainWindow", "CheckBox"))
+        self.class_2.setText(_translate("MainWindow", "CheckBox"))
+        self.class_3.setText(_translate("MainWindow", "CheckBox"))
+        self.class_4.setText(_translate("MainWindow", "CheckBox"))
+        self.class_5.setText(_translate("MainWindow", "CheckBox"))
         self.current_level_label.setText(_translate("MainWindow", "Current Level"))
         self.current_level.setPlaceholderText(_translate("MainWindow", "NA"))
         self.overlay_method.setItemText(0, _translate("MainWindow", "Segmentation Mask (by Pixel)"))
@@ -232,6 +269,8 @@ class Ui_MainWindow(object):
         self.orig_image.mouseMoveEvent = self.mouse_orig
         self.orig_image.wheelEvent = self.wheel_zoom
         self.info.mousePressEvent = self.get_random_location
+
+        ##Overlays
         self.overlay_side_by_side.stateChanged.connect(self.overlay_state_changed)
         self.overlay_image.hide()
         self.overlay_side_by_side.setEnabled(False)
@@ -247,6 +286,19 @@ class Ui_MainWindow(object):
         self.check_nuclei.stateChanged.connect(self.select_overlays)
         self.check_others.stateChanged.connect(self.select_overlays)
 
+        self.overlay_group.hide()
+        self.overlay_group.setEnabled(False)
+        self.overlay_group_dict = {0: self.class_0, 1: self.class_1, 2: self.class_2,
+                                   3: self.class_3, 4: self.class_4, 5: self.class_5}
+        self.overlay_group_states = {0: False, 1: False, 2: False,
+                                   3: False, 4: False, 5: False}
+        self.class_0.stateChanged.connect(self.select_class)
+        self.class_1.stateChanged.connect(self.select_class)
+        self.class_2.stateChanged.connect(self.select_class)
+        self.class_3.stateChanged.connect(self.select_class)
+        self.class_4.stateChanged.connect(self.select_class)
+        self.class_5.stateChanged.connect(self.select_class)
+
     ## Functions for reading files, setting PixMaps
     def get_file(self):
         fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", os.getcwd(), "(*.tif *.jp2)")
@@ -257,6 +309,7 @@ class Ui_MainWindow(object):
             self.setImage(curim)
             self.updateInfo(orim)
             self.zoomSlider.setMaximum(nlevel)
+            self.zoomSlider.setValue(0)
             self.c_zoom_level = 0
             self.current_level.setText(str(self.ImageView.level))
 
@@ -291,6 +344,15 @@ class Ui_MainWindow(object):
                     self.if_image_overlay += 1
                     self.check_heatmap.setEnabled(True)
                     self.check_heatmap.setChecked(True)
+            elif self.overlay_method.currentText()=="Nuclei Position":
+                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", os.getcwd(), "(*.mat)")
+                if fname[0]:
+                    tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),
+                                                            states=self.overlay_states)
+                    self.setImageOverlay(tim)
+                    self.if_image_overlay += 1
+                    self.check_nuclei.setEnabled(True)
+                    self.check_nuclei.setChecked(True)
 
     def setImage(self, image):
         self.orig_image.setPixmap(QPixmap.fromImage(image))
@@ -401,7 +463,28 @@ class Ui_MainWindow(object):
                 self.overlay_states["Heat"] = not self.overlay_states["Heat"]
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states,
                                                                    ov_no_update=not self.overlay_states["Heat"]))
+        elif snd.text()=="Nuclei Position":
+            if self.if_image_overlay:
+                self.overlay_states["Nuclei"] = not self.overlay_states["Nuclei"]
+                self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states,
+                                                                   ov_no_update=not self.overlay_states["Nuclei"],
+                                                                   class_states=self.overlay_group_states))
+                print(self.ImageView.get_number_classes())
+                self.overlay_group.setEnabled(True)
+                for i in range(self.ImageView.get_number_classes()):
+                    self.overlay_group_dict[i].setEnabled(True)
+                    self.overlay_group_dict[i].setText("Class " + str(i))
+                    self.overlay_group_dict[i].setChecked(True)
+                self.overlay_group.show()
 
+    def select_class(self):
+        print("Value of state changed of ", self.menuWindow.sender().objectName(), self.menuWindow.sender())
+        snd = self.menuWindow.sender().objectName()
+        self.overlay_group_states[int(snd.split('_')[1])] = not self.overlay_group_states[int(snd.split('_')[1])]
+        print("From select class function: ", self.overlay_group_states)
+        self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states,
+                                                           ov_no_update=not self.overlay_states["Nuclei"],
+                                                           class_states=self.overlay_group_states))
     def overlay_state_changed(self):
         if self.overlay_side_by_side.isChecked():
             self.overlay_image.show()

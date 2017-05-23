@@ -18,7 +18,7 @@ class HeatMap():
         self.overlayim = None
         self.cmap = plt.get_cmap("YlOrRd")
 
-    def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None):
+    def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None, class_states=None):
         print("Getting Simple Overlay", self.level_fetch, level, coorw, coorh, width, height)
         if level >= self.level_fetch:
             self.overlayim = self.ovObj.read_region((coorw, coorh), level - self.level_fetch, (width, height))

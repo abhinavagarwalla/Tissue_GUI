@@ -14,7 +14,7 @@ class TumorRegion():
         self.low_polygons = [Polygon(np.vstack((i[0][:,1],i[0][:,0])).T) for i in self.ovObj if i[0].shape[0]>3]
         self.npolygons = len(self.low_polygons)
 
-    def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None):
+    def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None, class_states=None):
         print("Started Getting Overlay")
         self.clevel = level-1
         self.coor_low_w = pow(2, self.clevel) * coorw
@@ -25,8 +25,8 @@ class TumorRegion():
                        (self.coor_low_w + self.low_width, self.coor_low_h + self.low_height),
                        (self.coor_low_w, self.coor_low_h + self.low_height)])
 
-        pim = np.ones((height, width, 3), np.uint8)
-        pim *= 255
+        pim = np.zeros((height, width, 4), np.uint8)
+        # pim *= 255
 
         for i in range(self.npolygons):
             if self.low_polygons[i].is_valid and imp.intersects(self.low_polygons[i]):
@@ -36,11 +36,11 @@ class TumorRegion():
                         for kp in range(len(region_intersect)):
                             rel_img_coords = np.array(region_intersect[kp].exterior.coords)-(self.coor_low_w, self.coor_low_h)
                             pcoors = np.array(rel_img_coords/pow(2, self.clevel)).astype(np.int32).reshape((-1, 1, 2))
-                            pim = cv.polylines(pim, [pcoors], True, (0, 255, 0), 3)
+                            pim = cv.polylines(pim, [pcoors], True, (0, 255, 0, 255), 3)
                     elif isinstance(region_intersect, Polygon):
                         rel_img_coords = np.array(region_intersect.exterior.coords) - (self.coor_low_w, self.coor_low_h)
                         pcoors = np.array(rel_img_coords/pow(2, self.clevel)).astype(np.int32).reshape((-1, 1, 2))
-                        pim = cv.polylines(pim, [pcoors], True, (0, 255, 0), 3)
+                        pim = cv.polylines(pim, [pcoors], True, (0, 255, 0, 255), 3)
                     else:
                         pass
         self.overlayim = Image.fromarray(pim).convert("RGBA")

@@ -44,7 +44,7 @@ class SegMaskByPixel():
         self.overlayim = self.ovObj.read_region((coor_low_w, coor_low_h), level, (width, height))
         return self.overlayim
 
-    def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None):
+    def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None, class_states=None):
         if self.type=="OpenSlide":
             return self.get_overlay_openslide(level, coorw, coorh, width, height, method, step)
         elif self.type=="Image":
