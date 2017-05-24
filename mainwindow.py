@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtGui import QPixmap
 from image_ops import DisplayImage
 import os
+from dl_interface import Worker
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -167,7 +168,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.orig_image = QtWidgets.QLabel(self.vis)
         self.orig_image.setEnabled(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
+                                           QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.orig_image.sizePolicy().hasHeightForWidth())
@@ -180,7 +182,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.orig_image)
         self.overlay_image = QtWidgets.QLabel(self.vis)
         self.overlay_image.setEnabled(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
+                                           QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.overlay_image.sizePolicy().hasHeightForWidth())
@@ -196,6 +199,9 @@ class Ui_MainWindow(object):
         self.tabs.addTab(self.vis, "")
         self.training = QtWidgets.QWidget()
         self.training.setObjectName("training")
+        self.label = QtWidgets.QLabel(self.training)
+        self.label.setGeometry(QtCore.QRect(320, 100, 47, 13))
+        self.label.setObjectName("label")
         self.tabs.addTab(self.training, "")
         self.horizontalLayout_4.addWidget(self.tabs)
         MainWindow.setCentralWidget(self.centralWidget)
@@ -213,7 +219,8 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
         self.menuBar.addAction(self.menuWindow.menuAction())
 
-        self.intialize_signals_slots()
+        self.initialize_signals_slots()
+        self.initialize_worker_thread()
         self.retranslateUi(MainWindow)
         self.overlay_method.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -251,10 +258,11 @@ class Ui_MainWindow(object):
         self.overlay_image.setToolTip(_translate("MainWindow", "\"Overlay Image\""))
         self.overlay_image.setText(_translate("MainWindow", "Overlay Image"))
         self.tabs.setTabText(self.tabs.indexOf(self.vis), _translate("MainWindow", "Visualisation"))
+        self.label.setText(_translate("MainWindow", "TextLabel"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
-    def intialize_signals_slots(self):
+    def initialize_signals_slots(self):
         # Bind all the signal and slots here
         self.if_image = False
         self.if_image_overlay = 0
@@ -292,12 +300,26 @@ class Ui_MainWindow(object):
                                    3: self.class_3, 4: self.class_4, 5: self.class_5}
         self.overlay_group_states = {0: False, 1: False, 2: False,
                                    3: False, 4: False, 5: False}
+        self.colors = [(255, 0, 255, 255), (255, 0, 0, 255), (0, 255, 0, 255),
+                       (255, 128, 0, 255), (0, 0, 0, 255), (0, 0, 255, 255)]
         self.class_0.stateChanged.connect(self.select_class)
         self.class_1.stateChanged.connect(self.select_class)
         self.class_2.stateChanged.connect(self.select_class)
         self.class_3.stateChanged.connect(self.select_class)
         self.class_4.stateChanged.connect(self.select_class)
         self.class_5.stateChanged.connect(self.select_class)
+
+    def initialize_worker_thread(self):
+        self.worker = Worker()
+        self.thread = QtCore.QThread()
+        self.worker.intReady.connect(self.onIntReady)
+        self.worker.moveToThread(self.thread)
+        self.worker.finished.connect(self.thread.quit)
+        self.thread.started.connect(self.worker.procCounter)
+        self.thread.start()
+
+    def onIntReady(self, i):
+        self.label.setText("{}".format(i))
 
     ## Functions for reading files, setting PixMaps
     def get_file(self):
@@ -474,6 +496,7 @@ class Ui_MainWindow(object):
                 for i in range(self.ImageView.get_number_classes()):
                     self.overlay_group_dict[i].setEnabled(True)
                     self.overlay_group_dict[i].setText("Class " + str(i))
+                    self.overlay_group_dict[i].setStyleSheet("color: rgb" + str(self.colors[i]))
                     self.overlay_group_dict[i].setChecked(True)
                 self.overlay_group.show()
 
