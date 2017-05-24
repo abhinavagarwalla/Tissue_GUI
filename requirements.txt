@@ -1,0 +1,11 @@
+PyQt5
+Pillow
+opencv-python
+openslide-python
+scipy
+numpy
+matplotlib
+shapely
+
+Only for jp2 images:
+Matlab-Engine API for python

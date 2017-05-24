@@ -297,7 +297,7 @@ class DisplayImage():
                     self.t = Image.alpha_composite(self.t, self.overlayim["Nuclei"])
         if self.imheight < self.bb_height or self.imwidth < self.bb_width:
             pim = self.pad_image(image=self.t)
-            pim.show()
+            # pim.show()
             return ImageQt(pim)
         return ImageQt(self.t)
 
