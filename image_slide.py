@@ -8,7 +8,8 @@ import os
 class ImageClass():
     def __init__(self, filename):
         print("Initiating class with ", filename)
-        if ".tif" in filename:
+        olist = ["tif", "ndpi", "vms", "vmu", "svs", "mrxs", "scn", "svslide", "bif"]
+        if filename.split('.')[-1] in olist:
             self.wsiObj = ops.OpenSlide(filename)
             self.level_count = self.wsiObj.level_count
             self.level_dimensions = self.wsiObj.level_dimensions

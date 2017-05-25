@@ -168,8 +168,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.orig_image = QtWidgets.QLabel(self.vis)
         self.orig_image.setEnabled(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
-                                           QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.orig_image.sizePolicy().hasHeightForWidth())
@@ -182,8 +181,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.orig_image)
         self.overlay_image = QtWidgets.QLabel(self.vis)
         self.overlay_image.setEnabled(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
-                                           QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.overlay_image.sizePolicy().hasHeightForWidth())
@@ -211,12 +209,30 @@ class Ui_MainWindow(object):
         self.select_model = QtWidgets.QPushButton(self.training)
         self.select_model.setGeometry(QtCore.QRect(60, 240, 212, 23))
         self.select_model.setObjectName("select_model")
-        self.image_path_2 = QtWidgets.QLineEdit(self.training)
-        self.image_path_2.setGeometry(QtCore.QRect(280, 240, 801, 20))
-        self.image_path_2.setObjectName("image_path_2")
+        self.model_path = QtWidgets.QLineEdit(self.training)
+        self.model_path.setGeometry(QtCore.QRect(280, 240, 801, 20))
+        self.model_path.setObjectName("model_path")
         self.start_eval = QtWidgets.QPushButton(self.training)
-        self.start_eval.setGeometry(QtCore.QRect(190, 290, 121, 23))
+        self.start_eval.setGeometry(QtCore.QRect(280, 420, 121, 23))
         self.start_eval.setObjectName("start_eval")
+        self.label_2 = QtWidgets.QLabel(self.training)
+        self.label_2.setGeometry(QtCore.QRect(80, 160, 141, 21))
+        self.label_2.setObjectName("label_2")
+        self.select_level = QtWidgets.QComboBox(self.training)
+        self.select_level.setGeometry(QtCore.QRect(170, 160, 69, 22))
+        self.select_level.setObjectName("select_level")
+        self.label_3 = QtWidgets.QLabel(self.training)
+        self.label_3.setGeometry(QtCore.QRect(100, 280, 71, 31))
+        self.label_3.setObjectName("label_3")
+        self.label_4 = QtWidgets.QLabel(self.training)
+        self.label_4.setGeometry(QtCore.QRect(100, 310, 41, 31))
+        self.label_4.setObjectName("label_4")
+        self.select_patch_size = QtWidgets.QLineEdit(self.training)
+        self.select_patch_size.setGeometry(QtCore.QRect(190, 280, 113, 20))
+        self.select_patch_size.setObjectName("select_patch_size")
+        self.select_stride = QtWidgets.QLineEdit(self.training)
+        self.select_stride.setGeometry(QtCore.QRect(200, 320, 113, 20))
+        self.select_stride.setObjectName("select_stride")
         self.tabs.addTab(self.training, "")
         self.horizontalLayout_4.addWidget(self.tabs)
         MainWindow.setCentralWidget(self.centralWidget)
@@ -277,6 +293,9 @@ class Ui_MainWindow(object):
         self.select_image_train.setText(_translate("MainWindow", "Select Image"))
         self.select_model.setText(_translate("MainWindow", "Select Model"))
         self.start_eval.setText(_translate("MainWindow", "Start Evaluation"))
+        self.label_2.setText(_translate("MainWindow", "Level to Select: "))
+        self.label_3.setText(_translate("MainWindow", "Patch Size"))
+        self.label_4.setText(_translate("MainWindow", "Stride"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
@@ -345,7 +364,10 @@ class Ui_MainWindow(object):
 
     ## Functions for reading files, setting PixMaps
     def get_file(self):
-        fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", os.getcwd(), "(*.tif *.jp2)")
+        fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", os.getcwd(), "(*.tif *.jp2 *.ndpi"
+                                                                                       " *.vms *.vmu *.svs"
+                                                                                       " *.tiff *.mrxs *.scn"
+                                                                                       "*.svslide *.bif)")
         if fname[0]:
             self.ImageView = DisplayImage(fname[0],self.orig_image.height(), self.orig_image.width())
             self.if_image = True
@@ -540,11 +562,16 @@ class Ui_MainWindow(object):
             self.overlay_image.hide()
 
     def select_WSI(self):
-        fname = QFileDialog.getOpenFileName(self.menuWindow, "Select Whole Slide Image", os.getcwd(), "(*.tif *.jp2)")
+        fname = QFileDialog.getOpenFileName(self.menuWindow, "Select Whole Slide Image", os.getcwd(), "(*.tif *.jp2 *.ndpi"
+                                                                                       " *.vms *.vmu *.svs"
+                                                                                       " *.tiff *.mrxs *.scn"
+                                                                                       "*.svslide *.bif)")
         if fname[0]:
             print(fname[0])
+            self.image_path.setText(fname[0])
 
     def select_dl_model(self):
-        fname = QFileDialog.getOpenFileName(self.menuWindow, "Select DL Checkpoint", os.getcwd())
+        fname = QFileDialog.getOpenFileName(self.menuWindow, "Select DL Checkpoint", os.getcwd(), "*.meta")
         if fname[0]:
             print(fname[0])
+            self.model_path.setText(fname[0])
