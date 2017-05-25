@@ -34,4 +34,7 @@ class HeatMap():
         self.overlayim = np.array(self.overlayim.convert("L")) / 99
         self.overlayim = np.uint8(self.cmap(self.overlayim) * 255)
         self.overlayim = Image.fromarray(self.overlayim)
+        bands = list(self.overlayim.split())
+        bands[3] = bands[3].point(lambda x: x * 0.5)
+        self.overlayim = Image.merge(self.overlayim.mode, bands)
         return self.overlayim

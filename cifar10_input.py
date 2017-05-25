@@ -74,7 +74,7 @@ def read_cifar10(filename_queue):
     # fixed number of bytes for each.
     record_bytes = label_bytes + image_bytes
 
-    # Read a record, getting filenames from the filename_queue.  No
+    # R ead a record, getting filenames from the filename_queue.  No
     # header or footer in the CIFAR-10 format, so we leave header_bytes
     # and footer_bytes at their default of 0.
     reader = tf.FixedLengthRecordReader(record_bytes=record_bytes)

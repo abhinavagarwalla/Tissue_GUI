@@ -200,8 +200,23 @@ class Ui_MainWindow(object):
         self.training = QtWidgets.QWidget()
         self.training.setObjectName("training")
         self.label = QtWidgets.QLabel(self.training)
-        self.label.setGeometry(QtCore.QRect(320, 100, 47, 13))
+        self.label.setGeometry(QtCore.QRect(350, 100, 431, 61))
         self.label.setObjectName("label")
+        self.select_image_train = QtWidgets.QPushButton(self.training)
+        self.select_image_train.setGeometry(QtCore.QRect(60, 200, 212, 23))
+        self.select_image_train.setObjectName("select_image_train")
+        self.image_path = QtWidgets.QLineEdit(self.training)
+        self.image_path.setGeometry(QtCore.QRect(280, 200, 801, 20))
+        self.image_path.setObjectName("image_path")
+        self.select_model = QtWidgets.QPushButton(self.training)
+        self.select_model.setGeometry(QtCore.QRect(60, 240, 212, 23))
+        self.select_model.setObjectName("select_model")
+        self.image_path_2 = QtWidgets.QLineEdit(self.training)
+        self.image_path_2.setGeometry(QtCore.QRect(280, 240, 801, 20))
+        self.image_path_2.setObjectName("image_path_2")
+        self.start_eval = QtWidgets.QPushButton(self.training)
+        self.start_eval.setGeometry(QtCore.QRect(190, 290, 121, 23))
+        self.start_eval.setObjectName("start_eval")
         self.tabs.addTab(self.training, "")
         self.horizontalLayout_4.addWidget(self.tabs)
         MainWindow.setCentralWidget(self.centralWidget)
@@ -258,7 +273,10 @@ class Ui_MainWindow(object):
         self.overlay_image.setToolTip(_translate("MainWindow", "\"Overlay Image\""))
         self.overlay_image.setText(_translate("MainWindow", "Overlay Image"))
         self.tabs.setTabText(self.tabs.indexOf(self.vis), _translate("MainWindow", "Visualisation"))
-        self.label.setText(_translate("MainWindow", "TextLabel"))
+        self.label.setText(_translate("MainWindow", "Debug Label"))
+        self.select_image_train.setText(_translate("MainWindow", "Select Image"))
+        self.select_model.setText(_translate("MainWindow", "Select Model"))
+        self.start_eval.setText(_translate("MainWindow", "Start Evaluation"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
@@ -309,6 +327,10 @@ class Ui_MainWindow(object):
         self.class_4.stateChanged.connect(self.select_class)
         self.class_5.stateChanged.connect(self.select_class)
 
+        ##DL Part
+        self.select_image_train.clicked.connect(self.select_WSI)
+        self.select_model.clicked.connect(self.select_dl_model)
+
     def initialize_worker_thread(self):
         self.worker = Worker()
         self.thread = QtCore.QThread()
@@ -316,7 +338,7 @@ class Ui_MainWindow(object):
         self.worker.moveToThread(self.thread)
         self.worker.finished.connect(self.thread.quit)
         self.thread.started.connect(self.worker.procCounter)
-        self.thread.start()
+        # self.thread.start()
 
     def onIntReady(self, i):
         self.label.setText("{}".format(i))
@@ -491,14 +513,16 @@ class Ui_MainWindow(object):
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states,
                                                                    ov_no_update=not self.overlay_states["Nuclei"],
                                                                    class_states=self.overlay_group_states))
-                print(self.ImageView.get_number_classes())
-                self.overlay_group.setEnabled(True)
-                for i in range(self.ImageView.get_number_classes()):
-                    self.overlay_group_dict[i].setEnabled(True)
-                    self.overlay_group_dict[i].setText("Class " + str(i))
-                    self.overlay_group_dict[i].setStyleSheet("color: rgb" + str(self.colors[i]))
-                    self.overlay_group_dict[i].setChecked(True)
-                self.overlay_group.show()
+                if self.overlay_states["Nuclei"]:
+                    self.overlay_group.setEnabled(True)
+                    for i in range(self.ImageView.get_number_classes()):
+                        self.overlay_group_dict[i].setEnabled(True)
+                        self.overlay_group_dict[i].setText("Class " + str(i))
+                        self.overlay_group_dict[i].setStyleSheet("color: rgb" + str(self.colors[i]))
+                        self.overlay_group_dict[i].setChecked(True)
+                    self.overlay_group.show()
+                else:
+                    self.overlay_group.hide()
 
     def select_class(self):
         print("Value of state changed of ", self.menuWindow.sender().objectName(), self.menuWindow.sender())
@@ -508,8 +532,19 @@ class Ui_MainWindow(object):
         self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states,
                                                            ov_no_update=not self.overlay_states["Nuclei"],
                                                            class_states=self.overlay_group_states))
+
     def overlay_state_changed(self):
         if self.overlay_side_by_side.isChecked():
             self.overlay_image.show()
         else:
             self.overlay_image.hide()
+
+    def select_WSI(self):
+        fname = QFileDialog.getOpenFileName(self.menuWindow, "Select Whole Slide Image", os.getcwd(), "(*.tif *.jp2)")
+        if fname[0]:
+            print(fname[0])
+
+    def select_dl_model(self):
+        fname = QFileDialog.getOpenFileName(self.menuWindow, "Select DL Checkpoint", os.getcwd())
+        if fname[0]:
+            print(fname[0])
