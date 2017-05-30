@@ -353,3 +353,6 @@ class DisplayImage():
             pim = self.pad_image()
             return ImageQt(pim)
         return ImageQt(self.curim)
+
+    def get_current_coordinates(self):
+        return self.coor_cur_w, self.coor_cur_h

@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QThread, QObject, pyqtSignal, pyqtSlot
 import time
-from model_test import test
+from model_test import Test
 
 class Worker(QObject):
     finished = pyqtSignal()
@@ -14,4 +14,5 @@ class Worker(QObject):
         #     self.intReady.emit(i)
         # # main()
         # self.finished.emit()
-        test()
+        tc = Test()
+        tc.test()

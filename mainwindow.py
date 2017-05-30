@@ -104,14 +104,6 @@ class Ui_MainWindow(object):
         self.gridLayout.setContentsMargins(5, 5, 5, 5)
         self.gridLayout.setSpacing(6)
         self.gridLayout.setObjectName("gridLayout")
-        self.current_level_label = QtWidgets.QLabel(self.vis)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.current_level_label.sizePolicy().hasHeightForWidth())
-        self.current_level_label.setSizePolicy(sizePolicy)
-        self.current_level_label.setObjectName("current_level_label")
-        self.gridLayout.addWidget(self.current_level_label, 0, 0, 1, 1)
         self.current_level = QtWidgets.QLineEdit(self.vis)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -120,7 +112,31 @@ class Ui_MainWindow(object):
         self.current_level.setSizePolicy(sizePolicy)
         self.current_level.setReadOnly(True)
         self.current_level.setObjectName("current_level")
-        self.gridLayout.addWidget(self.current_level, 0, 1, 1, 1)
+        self.gridLayout.addWidget(self.current_level, 1, 1, 1, 1)
+        self.current_level_label = QtWidgets.QLabel(self.vis)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.current_level_label.sizePolicy().hasHeightForWidth())
+        self.current_level_label.setSizePolicy(sizePolicy)
+        self.current_level_label.setObjectName("current_level_label")
+        self.gridLayout.addWidget(self.current_level_label, 1, 0, 1, 1)
+        self.curX = QtWidgets.QLineEdit(self.vis)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.curX.sizePolicy().hasHeightForWidth())
+        self.curX.setSizePolicy(sizePolicy)
+        self.curX.setObjectName("curX")
+        self.gridLayout.addWidget(self.curX, 0, 0, 1, 1)
+        self.curY = QtWidgets.QLineEdit(self.vis)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.curY.sizePolicy().hasHeightForWidth())
+        self.curY.setSizePolicy(sizePolicy)
+        self.curY.setObjectName("curY")
+        self.gridLayout.addWidget(self.curY, 0, 1, 1, 1)
         self.verticalLayout_4.addLayout(self.gridLayout)
         self.horizontalLayout_5.addLayout(self.verticalLayout_4)
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
@@ -270,8 +286,8 @@ class Ui_MainWindow(object):
         self.class_3.setText(_translate("MainWindow", "CheckBox"))
         self.class_4.setText(_translate("MainWindow", "CheckBox"))
         self.class_5.setText(_translate("MainWindow", "CheckBox"))
-        self.current_level_label.setText(_translate("MainWindow", "Current Level"))
         self.current_level.setPlaceholderText(_translate("MainWindow", "NA"))
+        self.current_level_label.setText(_translate("MainWindow", "Current Level"))
         self.overlay_method.setItemText(0, _translate("MainWindow", "Segmentation Mask (by Pixel)"))
         self.overlay_method.setItemText(1, _translate("MainWindow", "Tumor Region"))
         self.overlay_method.setItemText(2, _translate("MainWindow", "Heatmap"))
@@ -374,6 +390,7 @@ class Ui_MainWindow(object):
             orim, curim, nlevel = self.ImageView.read_first()
             self.setImage(curim)
             self.updateInfo(orim)
+            self.update_coordinates()
             self.zoomSlider.setMaximum(nlevel)
             self.zoomSlider.setValue(0)
             self.c_zoom_level = 0
@@ -455,6 +472,7 @@ class Ui_MainWindow(object):
             if updated:
                 self.setImage(im)
                 self.updateInfo(self.ImageView.get_info())
+                self.update_coordinates()
                 if self.if_image_overlay:
                     self.setImageOverlay(self.ImageView.update_overlay(method_update="down", states = self.overlay_states))
 
@@ -486,6 +504,7 @@ class Ui_MainWindow(object):
             factor = 2
             self.setImage(self.ImageView.get_image_in(factor))
             self.updateInfo(self.ImageView.get_info())
+            self.update_coordinates()
             if self.if_image_overlay:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_in", states = self.overlay_states))
             self.current_level.setText(str(self.ImageView.level))
@@ -495,6 +514,7 @@ class Ui_MainWindow(object):
             factor = 2
             self.setImage(self.ImageView.get_image_out(factor))
             self.updateInfo(self.ImageView.get_info())
+            self.update_coordinates()
             if self.if_image_overlay:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_out", states = self.overlay_states))
             self.current_level.setText(str(self.ImageView.level))
@@ -506,6 +526,7 @@ class Ui_MainWindow(object):
             # print(self.info.size())
             self.setImage(self.ImageView.random_seek(event.pos().x(), event.pos().y(), self.info.size()))
             self.updateInfo(self.ImageView.get_info())
+            self.update_coordinates()
             print("Random Seek in Overlay")
             if self.if_image_overlay:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states))
@@ -575,3 +596,8 @@ class Ui_MainWindow(object):
         if fname[0]:
             print(fname[0])
             self.model_path.setText(fname[0])
+
+    def update_coordinates(self):
+        w, h = self.ImageView.get_current_coordinates()
+        self.curX.setText(str(w))
+        self.curY.setText(str(h))
