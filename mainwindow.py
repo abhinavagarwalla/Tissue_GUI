@@ -373,7 +373,7 @@ class Ui_MainWindow(object):
         self.worker.moveToThread(self.thread)
         self.worker.finished.connect(self.thread.quit)
         self.thread.started.connect(self.worker.procCounter)
-        self.thread.start()
+        # self.thread.start()
 
     def onIntReady(self, i):
         self.label.setText("{}".format(i))

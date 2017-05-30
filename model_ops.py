@@ -88,8 +88,8 @@ def down_sample(inTensor, x_dim, y_dim, in_ch_dim, out_ch_dim, layerID, maxPool=
 def up_sample(inTensor, symTensor, x_dim, y_dim, sx_dim, sy_dim, in_ch_dim, out_ch_dim, layerID):
     with tf.name_scope('Deconvolution'):
         disp('Deconvolution')
-
-        out_shape = [BATCH_SIZE, x_dim * 2, y_dim * 2, out_ch_dim]
+        batch_size = tf.shape(inTensor)[0]
+        out_shape = [batch_size, x_dim * 2, y_dim * 2, out_ch_dim]
         deconv = deconv2d_full(inTensor, out_ch_dim, in_ch_dim, layerID + '_Deconvolution', out_shape);
 
     with tf.name_scope('Concatination'):

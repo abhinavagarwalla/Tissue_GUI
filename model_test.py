@@ -11,6 +11,7 @@ import math
 from model_preprocess import Preprocess
 from combine_predictions import combine
 from time import  time
+from random import randint
 
 class Test():
     def __init__(self):
@@ -25,6 +26,7 @@ class Test():
         self.nsamples = len(self.coors)
         self.nepoch = math.ceil(self.nsamples/BATCH_SIZE)
         self.preprocessor = Preprocess()
+        self.continue_flag = True
 
     def delete_inside(self, boxes):
         boxes = np.array(boxes)
@@ -56,7 +58,7 @@ class Test():
         print(boxes)
         coors = []
         ## Make it more complete
-        for i in range(len(boxes)):
+        for i in range(1):#len(boxes)):
             a = range(max(0, boxes[i, 0]-DIFF_SIZE),
                       min(self.wsi.level_dimensions[LEVEL_FETCH][0],
                           boxes[i, 0] + boxes[i, 2] + DIFF_SIZE), OUTPUT_SIZE)
@@ -81,6 +83,7 @@ class Test():
                 coor_batch.append(self.coors[self.iter])
             self.iter += 1
             if self.iter==self.nsamples:
+                self.continue_flag = False
                 break
 
         image_batch = np.array(image_batch).reshape(-1, PATCH_SIZE, PATCH_SIZE, 3)
@@ -89,10 +92,6 @@ class Test():
     def save_predictions(self, preds, coors_batch, images):
         preds = (np.array(preds)*100).astype(np.uint8)
         for i in range(BATCH_SIZE):
-            # im_tumor = Image.fromarray(preds[i, :, :, 0])
-            # im_non_tumor = Image.fromarray(preds[i, :, :, 1])
-            # im_tumor.save('results\\' + str(coors_batch[i]) + "_tumor.png")
-            # im_non_tumor.save('results\\' + str(coors_batch[i]) + "_non_tumor.png")
             cv2.imwrite("results\\" + str(coors_batch[i]) + "_tumor.png", preds[i, :, :, 0])
             cv2.imwrite("results\\" + str(coors_batch[i]) + "_non_tumor.png", preds[i, :, :, 1])
             # orim = Image.fromarray(images[i])
@@ -104,11 +103,15 @@ class Test():
 
         with tf.Session() as sess:
             saver.restore(sess, CHECKPOINT_PATH)
-            for i in range(self.nepoch):
+            i = 0
+            while self.continue_flag:
                 print("At Epoch: ", i)
+                i+=1
                 images, coors_batch = self.get_image_from_coor()
-                pred = sess.run(self.logits_test, feed_dict={self.images_test: images})
-                self.save_predictions(pred, coors_batch, images)
+                print(len(images))
+                if len(images)==BATCH_SIZE:
+                    pred = sess.run(self.logits_test, feed_dict={self.images_test: images})
+                    self.save_predictions(pred, coors_batch, images)
             print("Done.")
         combine()
         print("Total time taken: ", time()-self.t0)
