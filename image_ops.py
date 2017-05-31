@@ -307,7 +307,7 @@ class DisplayImage():
             self.overlayim["Seg"] = Image.blend(self.curim, self.overlayim["Seg"], 0.7)
         elif state=="Reg":
             # self.overlayim["Reg"].save("Region_overlay.png")
-            self.overlayim["Reg"] = ImageChops.multiply(self.curim, self.overlayim["Reg"])
+            self.overlayim["Reg"] = Image.alpha_composite(self.curim, self.overlayim["Reg"])
         elif state=="Heat":
             # self.overlayim["Heat"].save("Heatmap_overlay.png")
             self.overlayim["Heat"] = Image.blend(self.curim, self.overlayim["Heat"], 0.4)

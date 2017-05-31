@@ -108,7 +108,6 @@ class Test():
                 print("At Epoch: ", i)
                 i+=1
                 images, coors_batch = self.get_image_from_coor()
-                print(len(images))
                 if len(images)==BATCH_SIZE:
                     pred = sess.run(self.logits_test, feed_dict={self.images_test: images})
                     self.save_predictions(pred, coors_batch, images)

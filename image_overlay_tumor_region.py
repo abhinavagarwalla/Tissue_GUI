@@ -15,7 +15,7 @@ class TumorRegion():
         self.npolygons = len(self.low_polygons)
 
     def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None, class_states=None):
-        print("Started Getting Overlay")
+        print("Started Getting Overlay in Tumor Region")
         self.clevel = level-1
         self.coor_low_w = pow(2, self.clevel) * coorw
         self.coor_low_h = pow(2, self.clevel) * coorh
@@ -44,4 +44,5 @@ class TumorRegion():
                     else:
                         pass
         self.overlayim = Image.fromarray(pim).convert("RGBA")
+        # self.overlayim.show()
         return self.overlayim
