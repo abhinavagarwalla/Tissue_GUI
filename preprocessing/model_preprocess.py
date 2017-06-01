@@ -6,7 +6,7 @@ from interface.model_config import *
 
 class Preprocess():
     def __init__(self):
-        self.targetImg = cv2.imread(TARGET_STAIN_PATH)
+        self.targetImg = cv2.imread(Config.TARGET_STAIN_PATH)
         self.targetImg = cv2.cvtColor(self.targetImg, 44);
 
         # Mean and Standard Deviation of Target image channels in Lab Colourspace

@@ -9,8 +9,8 @@ class UNet():
 
     def inference(self, images):
         with tf.name_scope('Down_Sample_1'):
-            x_dim = PATCH_SIZE
-            y_dim = PATCH_SIZE
+            x_dim = Config.PATCH_SIZE
+            y_dim = Config.PATCH_SIZE
             in_ch_dim = 3
             out_ch_dim = 64
             d_sample_1, x_dim_1, y_dim_1, in_ch_dim = down_sample(images, x_dim, y_dim, in_ch_dim, out_ch_dim, 'DS_1',
