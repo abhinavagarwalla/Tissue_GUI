@@ -16,7 +16,7 @@ class HeatMap():
 
         self.type = "Image"
         self.overlayim = None
-        self.cmap = plt.get_cmap("YlOrRd")
+        self.cmap = plt.get_cmap("jet")
 
     def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None, class_states=None):
         print("Getting Simple Overlay", self.level_fetch, level, coorw, coorh, width, height)
@@ -35,6 +35,6 @@ class HeatMap():
         self.overlayim = np.uint8(self.cmap(self.overlayim) * 255)
         self.overlayim = Image.fromarray(self.overlayim)
         bands = list(self.overlayim.split())
-        bands[3] = bands[3].point(lambda x: x * 0.5)
+        bands[3] = bands[3].point(lambda x: x * 0.2)
         self.overlayim = Image.merge(self.overlayim.mode, bands)
         return self.overlayim

@@ -1,17 +1,18 @@
-from PIL import Image, ImageDraw
-import tensorflow as tf
-import model_definition
-import cv2
-from model_config import *
-from scipy import ndimage
+import math
 from itertools import product
+from time import time
+
+import cv2
 import numpy as np
 import openslide as ops
-import math
-from model_preprocess import Preprocess
+import tensorflow as tf
+from scipy import ndimage
+
 from combine_predictions import combine
-from time import  time
-from random import randint
+from model_config import *
+from nets import model_definition
+from preprocessing.model_preprocess import Preprocess
+
 
 class Test():
     def __init__(self):

@@ -1,5 +1,6 @@
-from model_ops import *
 from model_config import *
+from nets.model_ops import *
+
 
 class UNet():
     def __init__(self):

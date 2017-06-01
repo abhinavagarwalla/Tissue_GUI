@@ -1,12 +1,14 @@
 import cv2 as cv
 import numpy as np
+from PIL import Image
 from PIL.ImageQt import ImageQt
-from PIL import Image, ImageChops
-from image_overlay_segmask import SegMaskByPixel
-from image_overlay_tumor_region import TumorRegion
-from image_overlay_heatmap import HeatMap
-from image_overlay_nuclei import NucleiPoints
+
 from image_slide import ImageClass
+from overlays.image_overlay_heatmap import HeatMap
+from overlays.image_overlay_nuclei import NucleiPoints
+from overlays.image_overlay_segmask import SegMaskByPixel
+from overlays.image_overlay_tumor_region import TumorRegion
+
 
 class DisplayImage():
     def __init__(self, filename, bb_height, bb_width):
@@ -291,8 +293,8 @@ class DisplayImage():
                     # self.t = ImageChops.multiply(self.t, self.overlayim["Reg"])
                     self.t = Image.alpha_composite(self.t, self.overlayim["Reg"])
                 elif k=="Heat":
-                    print(self.t.size, self.overlayim["Heat"].size, self.t.mode, self.overlayim["Heat"].mode)
-                    self.t = Image.blend(self.t, self.overlayim["Heat"], 0.4)
+                    # self.t = Image.blend(self.t, self.overlayim["Heat"], 0.4)
+                    self.t = Image.alpha_composite(self.t, self.overlayim["Heat"])
                 elif k=="Nuclei":
                     self.t = Image.alpha_composite(self.t, self.overlayim["Nuclei"])
         if self.imheight < self.bb_height or self.imwidth < self.bb_width:
@@ -310,7 +312,8 @@ class DisplayImage():
             self.overlayim["Reg"] = Image.alpha_composite(self.curim, self.overlayim["Reg"])
         elif state=="Heat":
             # self.overlayim["Heat"].save("Heatmap_overlay.png")
-            self.overlayim["Heat"] = Image.blend(self.curim, self.overlayim["Heat"], 0.4)
+            # self.overlayim["Heat"] = Image.blend(self.curim, self.overlayim["Heat"], 0.4)
+            self.overlayim["Heat"] = Image.alpha_composite(self.curim, self.overlayim["Heat"])
         elif state=="Nuclei":
             print("overlaying on original image", self.curim, self.overlayim["Nuclei"])
             self.overlayim["Nuclei"] = Image.alpha_composite(self.curim, self.overlayim["Nuclei"])
