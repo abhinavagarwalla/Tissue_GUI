@@ -1,14 +1,14 @@
 import math
 from itertools import product
 from time import time
-
+import os
 import cv2
 import numpy as np
 import openslide as ops
 import tensorflow as tf
 from .model_config import *
 from scipy import ndimage
-
+import shutil
 from .combine_predictions import combine
 from nets import model_definition
 from preprocessing.model_preprocess import Preprocess
@@ -28,6 +28,11 @@ class Test():
         self.nepoch = math.ceil(self.nsamples/Config.BATCH_SIZE)
         self.preprocessor = Preprocess()
         self.continue_flag = True
+
+        if os.path.exists(Config.RESULT_PATH):
+            shutil.rmtree(Config.RESULT_PATH)
+            os.mkdir(Config.RESULT_PATH)
+            os.mkdir(Config.RESULT_PATH + "//predictions_png")
 
     def delete_inside(self, boxes):
         boxes = np.array(boxes)
