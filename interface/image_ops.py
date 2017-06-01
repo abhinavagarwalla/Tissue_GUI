@@ -2,8 +2,8 @@ import cv2 as cv
 import numpy as np
 from PIL import Image
 from PIL.ImageQt import ImageQt
+from .image_slide import ImageClass
 
-from image_slide import ImageClass
 from overlays.image_overlay_heatmap import HeatMap
 from overlays.image_overlay_nuclei import NucleiPoints
 from overlays.image_overlay_segmask import SegMaskByPixel

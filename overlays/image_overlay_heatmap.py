@@ -1,7 +1,8 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
-import matplotlib.pyplot as plt
-from image_slide import ImageClass
+
+from interface.image_slide import ImageClass
 
 
 class HeatMap():

@@ -1,9 +1,11 @@
-from PIL import Image
-import numpy as np
-import cv2
-import openslide as ops
 import glob
-from model_config import *
+
+import cv2
+import numpy as np
+import openslide as ops
+from PIL import Image
+from interface.model_config import *
+
 
 def combine():
     RESULT_PATH = 'C:\\Users\\abhinav\\Desktop\\Tissue_GUI\\results\\'

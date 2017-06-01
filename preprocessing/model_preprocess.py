@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
-from model_config import *
+
+from interface.model_config import *
+
 
 class Preprocess():
     def __init__(self):

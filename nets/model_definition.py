@@ -1,4 +1,5 @@
-from model_config import *
+from interface.model_config import *
+
 from nets.model_ops import *
 
 

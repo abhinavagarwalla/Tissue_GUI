@@ -6,10 +6,10 @@ import cv2
 import numpy as np
 import openslide as ops
 import tensorflow as tf
+from .model_config import *
 from scipy import ndimage
 
-from combine_predictions import combine
-from model_config import *
+from .combine_predictions import combine
 from nets import model_definition
 from preprocessing.model_preprocess import Preprocess
 

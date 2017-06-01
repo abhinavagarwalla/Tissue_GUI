@@ -1,9 +1,11 @@
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtGui import QPixmap
-from image_ops import DisplayImage
 import os
-from dl_interface import Worker
+
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QFileDialog
+from .image_ops import DisplayImage
+from .dl_interface import Worker
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -373,7 +375,7 @@ class Ui_MainWindow(object):
         self.worker.moveToThread(self.thread)
         self.worker.finished.connect(self.thread.quit)
         self.thread.started.connect(self.worker.procCounter)
-        # self.thread.start()
+        self.thread.start()
 
     def onIntReady(self, i):
         self.label.setText("{}".format(i))

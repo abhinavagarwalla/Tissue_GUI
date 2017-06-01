@@ -1,6 +1,7 @@
-from PyQt5.QtCore import QThread, QObject, pyqtSignal, pyqtSlot
-import time
-from model_test import Test
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+
+from .model_test import Test
+
 
 class Worker(QObject):
     finished = pyqtSignal()
@@ -14,5 +15,6 @@ class Worker(QObject):
         #     self.intReady.emit(i)
         # # main()
         # self.finished.emit()
+        print("Starting Testing")
         tc = Test()
         tc.test()
