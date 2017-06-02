@@ -1,121 +1,54 @@
-import math
-from itertools import product
-from time import time
-import os
-import cv2
-import numpy as np
-import openslide as ops
-import tensorflow as tf
-from .model_config import *
-from scipy import ndimage
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+
 import shutil
-from .combine_predictions import combine
+from time import time
+
+import tensorflow as tf
+from interface.combine_predictions import combine
+from interface.data_io import Data
+from interface.model_config import *
 from nets import nets_factory
-from preprocessing import preprocessing_factory
 
-class Test():
-    def __init__(self):
+class Test(QObject):
+    finished = pyqtSignal()
+    epoch = pyqtSignal(int)
+
+    def initialize(self):
         self.t0 = time()
-
-        self.wsi = ops.OpenSlide(Config.WSI_PATH)
         self.images_test = tf.placeholder(tf.float32, shape=(None, Config.PATCH_SIZE, Config.PATCH_SIZE, 3))
         self.output = nets_factory.get_network_fn(name='unet', images=self.images_test, is_training=False)
-        self.preprocessor = preprocessing_factory.get_preprocessing_fn(name='stain_norm')
-
-        self.coors = self.get_coordinates()
-        self.iter = 0
-        self.nsamples = len(self.coors)
-        self.nepoch = math.ceil(self.nsamples/Config.BATCH_SIZE)
-        self.continue_flag = True
+        self.dataloader = Data(preprocessor='stain_norm')
 
         if os.path.exists(Config.RESULT_PATH):
             shutil.rmtree(Config.RESULT_PATH)
-            os.mkdir(Config.RESULT_PATH)
-            os.mkdir(Config.RESULT_PATH + "//predictions_png")
+        os.mkdir(Config.RESULT_PATH)
+        os.mkdir(Config.RESULT_PATH + os.sep + "predictions_png")
 
-    def delete_inside(self, boxes):
-        boxes = np.array(boxes)
-        boxes_new = []
-        for i in range(len(boxes)):
-            a = boxes[(boxes[:,0]<boxes[i,0]) & (boxes[:,1]<boxes[i,1]) &
-                      ((boxes[:,0]+boxes[:,2]) > (boxes[i,0]+boxes[i,2])) &
-                      ((boxes[:,1]+boxes[:,3])>(boxes[i,1] + boxes[i,3]))]
-            if len(a):
-                print(len(a), a, boxes[i])
-            else:
-                boxes_new.append(boxes[i])
-        return np.array(boxes_new)
-
-    def get_coordinates(self):
-        img = ndimage.imread(Config.MASK_PATH)
-        contours = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        a = np.array([cv2.contourArea(i) for i in contours[1]])
-        b = np.array(contours[1])
-        order = a.argsort()[::-1]
-        a, b = a[order], b[order]
-        threshArea, threshPoints = 200, 10
-        boxes = [cv2.boundingRect(i) for i in b[a > threshArea] if len(i) > threshPoints]
-        # shapely_box = [box(i[1], i[0], i[1]+i[3], i[0]+i[2]) for i in boxes]
-        boxes = self.delete_inside(boxes)
-        # print(boxes)
-
-        boxes = boxes * pow(2, Config.LEVEL_UPGRADE)
-        print(boxes)
-        coors = []
-        ## Make it more complete
-        for i in range(1):#len(boxes)):
-            a = range(max(0, boxes[i, 0]-Config.DIFF_SIZE),
-                      min(self.wsi.level_dimensions[Config.LEVEL_FETCH][0],
-                          boxes[i, 0] + boxes[i, 2] + Config.DIFF_SIZE), Config.OUTPUT_SIZE)
-            b = range(max(0, boxes[i, 1]-Config.DIFF_SIZE),
-                      min(self.wsi.level_dimensions[Config.LEVEL_FETCH][1],
-                          boxes[i, 1] + boxes[i, 3] + Config.DIFF_SIZE), Config.OUTPUT_SIZE)
-            coors.extend(list(product(a, b)))
-        return coors
-
-    def get_image_from_coor(self):
-        image_batch = []
-        coor_batch = []
-        while len(coor_batch)!=Config.BATCH_SIZE:
-            # re = random.randint(0, self.nsamples)
-            im = np.array(self.wsi.read_region((pow(2, Config.LEVEL_FETCH)*self.coors[self.iter][0],
-                                                pow(2, Config.LEVEL_FETCH)*self.coors[self.iter][1]),
-                                               Config.LEVEL_FETCH,
-                                               (Config.PATCH_SIZE, Config.PATCH_SIZE)).convert('RGB'))
-            if np.mean(im)<= 240:
-                im = self.preprocessor.preprocess_single(im)
-                image_batch.append(im[:,:,::-1]) #RGB to BGR
-                coor_batch.append(self.coors[self.iter])
-            self.iter += 1
-            if self.iter==self.nsamples:
-                self.continue_flag = False
-                break
-
-        image_batch = np.array(image_batch).reshape(-1, Config.PATCH_SIZE, Config.PATCH_SIZE, 3)
-        return image_batch, coor_batch
-
-    def save_predictions(self, preds, coors_batch, images):
-        preds = (np.array(preds)*100).astype(np.uint8)
-        for i in range(Config.BATCH_SIZE):
-            cv2.imwrite("results\\" + str(coors_batch[i]) + "_tumor.png", preds[i, :, :, 0])
-            cv2.imwrite("results\\" + str(coors_batch[i]) + "_non_tumor.png", preds[i, :, :, 1])
-            # orim = Image.fromarray(images[i])
-            # orim.save('results\\' + str(coors_batch[i]) + "_orig.png")
-
+    @pyqtSlot()
     def test(self):
         # Saver and initialisation
+        self.initialize()
         saver = tf.train.Saver()
-
+        self.epoch.emit(5)
         with tf.Session() as sess:
             saver.restore(sess, Config.CHECKPOINT_PATH)
             i = 0
-            while self.continue_flag:
-                print("At Epoch: ", i)
+            while self.dataloader.continue_flag:
+                print("At Epoch: ", i, (i*Config.BATCH_SIZE)/self.dataloader.nsamples, self.dataloader.nsamples)
+                self.epoch.emit(int((100*i*Config.BATCH_SIZE)/self.dataloader.nsamples))
                 i+=1
-                images, coors_batch = self.get_image_from_coor()
+                images, coors_batch = self.dataloader.get_image_from_coor()
                 if len(images)==Config.BATCH_SIZE:
                     pred = sess.run(self.output, feed_dict={self.images_test: images})
-                    self.save_predictions(pred, coors_batch, images)
-            print("Done.")
-        combine()
+                    self.dataloader.save_predictions(pred, coors_batch)
+        if self.dataloader.data_completed:
+            combine()
         print("Total time taken: ", time()-self.t0)
+        self.finished.emit()
+
+    @pyqtSlot()
+    def stop_call(self):
+        print("Stopping Testing..")
+        self.dataloader.continue_flag = False
+        if os.path.exists(Config.RESULT_PATH):
+            shutil.rmtree(Config.RESULT_PATH)

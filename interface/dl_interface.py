@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
-from .model_test import Test
+from interface.model_test import Test
 
 
 class Worker(QObject):
