@@ -17,6 +17,7 @@ class ImageClass():
         if ".jp2" in filename:
             self.filename = filename
             self.eng = me.start_matlab()
+            self.eng.cd(os.getcwd() + os.sep + 'interface', nargout=0)
             l, w, h = self.eng.get_info(self.filename, nargout=3)
             self.level_count = int(l)
             self.level_dimensions = []
@@ -37,7 +38,7 @@ class ImageClass():
         print(self.level_count, self.level_dimensions, type(self.level_dimensions))
 
     def read_region(self, coor_low, level, dim):
-        print("Reading Region: ", coor_low, level, dim)
+        # print("Reading Region: ", coor_low, level, dim)
         if self.type=="tiff":
             return self.wsiObj.read_region(coor_low, level, dim)
         elif self.type=="jp2":
@@ -47,8 +48,6 @@ class ImageClass():
             hdown = min(self.level_dimensions[level][1], hleft + dim[1])
             wleft = max(1, coor_cur_w+1)
             wright = min(self.level_dimensions[level][0], wleft + dim[0])
-            # if dim[0] < self.level_dimensions[level][0] and dim[1] < self.level_dimensions[level][1]:
-            # if abs(hdown-hleft)==dim[1] and abs(wright-wleft)==dim[0]:
             mim = self.eng.read_region(self.filename, level, matlab.int32([hleft, hdown, wleft, wright]))
             im = np.array(mim._data).reshape(mim.size, order='F')
             # print("Inside 1st condition", Image.fromarray(im).convert("RGBA").size)

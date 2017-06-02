@@ -17,7 +17,7 @@ class Test(QObject):
         self.t0 = time()
         self.images_test = tf.placeholder(tf.float32, shape=(None, Config.PATCH_SIZE, Config.PATCH_SIZE, 3))
         self.output = nets_factory.get_network_fn(name='unet', images=self.images_test, is_training=False)
-        self.dataloader = Data(preprocessor='stain_norm')
+        self.dataloader = Data(preprocessor='stain_norm', outshape=self.output.shape)
 
         if os.path.exists(Config.RESULT_PATH):
             shutil.rmtree(Config.RESULT_PATH)
@@ -29,7 +29,7 @@ class Test(QObject):
         # Saver and initialisation
         self.initialize()
         saver = tf.train.Saver()
-        self.epoch.emit(5)
+        self.epoch.emit(0)
         with tf.Session() as sess:
             saver.restore(sess, Config.CHECKPOINT_PATH)
             i = 0
@@ -40,15 +40,24 @@ class Test(QObject):
                 images, coors_batch = self.dataloader.get_image_from_coor()
                 if len(images)==Config.BATCH_SIZE:
                     pred = sess.run(self.output, feed_dict={self.images_test: images})
-                    self.dataloader.save_predictions(pred, coors_batch)
+                    if self.dataloader.write_to_folder_flag:
+                        self.dataloader.save_predictions(pred, coors_batch)
         if self.dataloader.data_completed:
             combine()
-        print("Total time taken: ", time()-self.t0)
-        self.finished.emit()
+            print("Total time taken: ", time()-self.t0)
+            self.finished.emit()
 
     @pyqtSlot()
     def stop_call(self):
         print("Stopping Testing..")
         self.dataloader.continue_flag = False
+        self.dataloader.write_to_folder_flag = False
+        # time.sleep(2)
         if os.path.exists(Config.RESULT_PATH):
-            shutil.rmtree(Config.RESULT_PATH)
+            try:
+                shutil.rmtree(Config.RESULT_PATH)
+                print("Result tree removed")
+            except:
+                pass
+        self.epoch.emit(0)
+        self.finished.emit()

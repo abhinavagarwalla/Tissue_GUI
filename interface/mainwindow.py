@@ -1,11 +1,10 @@
-import os
-
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QFileDialog
 from interface.image_ops import DisplayImage
 from interface.model_config import *
 from interface.model_test import Test
+from interface.image_slide import ImageClass
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -217,54 +216,69 @@ class Ui_MainWindow(object):
         self.tabs.addTab(self.vis, "")
         self.training = QtWidgets.QWidget()
         self.training.setObjectName("training")
-        self.label = QtWidgets.QLabel(self.training)
-        self.label.setGeometry(QtCore.QRect(350, 100, 61, 61))
-        self.label.setObjectName("label")
-        self.select_image_train = QtWidgets.QPushButton(self.training)
-        self.select_image_train.setGeometry(QtCore.QRect(60, 280, 212, 23))
-        self.select_image_train.setObjectName("select_image_train")
-        self.image_path = QtWidgets.QLineEdit(self.training)
-        self.image_path.setEnabled(False)
-        self.image_path.setGeometry(QtCore.QRect(280, 280, 441, 20))
-        self.image_path.setObjectName("image_path")
-        self.select_model = QtWidgets.QPushButton(self.training)
-        self.select_model.setGeometry(QtCore.QRect(60, 320, 212, 23))
-        self.select_model.setObjectName("select_model")
-        self.model_path = QtWidgets.QLineEdit(self.training)
-        self.model_path.setEnabled(False)
-        self.model_path.setGeometry(QtCore.QRect(280, 320, 441, 20))
-        self.model_path.setObjectName("model_path")
-        self.start_eval = QtWidgets.QPushButton(self.training)
-        self.start_eval.setGeometry(QtCore.QRect(460, 400, 121, 23))
-        self.start_eval.setObjectName("start_eval")
-        self.label_2 = QtWidgets.QLabel(self.training)
-        self.label_2.setGeometry(QtCore.QRect(60, 400, 81, 21))
-        self.label_2.setObjectName("label_2")
-        self.select_level = QtWidgets.QComboBox(self.training)
-        self.select_level.setEnabled(False)
-        self.select_level.setGeometry(QtCore.QRect(150, 400, 69, 22))
-        self.select_level.setObjectName("select_level")
-        self.label_3 = QtWidgets.QLabel(self.training)
-        self.label_3.setGeometry(QtCore.QRect(250, 390, 71, 31))
-        self.label_3.setObjectName("label_3")
-        self.select_patch_size = QtWidgets.QLineEdit(self.training)
-        self.select_patch_size.setEnabled(False)
-        self.select_patch_size.setGeometry(QtCore.QRect(320, 400, 113, 20))
-        self.select_patch_size.setObjectName("select_patch_size")
-        self.select_mask = QtWidgets.QPushButton(self.training)
-        self.select_mask.setGeometry(QtCore.QRect(60, 360, 212, 23))
-        self.select_mask.setObjectName("select_mask")
-        self.mask_path = QtWidgets.QLineEdit(self.training)
-        self.mask_path.setEnabled(False)
-        self.mask_path.setGeometry(QtCore.QRect(280, 360, 441, 20))
-        self.mask_path.setObjectName("mask_path")
-        self.stop_eval = QtWidgets.QPushButton(self.training)
-        self.stop_eval.setGeometry(QtCore.QRect(600, 400, 121, 23))
-        self.stop_eval.setObjectName("stop_eval")
-        self.test_progress = QtWidgets.QProgressBar(self.training)
-        self.test_progress.setGeometry(QtCore.QRect(260, 450, 171, 23))
+        self.testBox = QtWidgets.QGroupBox(self.training)
+        self.testBox.setGeometry(QtCore.QRect(30, 20, 701, 251))
+        self.testBox.setObjectName("testBox")
+        self.test_progress = QtWidgets.QProgressBar(self.testBox)
+        self.test_progress.setGeometry(QtCore.QRect(20, 200, 321, 23))
         self.test_progress.setProperty("value", 0)
         self.test_progress.setObjectName("test_progress")
+        self.mask_path = QtWidgets.QLineEdit(self.testBox)
+        self.mask_path.setEnabled(False)
+        self.mask_path.setGeometry(QtCore.QRect(230, 110, 441, 20))
+        self.mask_path.setReadOnly(True)
+        self.mask_path.setObjectName("mask_path")
+        self.select_wsi_level = QtWidgets.QComboBox(self.testBox)
+        self.select_wsi_level.setEnabled(False)
+        self.select_wsi_level.setGeometry(QtCore.QRect(70, 150, 41, 22))
+        self.select_wsi_level.setObjectName("select_wsi_level")
+        self.stop_eval = QtWidgets.QPushButton(self.testBox)
+        self.stop_eval.setGeometry(QtCore.QRect(550, 150, 121, 23))
+        self.stop_eval.setObjectName("stop_eval")
+        self.select_mask_level = QtWidgets.QComboBox(self.testBox)
+        self.select_mask_level.setEnabled(False)
+        self.select_mask_level.setGeometry(QtCore.QRect(200, 150, 41, 22))
+        self.select_mask_level.setObjectName("select_mask_level")
+        self.start_eval = QtWidgets.QPushButton(self.testBox)
+        self.start_eval.setGeometry(QtCore.QRect(410, 150, 121, 23))
+        self.start_eval.setObjectName("start_eval")
+        self.image_path = QtWidgets.QLineEdit(self.testBox)
+        self.image_path.setEnabled(False)
+        self.image_path.setGeometry(QtCore.QRect(230, 30, 441, 20))
+        self.image_path.setReadOnly(True)
+        self.image_path.setObjectName("image_path")
+        self.select_model = QtWidgets.QPushButton(self.testBox)
+        self.select_model.setGeometry(QtCore.QRect(10, 70, 212, 23))
+        self.select_model.setObjectName("select_model")
+        self.model_path = QtWidgets.QLineEdit(self.testBox)
+        self.model_path.setEnabled(False)
+        self.model_path.setGeometry(QtCore.QRect(230, 70, 441, 20))
+        self.model_path.setReadOnly(True)
+        self.model_path.setObjectName("model_path")
+        self.label_2 = QtWidgets.QLabel(self.testBox)
+        self.label_2.setGeometry(QtCore.QRect(10, 150, 61, 21))
+        self.label_2.setObjectName("label_2")
+        self.select_patch_size = QtWidgets.QLineEdit(self.testBox)
+        self.select_patch_size.setEnabled(False)
+        self.select_patch_size.setGeometry(QtCore.QRect(360, 150, 41, 20))
+        self.select_patch_size.setObjectName("select_patch_size")
+        self.select_image_train = QtWidgets.QPushButton(self.testBox)
+        self.select_image_train.setGeometry(QtCore.QRect(10, 30, 212, 23))
+        self.select_image_train.setObjectName("select_image_train")
+        self.label_3 = QtWidgets.QLabel(self.testBox)
+        self.label_3.setGeometry(QtCore.QRect(300, 150, 51, 21))
+        self.label_3.setObjectName("label_3")
+        self.select_mask = QtWidgets.QPushButton(self.testBox)
+        self.select_mask.setGeometry(QtCore.QRect(10, 110, 212, 23))
+        self.select_mask.setObjectName("select_mask")
+        self.label_4 = QtWidgets.QLabel(self.testBox)
+        self.label_4.setGeometry(QtCore.QRect(140, 150, 61, 21))
+        self.label_4.setObjectName("label_4")
+        self.plainTextEdit = QtWidgets.QPlainTextEdit(self.testBox)
+        self.plainTextEdit.setEnabled(False)
+        self.plainTextEdit.setGeometry(QtCore.QRect(340, 190, 341, 41))
+        self.plainTextEdit.setReadOnly(True)
+        self.plainTextEdit.setObjectName("plainTextEdit")
         self.tabs.addTab(self.training, "")
         self.horizontalLayout_4.addWidget(self.tabs)
         MainWindow.setCentralWidget(self.centralWidget)
@@ -321,14 +335,15 @@ class Ui_MainWindow(object):
         self.overlay_image.setToolTip(_translate("MainWindow", "\"Overlay Image\""))
         self.overlay_image.setText(_translate("MainWindow", "Overlay Image"))
         self.tabs.setTabText(self.tabs.indexOf(self.vis), _translate("MainWindow", "Visualisation"))
-        self.label.setText(_translate("MainWindow", "Debug Label"))
-        self.select_image_train.setText(_translate("MainWindow", "Select Image"))
-        self.select_model.setText(_translate("MainWindow", "Select Model"))
+        self.testBox.setTitle(_translate("MainWindow", "Testing"))
+        self.stop_eval.setText(_translate("MainWindow", "Stop Evaluation"))
         self.start_eval.setText(_translate("MainWindow", "Start Evaluation"))
-        self.label_2.setText(_translate("MainWindow", "Level to Select: "))
+        self.select_model.setText(_translate("MainWindow", "Select Model"))
+        self.label_2.setText(_translate("MainWindow", "WSI Level:"))
+        self.select_image_train.setText(_translate("MainWindow", "Select Image"))
         self.label_3.setText(_translate("MainWindow", "Patch Size"))
         self.select_mask.setText(_translate("MainWindow", "Select Mask"))
-        self.stop_eval.setText(_translate("MainWindow", "Stop Evaluation"))
+        self.label_4.setText(_translate("MainWindow", "Mask Level:"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
@@ -395,7 +410,6 @@ class Ui_MainWindow(object):
         self.stop_eval.clicked.connect(lambda: self.test_model.stop_call())
 
     def update_test_progress(self, i):
-        self.label.setText("{}".format(i))
         self.test_progress.setValue(i)
 
     ## Functions for reading files, setting PixMaps
@@ -611,6 +625,11 @@ class Ui_MainWindow(object):
             print(fname[0])
             self.image_path.setEnabled(True)
             self.image_path.setText(fname[0])
+            self.select_patch_size.setEnabled(True)
+            self.select_wsi_level.setEnabled(True)
+            nlevel = ImageClass(self.image_path.text()).level_count
+            self.select_wsi_level.addItem("None")
+            [self.select_wsi_level.addItem(str(i)) for i in range(nlevel)]
 
     def select_dl_model(self):
         fname = QFileDialog.getOpenFileName(self.menuWindow, "Select DL Checkpoint", os.getcwd(), "*.ckpt-*")
@@ -625,13 +644,25 @@ class Ui_MainWindow(object):
             print(fname[0])
             self.mask_path.setEnabled(True)
             self.mask_path.setText(fname[0])
+            self.select_mask_level.setEnabled(True)
+            self.select_mask_level.addItem("None")
+            [self.select_mask_level.addItem(str(i)) for i in range(12)]
+
+    def check_test_fields(self):
+        if self.image_path.isEnabled() and self.model_path.isEnabled() and self.mask_path.isEnabled() \
+                and self.select_patch_size.text()!='' and self.select_wsi_level.currentIndex()!=0\
+                and self.select_mask_level.currentIndex()!=0:
+            return True
 
     def start_testing(self):
-        # if self.image_path.isEnabled() and self.model_path.isEnabled() and self.mask_path.isEnabled():
-        #     Config.WSI_PATH = self.image_path.text()
-        #     Config.CHECKPOINT_PATH = self.model_path.text()
-        #     Config.MASK_PATH = self.mask_path.text()
-        self.thread.start()
+        if self.check_test_fields():
+            Config.WSI_PATH = self.image_path.text()
+            Config.CHECKPOINT_PATH = self.model_path.text()
+            Config.MASK_PATH = self.mask_path.text()
+            Config.PATCH_SIZE = int(self.select_patch_size.text())
+            Config.LEVEL_FETCH = self.select_wsi_level.currentIndex()-1
+            Config.LEVEL_UPGRADE = self.select_mask_level.currentIndex() - 1 - Config.LEVEL_FETCH
+            self.thread.start()
 
     def update_coordinates(self):
         w, h = self.ImageView.get_current_coordinates()

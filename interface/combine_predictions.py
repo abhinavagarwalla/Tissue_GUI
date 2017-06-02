@@ -2,15 +2,15 @@ import glob
 
 import cv2
 import numpy as np
-import openslide as ops
 from PIL import Image
 from interface.model_config import *
+from interface.image_slide import ImageClass
 
 def combine():
     ilist = glob.glob(Config.RESULT_PATH+"\\*)_tumor.png")
 
     # (48896, 110336)
-    wsi = ops.OpenSlide(Config.WSI_PATH)
+    wsi = ImageClass(Config.WSI_PATH)
     wsiDim = (wsi.level_dimensions[Config.LEVEL_FETCH][1], wsi.level_dimensions[Config.LEVEL_FETCH][0]) #(110336, 48896)
     arr = np.zeros(wsiDim)
     for i in ilist:

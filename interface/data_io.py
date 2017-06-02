@@ -4,18 +4,21 @@ import numpy as np
 from interface.model_config import *
 from preprocessing import preprocessing_factory
 from itertools import product
-import openslide as ops
 import os
+from interface.image_slide import ImageClass
 
 class Data():
-    def __init__(self, preprocessor):
-        self.wsi = ops.OpenSlide(Config.WSI_PATH)
+    def __init__(self, preprocessor, outshape):
+        self.wsi = ImageClass(Config.WSI_PATH)
+        self.output_size = int(outshape[1])
+        Config.DIFF_SIZE = Config.PATCH_SIZE - self.output_size
         self.preprocessor = preprocessing_factory.get_preprocessing_fn(name=preprocessor)
         self.coors = self.get_coordinates()
         self.nsamples = len(self.coors)
         self.iter = 0
         self.continue_flag = True
         self.data_completed = False
+        self.write_to_folder_flag = True
 
     def delete_inside(self, boxes):
         boxes = np.array(boxes)
@@ -50,10 +53,10 @@ class Data():
         for i in range(1):  # len(boxes)):
             a = range(max(0, boxes[i, 0] - Config.DIFF_SIZE),
                       min(self.wsi.level_dimensions[Config.LEVEL_FETCH][0],
-                          boxes[i, 0] + boxes[i, 2] + Config.DIFF_SIZE), Config.OUTPUT_SIZE)
+                          boxes[i, 0] + boxes[i, 2] + Config.DIFF_SIZE), self.output_size)
             b = range(max(0, boxes[i, 1] - Config.DIFF_SIZE),
                       min(self.wsi.level_dimensions[Config.LEVEL_FETCH][1],
-                          boxes[i, 1] + boxes[i, 3] + Config.DIFF_SIZE), Config.OUTPUT_SIZE)
+                          boxes[i, 1] + boxes[i, 3] + Config.DIFF_SIZE), self.output_size)
             coors.extend(list(product(a, b)))
         return coors
 
@@ -82,7 +85,8 @@ class Data():
     def save_predictions(self, preds, coors_batch, images=None):
         preds = (np.array(preds) * 100).astype(np.uint8)
         for i in range(Config.BATCH_SIZE):
-            cv2.imwrite(Config.RESULT_PATH + os.sep + str(coors_batch[i]) + "_tumor.png", preds[i, :, :, 0])
-            cv2.imwrite(Config.RESULT_PATH + os.sep + str(coors_batch[i]) + "_non_tumor.png", preds[i, :, :, 1])
-            # orim = Image.fromarray(images[i])
-            # orim.save('results\\' + str(coors_batch[i]) + "_orig.png")
+            if self.write_to_folder_flag:
+                cv2.imwrite(Config.RESULT_PATH + os.sep + str(coors_batch[i]) + "_tumor.png", preds[i, :, :, 0])
+                cv2.imwrite(Config.RESULT_PATH + os.sep + str(coors_batch[i]) + "_non_tumor.png", preds[i, :, :, 1])
+                # orim = Image.fromarray(images[i])
+                # orim.save('results\\' + str(coors_batch[i]) + "_orig.png")
