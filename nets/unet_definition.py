@@ -1,13 +1,14 @@
 from interface.model_config import *
-
-from nets.model_ops import *
-
+from nets.network_ops import *
 
 class UNet():
     def __init__(self):
         pass
 
-    def inference(self, images):
+    def model(self, images, is_training=False):
+        return self.model_test(images)
+
+    def model_test(self, images):
         with tf.name_scope('Down_Sample_1'):
             x_dim = Config.PATCH_SIZE
             y_dim = Config.PATCH_SIZE

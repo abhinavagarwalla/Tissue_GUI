@@ -4,7 +4,7 @@ import numpy as np
 from interface.model_config import *
 
 
-class Preprocess():
+class StrainNormalisation():
     def __init__(self):
         self.targetImg = cv2.imread(Config.TARGET_STAIN_PATH)
         self.targetImg = cv2.cvtColor(self.targetImg, 44);
@@ -18,7 +18,7 @@ class Preprocess():
         self.mT2, self.sdT2 = cv2.meanStdDev(t2)
         self.mT3, self.sdT3 = cv2.meanStdDev(t3)
 
-    def stain_normalisation(self, patch):
+    def preprocess_single(self, patch):
         patch = cv2.cvtColor(patch, 44)
 
         # Mean and Standard Deviation of Source image channels in Lab Colourspace
@@ -45,3 +45,9 @@ class Preprocess():
         normLab = np.float32(normLab)
         norm = cv2.cvtColor(normLab, 56)
         return norm
+
+    def preprocess_batch(self, patches):
+        res = []
+        for i in patches:
+            res.append(self.preprocess_single(i))
+        return np.array(res)

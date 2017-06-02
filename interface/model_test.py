@@ -10,23 +10,22 @@ from .model_config import *
 from scipy import ndimage
 import shutil
 from .combine_predictions import combine
-from nets import model_definition
-from preprocessing.model_preprocess import Preprocess
-
+from nets import nets_factory
+from preprocessing import preprocessing_factory
 
 class Test():
     def __init__(self):
         self.t0 = time()
+
         self.wsi = ops.OpenSlide(Config.WSI_PATH)
         self.images_test = tf.placeholder(tf.float32, shape=(None, Config.PATCH_SIZE, Config.PATCH_SIZE, 3))
-        # Network
-        self.net = model_definition.UNet()
-        self.logits_test = self.net.inference(self.images_test)
+        self.output = nets_factory.get_network_fn(name='unet', images=self.images_test, is_training=False)
+        self.preprocessor = preprocessing_factory.get_preprocessing_fn(name='stain_norm')
+
         self.coors = self.get_coordinates()
         self.iter = 0
         self.nsamples = len(self.coors)
         self.nepoch = math.ceil(self.nsamples/Config.BATCH_SIZE)
-        self.preprocessor = Preprocess()
         self.continue_flag = True
 
         if os.path.exists(Config.RESULT_PATH):
@@ -84,7 +83,7 @@ class Test():
                                                Config.LEVEL_FETCH,
                                                (Config.PATCH_SIZE, Config.PATCH_SIZE)).convert('RGB'))
             if np.mean(im)<= 240:
-                im = self.preprocessor.stain_normalisation(im)
+                im = self.preprocessor.preprocess_single(im)
                 image_batch.append(im[:,:,::-1]) #RGB to BGR
                 coor_batch.append(self.coors[self.iter])
             self.iter += 1
@@ -115,7 +114,7 @@ class Test():
                 i+=1
                 images, coors_batch = self.get_image_from_coor()
                 if len(images)==Config.BATCH_SIZE:
-                    pred = sess.run(self.logits_test, feed_dict={self.images_test: images})
+                    pred = sess.run(self.output, feed_dict={self.images_test: images})
                     self.save_predictions(pred, coors_batch, images)
             print("Done.")
         combine()

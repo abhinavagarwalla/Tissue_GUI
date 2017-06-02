@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-
 def weight_variable(shape, stddev, name):
     initial = tf.truncated_normal(shape, stddev=stddev, name='Gaussian_Init')
     return tf.Variable(initial, name=name)
