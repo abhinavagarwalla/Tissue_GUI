@@ -1,4 +1,4 @@
-from interface.model_config import *
+from dl_interface.model_config import *
 from nets.network_ops import *
 
 class UNet():

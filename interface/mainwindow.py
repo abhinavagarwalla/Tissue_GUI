@@ -1,10 +1,12 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QFileDialog
+
+from dl_interface.model_config import *
+from dl_interface.model_test import Test
 from interface.image_ops import DisplayImage
-from interface.model_config import *
-from interface.model_test import Test
 from interface.image_slide import ImageClass
+from dl_interface.gen_patch import PatchGenerator
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -217,7 +219,8 @@ class Ui_MainWindow(object):
         self.training = QtWidgets.QWidget()
         self.training.setObjectName("training")
         self.testBox = QtWidgets.QGroupBox(self.training)
-        self.testBox.setGeometry(QtCore.QRect(30, 20, 701, 251))
+        self.testBox.setGeometry(QtCore.QRect(20, 400, 701, 251))
+        self.testBox.setCheckable(False)
         self.testBox.setObjectName("testBox")
         self.test_progress = QtWidgets.QProgressBar(self.testBox)
         self.test_progress.setGeometry(QtCore.QRect(20, 200, 321, 23))
@@ -279,6 +282,101 @@ class Ui_MainWindow(object):
         self.plainTextEdit.setGeometry(QtCore.QRect(340, 190, 341, 41))
         self.plainTextEdit.setReadOnly(True)
         self.plainTextEdit.setObjectName("plainTextEdit")
+        self.trainBox = QtWidgets.QGroupBox(self.training)
+        self.trainBox.setGeometry(QtCore.QRect(20, 20, 491, 351))
+        self.trainBox.setObjectName("trainBox")
+        self.label_5 = QtWidgets.QLabel(self.trainBox)
+        self.label_5.setGeometry(QtCore.QRect(40, 70, 71, 16))
+        self.label_5.setObjectName("label_5")
+        self.label_6 = QtWidgets.QLabel(self.trainBox)
+        self.label_6.setGeometry(QtCore.QRect(40, 110, 61, 16))
+        self.label_6.setObjectName("label_6")
+        self.label_7 = QtWidgets.QLabel(self.trainBox)
+        self.label_7.setGeometry(QtCore.QRect(40, 150, 111, 16))
+        self.label_7.setObjectName("label_7")
+        self.label_8 = QtWidgets.QLabel(self.trainBox)
+        self.label_8.setGeometry(QtCore.QRect(40, 190, 71, 16))
+        self.label_8.setObjectName("label_8")
+        self.label_9 = QtWidgets.QLabel(self.trainBox)
+        self.label_9.setGeometry(QtCore.QRect(40, 230, 41, 16))
+        self.label_9.setObjectName("label_9")
+        self.comboBox = QtWidgets.QComboBox(self.trainBox)
+        self.comboBox.setGeometry(QtCore.QRect(170, 60, 69, 22))
+        self.comboBox.setObjectName("comboBox")
+        self.comboBox_2 = QtWidgets.QComboBox(self.trainBox)
+        self.comboBox_2.setGeometry(QtCore.QRect(170, 100, 69, 22))
+        self.comboBox_2.setObjectName("comboBox_2")
+        self.comboBox_3 = QtWidgets.QComboBox(self.trainBox)
+        self.comboBox_3.setGeometry(QtCore.QRect(170, 150, 69, 22))
+        self.comboBox_3.setObjectName("comboBox_3")
+        self.lineEdit = QtWidgets.QLineEdit(self.trainBox)
+        self.lineEdit.setGeometry(QtCore.QRect(170, 190, 113, 20))
+        self.lineEdit.setObjectName("lineEdit")
+        self.comboBox_4 = QtWidgets.QComboBox(self.trainBox)
+        self.comboBox_4.setGeometry(QtCore.QRect(170, 220, 69, 22))
+        self.comboBox_4.setObjectName("comboBox_4")
+        self.label_10 = QtWidgets.QLabel(self.trainBox)
+        self.label_10.setGeometry(QtCore.QRect(40, 260, 41, 16))
+        self.label_10.setObjectName("label_10")
+        self.lineEdit_2 = QtWidgets.QLineEdit(self.trainBox)
+        self.lineEdit_2.setGeometry(QtCore.QRect(170, 260, 113, 20))
+        self.lineEdit_2.setObjectName("lineEdit_2")
+        self.label_11 = QtWidgets.QLabel(self.trainBox)
+        self.label_11.setGeometry(QtCore.QRect(320, 30, 61, 21))
+        self.label_11.setObjectName("label_11")
+        self.select_wsi_level_2 = QtWidgets.QComboBox(self.trainBox)
+        self.select_wsi_level_2.setEnabled(False)
+        self.select_wsi_level_2.setGeometry(QtCore.QRect(380, 30, 41, 22))
+        self.select_wsi_level_2.setObjectName("select_wsi_level_2")
+        self.label_12 = QtWidgets.QLabel(self.trainBox)
+        self.label_12.setGeometry(QtCore.QRect(320, 60, 51, 21))
+        self.label_12.setObjectName("label_12")
+        self.select_patch_size_2 = QtWidgets.QLineEdit(self.trainBox)
+        self.select_patch_size_2.setEnabled(False)
+        self.select_patch_size_2.setGeometry(QtCore.QRect(380, 60, 41, 20))
+        self.select_patch_size_2.setObjectName("select_patch_size_2")
+        self.label_13 = QtWidgets.QLabel(self.trainBox)
+        self.label_13.setGeometry(QtCore.QRect(40, 290, 81, 16))
+        self.label_13.setObjectName("label_13")
+        self.label_14 = QtWidgets.QLabel(self.trainBox)
+        self.label_14.setGeometry(QtCore.QRect(40, 320, 47, 13))
+        self.label_14.setObjectName("label_14")
+        self.lineEdit_3 = QtWidgets.QLineEdit(self.trainBox)
+        self.lineEdit_3.setGeometry(QtCore.QRect(170, 30, 113, 20))
+        self.lineEdit_3.setObjectName("lineEdit_3")
+        self.pushButton = QtWidgets.QPushButton(self.trainBox)
+        self.pushButton.setGeometry(QtCore.QRect(40, 30, 111, 23))
+        self.pushButton.setObjectName("pushButton")
+        self.patchBox = QtWidgets.QGroupBox(self.training)
+        self.patchBox.setGeometry(QtCore.QRect(550, 20, 531, 141))
+        self.patchBox.setObjectName("patchBox")
+        self.gen_image_path = QtWidgets.QLineEdit(self.patchBox)
+        self.gen_image_path.setEnabled(False)
+        self.gen_image_path.setGeometry(QtCore.QRect(150, 30, 371, 20))
+        self.gen_image_path.setObjectName("gen_image_path")
+        self.select_gen_images = QtWidgets.QPushButton(self.patchBox)
+        self.select_gen_images.setGeometry(QtCore.QRect(30, 30, 111, 23))
+        self.select_gen_images.setObjectName("select_gen_images")
+        self.select_gen_patch_size = QtWidgets.QLineEdit(self.patchBox)
+        self.select_gen_patch_size.setEnabled(False)
+        self.select_gen_patch_size.setGeometry(QtCore.QRect(100, 100, 41, 20))
+        self.select_gen_patch_size.setObjectName("select_gen_patch_size")
+        self.select_gen_wsi_level = QtWidgets.QComboBox(self.patchBox)
+        self.select_gen_wsi_level.setEnabled(False)
+        self.select_gen_wsi_level.setGeometry(QtCore.QRect(100, 70, 41, 22))
+        self.select_gen_wsi_level.setObjectName("select_gen_wsi_level")
+        self.label_15 = QtWidgets.QLabel(self.patchBox)
+        self.label_15.setGeometry(QtCore.QRect(40, 70, 61, 21))
+        self.label_15.setObjectName("label_15")
+        self.label_16 = QtWidgets.QLabel(self.patchBox)
+        self.label_16.setGeometry(QtCore.QRect(40, 100, 51, 21))
+        self.label_16.setObjectName("label_16")
+        self.start_gen_patch = QtWidgets.QPushButton(self.patchBox)
+        self.start_gen_patch.setGeometry(QtCore.QRect(190, 80, 121, 23))
+        self.start_gen_patch.setObjectName("start_gen_patch")
+        self.stop_gen_patch = QtWidgets.QPushButton(self.patchBox)
+        self.stop_gen_patch.setGeometry(QtCore.QRect(320, 80, 121, 23))
+        self.stop_gen_patch.setObjectName("stop_gen_patch")
         self.tabs.addTab(self.training, "")
         self.horizontalLayout_4.addWidget(self.tabs)
         MainWindow.setCentralWidget(self.centralWidget)
@@ -344,6 +442,24 @@ class Ui_MainWindow(object):
         self.label_3.setText(_translate("MainWindow", "Patch Size"))
         self.select_mask.setText(_translate("MainWindow", "Select Mask"))
         self.label_4.setText(_translate("MainWindow", "Mask Level:"))
+        self.trainBox.setTitle(_translate("MainWindow", "Training"))
+        self.label_5.setText(_translate("MainWindow", "Preprocessing"))
+        self.label_6.setText(_translate("MainWindow", "Optimiser"))
+        self.label_7.setText(_translate("MainWindow", "Network Architecture"))
+        self.label_8.setText(_translate("MainWindow", "Learning Rate"))
+        self.label_9.setText(_translate("MainWindow", "Loss"))
+        self.label_10.setText(_translate("MainWindow", "Epoch"))
+        self.label_11.setText(_translate("MainWindow", "WSI Level:"))
+        self.label_12.setText(_translate("MainWindow", "Patch Size"))
+        self.label_13.setText(_translate("MainWindow", "Problem Type:"))
+        self.label_14.setText(_translate("MainWindow", "Labels"))
+        self.pushButton.setText(_translate("MainWindow", "Training Images"))
+        self.patchBox.setTitle(_translate("MainWindow", "Generate Patches"))
+        self.select_gen_images.setText(_translate("MainWindow", "Images"))
+        self.label_15.setText(_translate("MainWindow", "WSI Level:"))
+        self.label_16.setText(_translate("MainWindow", "Patch Size"))
+        self.start_gen_patch.setText(_translate("MainWindow", "Generate Patches"))
+        self.stop_gen_patch.setText(_translate("MainWindow", "Cancel"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
@@ -400,14 +516,24 @@ class Ui_MainWindow(object):
         self.select_mask.clicked.connect(self.select_mask_path)
         self.start_eval.clicked.connect(self.start_testing)
 
+        self.select_gen_images.clicked.connect(self.select_gen_WSI)
+        self.start_gen_patch.clicked.connect(self.start_generating_patch)
+
     def initialize_worker_thread(self):
         self.test_model = Test()
-        self.thread = QtCore.QThread()
+        self.thread_test = QtCore.QThread()
         self.test_model.epoch.connect(self.update_test_progress)
-        self.test_model.moveToThread(self.thread)
-        self.test_model.finished.connect(self.thread.quit)
-        self.thread.started.connect(self.test_model.test)
+        self.test_model.moveToThread(self.thread_test)
+        self.test_model.finished.connect(self.thread_test.quit)
+        self.thread_test.started.connect(self.test_model.test)
         self.stop_eval.clicked.connect(lambda: self.test_model.stop_call())
+
+        self.generate_patches = PatchGenerator()
+        self.thread_patch = QtCore.QThread()
+        self.generate_patches.moveToThread(self.thread_patch)
+        self.generate_patches.finished.connect(self.thread_patch.quit)
+        self.thread_patch.started.connect(self.generate_patches.run)
+        self.stop_gen_patch.clicked.connect(lambda: self.generate_patches.stop_call())
 
     def update_test_progress(self, i):
         self.test_progress.setValue(i)
@@ -631,6 +757,18 @@ class Ui_MainWindow(object):
             self.select_wsi_level.addItem("None")
             [self.select_wsi_level.addItem(str(i)) for i in range(nlevel)]
 
+    def select_gen_WSI(self):
+        fname = QFileDialog.getExistingDirectory(self.menuWindow, "Choose Directory", os.getcwd(),
+                                                 QFileDialog.ShowDirsOnly)
+        if fname:
+            print(fname)
+            self.gen_image_path.setEnabled(True)
+            self.gen_image_path.setText(fname)
+            self.select_gen_patch_size.setEnabled(True)
+            self.select_gen_wsi_level.setEnabled(True)
+            self.select_gen_wsi_level.addItem("None")
+            [self.select_gen_wsi_level.addItem(str(i)) for i in range(12)]
+
     def select_dl_model(self):
         fname = QFileDialog.getOpenFileName(self.menuWindow, "Select DL Checkpoint", os.getcwd(), "*.ckpt-*")
         if fname[0]:
@@ -653,6 +791,7 @@ class Ui_MainWindow(object):
                 and self.select_patch_size.text()!='' and self.select_wsi_level.currentIndex()!=0\
                 and self.select_mask_level.currentIndex()!=0:
             return True
+        return False
 
     def start_testing(self):
         if self.check_test_fields():
@@ -662,7 +801,20 @@ class Ui_MainWindow(object):
             Config.PATCH_SIZE = int(self.select_patch_size.text())
             Config.LEVEL_FETCH = self.select_wsi_level.currentIndex()-1
             Config.LEVEL_UPGRADE = self.select_mask_level.currentIndex() - 1 - Config.LEVEL_FETCH
-            self.thread.start()
+            self.thread_test.start()
+
+    def check_patch_fields(self):
+        if self.gen_image_path.isEnabled() and self.select_gen_patch_size.text()!=''\
+                and self.select_gen_wsi_level.currentIndex()!=0:
+            return True
+        return False
+
+    def start_generating_patch(self):
+        # if self.check_patch_fields():
+        #     PatchConfig.WSI_FOLDER_PATH = self.gen_image_path.text()
+        #     PatchConfig.LEVEL_FETCH = self.select_gen_wsi_level.currentIndex() - 1
+        #     PatchConfig.PATCH_SIZE = int(self.select_gen_patch_size.text())
+        self.thread_patch.start()
 
     def update_coordinates(self):
         w, h = self.ImageView.get_current_coordinates()

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from interface.model_config import *
+from dl_interface.model_config import *
 
 
 class StrainNormalisation():

@@ -1,11 +1,14 @@
-from scipy import ndimage
+import os
+from itertools import product
+
 import cv2
 import numpy as np
-from interface.model_config import *
-from preprocessing import preprocessing_factory
-from itertools import product
-import os
+from scipy import ndimage
+
+from dl_interface.model_config import *
 from interface.image_slide import ImageClass
+from preprocessing import preprocessing_factory
+
 
 class Data():
     def __init__(self, preprocessor, outshape):

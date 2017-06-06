@@ -15,3 +15,23 @@ class Config():
     OUTPUT_SIZE = None #164 #36
     DIFF_SIZE = None #PATCH_SIZE - OUTPUT_SIZE
     BATCH_SIZE = 64
+
+    STATE = None ## For setting either testing, training or patch creation
+
+class PatchConfig():
+    MASK_PATH = None
+    WSI_FOLDER_PATH = '//shaban-pc/Camelyon16/Dataset/Original/Train' #None
+    WSI_PATH = None
+    RESULT_PATH = os.getcwd() + os.sep + 'results'
+    LEVEL_UPGRADE = None  # 5
+    LEVEL_FETCH = 0 #None
+    PATCH_SIZE = 384 #None  # 252 #124
+    BATCH_SIZE = 128
+    LEVEL_UPGRADE = 6
+    RESULT_PATH = 'F:\\abhinav\\patches'
+
+class TrainConfig():
+    pass
+
+class TestConfig():
+    pass

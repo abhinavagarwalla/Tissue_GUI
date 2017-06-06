@@ -3,8 +3,10 @@ import glob
 import cv2
 import numpy as np
 from PIL import Image
-from interface.model_config import *
+
+from dl_interface.model_config import *
 from interface.image_slide import ImageClass
+
 
 def combine():
     ilist = glob.glob(Config.RESULT_PATH+"\\*)_tumor.png")
