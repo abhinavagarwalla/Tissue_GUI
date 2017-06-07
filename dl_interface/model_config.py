@@ -22,8 +22,7 @@ class PatchConfig():
     MASK_PATH = None
     WSI_FOLDER_PATH = '//shaban-pc/Camelyon16/Dataset/Original/Train' #None
     WSI_PATH = None
-    RESULT_PATH = os.getcwd() + os.sep + 'results'
-    LEVEL_UPGRADE = None  # 5
+    # RESULT_PATH = os.getcwd() + os.sep + 'results'
     LEVEL_FETCH = 0 #None
     PATCH_SIZE = 384 #None  # 252 #124
     BATCH_SIZE = 128

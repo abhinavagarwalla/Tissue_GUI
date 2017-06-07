@@ -59,10 +59,10 @@ class PatchGenerator(QObject):
                     else:
                         break
                 self.wsi_completed = False
-                np.save(PatchConfig.WSI_FOLDER_PATH + os.sep + "Coors" + os.sep + \
-                        self.wsi_list["Tumor"][self.wsi_iter].split('.')[0] + '_coors.npy', np.array(self.coors))
-                np.save(PatchConfig.WSI_FOLDER_PATH + os.sep + "Coors" + os.sep + \
-                        self.wsi_list["Tumor"][self.wsi_iter].split('.')[0] + '_coors_labels.npy', np.array(self.coor_labels))
+                np.save(PatchConfig.RESULT_PATH + os.sep + "Coors" + os.sep + \
+                        self.wsi_list["Tumor"][self.wsi_iter].split(os.sep)[-1].split('.')[0] + '_coors.npy', np.array(self.coors))
+                np.save(PatchConfig.RESULT_PATH + os.sep + "Coors" + os.sep + \
+                        self.wsi_list["Tumor"][self.wsi_iter].split(os.sep)[-1].split('.')[0] + '_coors_labels.npy', np.array(self.coor_labels))
                 print("WSI has been completed, iterating to next")
             self.data_completed = True
 
@@ -76,37 +76,38 @@ class PatchGenerator(QObject):
                                                 pow(2, PatchConfig.LEVEL_FETCH) * self.coors[self.iter][1]),
                                                PatchConfig.LEVEL_FETCH,
                                                (PatchConfig.PATCH_SIZE, PatchConfig.PATCH_SIZE)).convert('RGB'))
-            tover = np.mean(np.array(self.tumor_wsi.read_region((pow(2, PatchConfig.LEVEL_FETCH) * self.coors[self.iter][0],
-                                                pow(2, PatchConfig.LEVEL_FETCH) * self.coors[self.iter][1]), PatchConfig.LEVEL_FETCH,
-                                                                (PatchConfig.PATCH_SIZE,
-                                                                 PatchConfig.PATCH_SIZE)).convert('1')))
-
-            if tover > 0.60:
-                image_batch.append(im[:, :, ::-1])  # RGB to BGR
-                coor_batch.append(self.coors[self.iter])
-                folder_list.append("Tumor")
-            elif tover < 0.25:
-                if np.mean(im) <= 180:
+            if np.mean(im) <= 240:
+                tover = np.mean(np.array(self.tumor_wsi.read_region((pow(2, PatchConfig.LEVEL_FETCH) * self.coors[self.iter][0],
+                                                    pow(2, PatchConfig.LEVEL_FETCH) * self.coors[self.iter][1]), PatchConfig.LEVEL_FETCH,
+                                                                    (PatchConfig.PATCH_SIZE,
+                                                                     PatchConfig.PATCH_SIZE)).convert('1')))
+                # if tover > 0:
+                #     print(tover)
+                if tover > 0.50:
+                    # print("This is tumor case")
+                    image_batch.append(im[:, :, ::-1])  # RGB to BGR
+                    coor_batch.append(self.coors[self.iter])
+                    folder_list.append("Tumor")
+                elif tover < 0.01:
                     prob = random.random()
-                    if prob < 0.10:
+                    if (np.mean(im) <= 180) and (prob < 0.10):
                         image_batch.append(im[:, :, ::-1])  # RGB to BGR
                         coor_batch.append(self.coors[self.iter])
-                elif np.mean(im) >= 240:
-                    pass
+                        folder_list.append("Normal")
+                    elif prob < 0.001:
+                        image_batch.append(im[:, :, ::-1])  # RGB to BGR
+                        coor_batch.append(self.coors[self.iter])
+                        folder_list.append("Normal")
                 else:
-                    prob = random.random()
-                    if prob < 0.001:
-                        image_batch.append(im[:, :, ::-1])  # RGB to BGR
-                        coor_batch.append(self.coors[self.iter])
-                folder_list.append("Normal")
-            elif abs(tover-0.50)<0.05:
-                image_batch.append(im[:, :, ::-1])  # RGB to BGR
-                coor_batch.append(self.coors[self.iter])
-                folder_list.append("Ambiguous")
+                    # print("This is ambiguous case")
+                    image_batch.append(im[:, :, ::-1])  # RGB to BGR
+                    coor_batch.append(self.coors[self.iter])
+                    folder_list.append("Ambiguous")
+                self.coor_labels.append(tover)
 
-            self.coor_labels.append(tover)
             self.iter += 1
             if self.iter == self.nsamples:
+                self.iter = 0
                 self.wsi_completed = True
                 break
 
@@ -114,7 +115,7 @@ class PatchGenerator(QObject):
         self.save_predictions(image_batch, coor_batch, folder_list)
 
     def save_predictions(self, images, coors_batch, folder_name):
-        print("Saving Predictions..", self.wsi_iter, self.iter)
+        print("Saving Predictions..", self.wsi_iter, '/', len(self.wsi_list["Tumor"]), self.iter, '/', self.nsamples)
         for i in range(len(images)):
             if self.write_to_folder_flag:
                 orim = Image.fromarray(images[i])
@@ -133,6 +134,14 @@ class PatchGenerator(QObject):
             if len(a):
                 print(len(a), a, boxes[i])
             else:
+                if (boxes[i, 0]+boxes[i,2])< 0.05*self.wsi.level_dimensions[PatchConfig.LEVEL_FETCH+PatchConfig.LEVEL_UPGRADE][0]:
+                    continue
+                if boxes[i, 0] > 0.95 * self.wsi.level_dimensions[PatchConfig.LEVEL_FETCH+PatchConfig.LEVEL_UPGRADE][0]:
+                    continue
+                if (boxes[i, 1]+boxes[i,3])< 0.05*self.wsi.level_dimensions[PatchConfig.LEVEL_FETCH+PatchConfig.LEVEL_UPGRADE][1]:
+                    continue
+                if boxes[i, 1] > 0.95 * self.wsi.level_dimensions[PatchConfig.LEVEL_FETCH+PatchConfig.LEVEL_UPGRADE][1]:
+                    continue
                 boxes_new.append(boxes[i])
         return np.array(boxes_new)
 
@@ -151,7 +160,7 @@ class PatchGenerator(QObject):
         boxes = boxes * pow(2, PatchConfig.LEVEL_UPGRADE)
         print(boxes)
         coors = []
-        for i in range(1):
+        for i in range(len(boxes)):
             a = range(max(0, boxes[i, 0]),
                       min(self.wsi.level_dimensions[PatchConfig.LEVEL_FETCH][0],
                           boxes[i, 0] + boxes[i, 2]), PatchConfig.PATCH_SIZE)
@@ -159,6 +168,8 @@ class PatchGenerator(QObject):
                       min(self.wsi.level_dimensions[PatchConfig.LEVEL_FETCH][1],
                           boxes[i, 1] + boxes[i, 3]), PatchConfig.PATCH_SIZE)
             coors.extend(list(product(a, b)))
+        random.shuffle(coors)
+        print("All coordinates has been fetched")
         return coors
 
     @pyqtSlot()

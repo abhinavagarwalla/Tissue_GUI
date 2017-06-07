@@ -53,7 +53,7 @@ class Data():
         print(boxes)
         coors = []
         ## Make it more complete
-        for i in range(1):  # len(boxes)):
+        for i in range(len(boxes)):
             a = range(max(0, boxes[i, 0] - Config.DIFF_SIZE),
                       min(self.wsi.level_dimensions[Config.LEVEL_FETCH][0],
                           boxes[i, 0] + boxes[i, 2] + Config.DIFF_SIZE), self.output_size)
