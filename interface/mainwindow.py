@@ -7,6 +7,7 @@ from dl_interface.model_test import Test
 from interface.image_ops import DisplayImage
 from interface.image_slide import ImageClass
 from dl_interface.gen_patch import PatchGenerator
+from dl_interface.convert_dataset import TFRecordConverter
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -321,20 +322,6 @@ class Ui_MainWindow(object):
         self.lineEdit_2 = QtWidgets.QLineEdit(self.trainBox)
         self.lineEdit_2.setGeometry(QtCore.QRect(170, 260, 113, 20))
         self.lineEdit_2.setObjectName("lineEdit_2")
-        self.label_11 = QtWidgets.QLabel(self.trainBox)
-        self.label_11.setGeometry(QtCore.QRect(320, 30, 61, 21))
-        self.label_11.setObjectName("label_11")
-        self.select_wsi_level_2 = QtWidgets.QComboBox(self.trainBox)
-        self.select_wsi_level_2.setEnabled(False)
-        self.select_wsi_level_2.setGeometry(QtCore.QRect(380, 30, 41, 22))
-        self.select_wsi_level_2.setObjectName("select_wsi_level_2")
-        self.label_12 = QtWidgets.QLabel(self.trainBox)
-        self.label_12.setGeometry(QtCore.QRect(320, 60, 51, 21))
-        self.label_12.setObjectName("label_12")
-        self.select_patch_size_2 = QtWidgets.QLineEdit(self.trainBox)
-        self.select_patch_size_2.setEnabled(False)
-        self.select_patch_size_2.setGeometry(QtCore.QRect(380, 60, 41, 20))
-        self.select_patch_size_2.setObjectName("select_patch_size_2")
         self.label_13 = QtWidgets.QLabel(self.trainBox)
         self.label_13.setGeometry(QtCore.QRect(40, 290, 81, 16))
         self.label_13.setObjectName("label_13")
@@ -347,8 +334,11 @@ class Ui_MainWindow(object):
         self.pushButton = QtWidgets.QPushButton(self.trainBox)
         self.pushButton.setGeometry(QtCore.QRect(40, 30, 111, 23))
         self.pushButton.setObjectName("pushButton")
+        self.start_tf_record = QtWidgets.QPushButton(self.trainBox)
+        self.start_tf_record.setGeometry(QtCore.QRect(320, 100, 121, 23))
+        self.start_tf_record.setObjectName("start_tf_record")
         self.patchBox = QtWidgets.QGroupBox(self.training)
-        self.patchBox.setGeometry(QtCore.QRect(550, 20, 531, 141))
+        self.patchBox.setGeometry(QtCore.QRect(550, 30, 531, 161))
         self.patchBox.setObjectName("patchBox")
         self.gen_image_path = QtWidgets.QLineEdit(self.patchBox)
         self.gen_image_path.setEnabled(False)
@@ -359,7 +349,7 @@ class Ui_MainWindow(object):
         self.select_gen_images.setObjectName("select_gen_images")
         self.select_gen_patch_size = QtWidgets.QLineEdit(self.patchBox)
         self.select_gen_patch_size.setEnabled(False)
-        self.select_gen_patch_size.setGeometry(QtCore.QRect(100, 100, 41, 20))
+        self.select_gen_patch_size.setGeometry(QtCore.QRect(230, 70, 41, 20))
         self.select_gen_patch_size.setObjectName("select_gen_patch_size")
         self.select_gen_wsi_level = QtWidgets.QComboBox(self.patchBox)
         self.select_gen_wsi_level.setEnabled(False)
@@ -369,14 +359,18 @@ class Ui_MainWindow(object):
         self.label_15.setGeometry(QtCore.QRect(40, 70, 61, 21))
         self.label_15.setObjectName("label_15")
         self.label_16 = QtWidgets.QLabel(self.patchBox)
-        self.label_16.setGeometry(QtCore.QRect(40, 100, 51, 21))
+        self.label_16.setGeometry(QtCore.QRect(170, 70, 51, 21))
         self.label_16.setObjectName("label_16")
         self.start_gen_patch = QtWidgets.QPushButton(self.patchBox)
-        self.start_gen_patch.setGeometry(QtCore.QRect(190, 80, 121, 23))
+        self.start_gen_patch.setGeometry(QtCore.QRect(120, 110, 121, 23))
         self.start_gen_patch.setObjectName("start_gen_patch")
         self.stop_gen_patch = QtWidgets.QPushButton(self.patchBox)
-        self.stop_gen_patch.setGeometry(QtCore.QRect(320, 80, 121, 23))
+        self.stop_gen_patch.setGeometry(QtCore.QRect(270, 110, 121, 23))
         self.stop_gen_patch.setObjectName("stop_gen_patch")
+        self.patch_progress = QtWidgets.QProgressBar(self.patchBox)
+        self.patch_progress.setGeometry(QtCore.QRect(300, 70, 221, 23))
+        self.patch_progress.setProperty("value", 0)
+        self.patch_progress.setObjectName("patch_progress")
         self.tabs.addTab(self.training, "")
         self.horizontalLayout_4.addWidget(self.tabs)
         MainWindow.setCentralWidget(self.centralWidget)
@@ -449,11 +443,10 @@ class Ui_MainWindow(object):
         self.label_8.setText(_translate("MainWindow", "Learning Rate"))
         self.label_9.setText(_translate("MainWindow", "Loss"))
         self.label_10.setText(_translate("MainWindow", "Epoch"))
-        self.label_11.setText(_translate("MainWindow", "WSI Level:"))
-        self.label_12.setText(_translate("MainWindow", "Patch Size"))
         self.label_13.setText(_translate("MainWindow", "Problem Type:"))
         self.label_14.setText(_translate("MainWindow", "Labels"))
-        self.pushButton.setText(_translate("MainWindow", "Training Images"))
+        self.pushButton.setText(_translate("MainWindow", "Training Dataset"))
+        self.start_tf_record.setText(_translate("MainWindow", "Convert to TFRecord"))
         self.patchBox.setTitle(_translate("MainWindow", "Generate Patches"))
         self.select_gen_images.setText(_translate("MainWindow", "Images"))
         self.label_15.setText(_translate("MainWindow", "WSI Level:"))
@@ -518,6 +511,7 @@ class Ui_MainWindow(object):
 
         self.select_gen_images.clicked.connect(self.select_gen_WSI)
         self.start_gen_patch.clicked.connect(self.start_generating_patch)
+        self.start_tf_record.clicked.connect(self.start_creating_dataset)
 
     def initialize_worker_thread(self):
         self.test_model = Test()
@@ -534,6 +528,13 @@ class Ui_MainWindow(object):
         self.generate_patches.finished.connect(self.thread_patch.quit)
         self.thread_patch.started.connect(self.generate_patches.run)
         self.stop_gen_patch.clicked.connect(lambda: self.generate_patches.stop_call())
+
+        self.create_dataset = TFRecordConverter()
+        self.thread_dataset = QtCore.QThread()
+        self.create_dataset.moveToThread(self.thread_dataset)
+        self.create_dataset.finished.connect(self.thread_dataset.quit)
+        self.thread_dataset.started.connect(self.create_dataset.run)
+        # self.stop_gen_patch.clicked.connect(lambda: self.create_dataset.stop_call())
 
     def update_test_progress(self, i):
         self.test_progress.setValue(i)
@@ -815,6 +816,9 @@ class Ui_MainWindow(object):
         #     PatchConfig.LEVEL_FETCH = self.select_gen_wsi_level.currentIndex() - 1
         #     PatchConfig.PATCH_SIZE = int(self.select_gen_patch_size.text())
         self.thread_patch.start()
+
+    def start_creating_dataset(self):
+        self.thread_dataset.start()
 
     def update_coordinates(self):
         w, h = self.ImageView.get_current_coordinates()

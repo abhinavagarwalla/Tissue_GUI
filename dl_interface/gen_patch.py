@@ -33,19 +33,19 @@ class PatchGenerator(QObject):
         self.wsi_list = dict((i, glob.glob(PatchConfig.WSI_FOLDER_PATH + os.sep + i + os.sep + "*.tif")) for i in self.classes)
         self.classes_dict = dict((i, self.classes[i]) for i in range(len(self.classes)))
 
-        if os.path.exists(PatchConfig.RESULT_PATH):
-            shutil.rmtree(PatchConfig.RESULT_PATH)
-        os.mkdir(PatchConfig.RESULT_PATH)
-        os.mkdir(PatchConfig.RESULT_PATH + os.sep + "Coors")
-        os.mkdir(PatchConfig.RESULT_PATH + os.sep + "Ambiguous")
-        [os.mkdir(PatchConfig.RESULT_PATH + os.sep + i) for i in self.classes]
+        # if os.path.exists(PatchConfig.RESULT_PATH):
+        #     shutil.rmtree(PatchConfig.RESULT_PATH)
+        # os.mkdir(PatchConfig.RESULT_PATH)
+        # os.mkdir(PatchConfig.RESULT_PATH + os.sep + "Coors")
+        # os.mkdir(PatchConfig.RESULT_PATH + os.sep + "Ambiguous")
+        # [os.mkdir(PatchConfig.RESULT_PATH + os.sep + i) for i in self.classes]
 
     def run(self):
         self.initialize()
         while(self.continue_flag):
             time.sleep(3)
             print(PatchConfig.WSI_FOLDER_PATH, self.classes)
-            for i in range(len(self.wsi_list["Tumor"])):
+            for i in range(50, 70):#, len(self.wsi_list["Tumor"])):
                 self.wsi_iter = i
                 self.wsi = ImageClass(self.wsi_list["Tumor"][self.wsi_iter])
                 self.tumor_wsi = ImageClass(PatchConfig.WSI_FOLDER_PATH + os.sep + "Tumor" + os.sep + "Mask_Tumor" +\

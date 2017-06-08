@@ -5,7 +5,7 @@ class UNet():
     def __init__(self):
         pass
 
-    def model(self, images, is_training=False):
+    def model(self, images, nclasses=None, is_training=False):
         return self.model_test(images)
 
     def model_test(self, images):

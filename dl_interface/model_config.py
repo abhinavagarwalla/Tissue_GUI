@@ -29,6 +29,14 @@ class PatchConfig():
     LEVEL_UPGRADE = 6
     RESULT_PATH = 'F:\\abhinav\\patches'
 
+class TFRConfig():
+    tfrecord_filename = "Camelyon_tfr" #None
+    dataset_dir = "F:\\abhinav\\patches\\wsi" #None
+    random_seed = 378
+    num_shards = 10
+    validation_size = 0.2
+    COOR_PATH = 'F:\\abhinav\\patches\\Coors'
+
 class TrainConfig():
     pass
 

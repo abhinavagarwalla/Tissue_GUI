@@ -73,7 +73,7 @@ class Data():
                                                Config.LEVEL_FETCH,
                                                (Config.PATCH_SIZE, Config.PATCH_SIZE)).convert('RGB'))
             if np.mean(im) <= 240:
-                im = self.preprocessor.preprocess_single(im)
+                im = self.preprocessor.preprocess_image(im)
                 image_batch.append(im[:, :, ::-1])  # RGB to BGR
                 coor_batch.append(self.coors[self.iter])
             self.iter += 1
