@@ -8,6 +8,7 @@ from interface.image_ops import DisplayImage
 from interface.image_slide import ImageClass
 from dl_interface.gen_patch import PatchGenerator
 from dl_interface.convert_dataset import TFRecordConverter
+from dl_interface.model_train import Train
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -334,11 +335,14 @@ class Ui_MainWindow(object):
         self.pushButton = QtWidgets.QPushButton(self.trainBox)
         self.pushButton.setGeometry(QtCore.QRect(40, 30, 111, 23))
         self.pushButton.setObjectName("pushButton")
-        self.start_tf_record = QtWidgets.QPushButton(self.trainBox)
-        self.start_tf_record.setGeometry(QtCore.QRect(320, 100, 121, 23))
-        self.start_tf_record.setObjectName("start_tf_record")
+        self.start_train = QtWidgets.QPushButton(self.trainBox)
+        self.start_train.setGeometry(QtCore.QRect(340, 170, 121, 23))
+        self.start_train.setObjectName("start_train")
+        self.stop_train = QtWidgets.QPushButton(self.trainBox)
+        self.stop_train.setGeometry(QtCore.QRect(340, 200, 121, 23))
+        self.stop_train.setObjectName("stop_train")
         self.patchBox = QtWidgets.QGroupBox(self.training)
-        self.patchBox.setGeometry(QtCore.QRect(550, 30, 531, 161))
+        self.patchBox.setGeometry(QtCore.QRect(550, 30, 531, 191))
         self.patchBox.setObjectName("patchBox")
         self.gen_image_path = QtWidgets.QLineEdit(self.patchBox)
         self.gen_image_path.setEnabled(False)
@@ -371,6 +375,9 @@ class Ui_MainWindow(object):
         self.patch_progress.setGeometry(QtCore.QRect(300, 70, 221, 23))
         self.patch_progress.setProperty("value", 0)
         self.patch_progress.setObjectName("patch_progress")
+        self.start_tf_record = QtWidgets.QPushButton(self.patchBox)
+        self.start_tf_record.setGeometry(QtCore.QRect(200, 150, 121, 23))
+        self.start_tf_record.setObjectName("start_tf_record")
         self.tabs.addTab(self.training, "")
         self.horizontalLayout_4.addWidget(self.tabs)
         MainWindow.setCentralWidget(self.centralWidget)
@@ -446,13 +453,15 @@ class Ui_MainWindow(object):
         self.label_13.setText(_translate("MainWindow", "Problem Type:"))
         self.label_14.setText(_translate("MainWindow", "Labels"))
         self.pushButton.setText(_translate("MainWindow", "Training Dataset"))
-        self.start_tf_record.setText(_translate("MainWindow", "Convert to TFRecord"))
+        self.start_train.setText(_translate("MainWindow", "Start Training"))
+        self.stop_train.setText(_translate("MainWindow", "Stop Training"))
         self.patchBox.setTitle(_translate("MainWindow", "Generate Patches"))
         self.select_gen_images.setText(_translate("MainWindow", "Images"))
         self.label_15.setText(_translate("MainWindow", "WSI Level:"))
         self.label_16.setText(_translate("MainWindow", "Patch Size"))
         self.start_gen_patch.setText(_translate("MainWindow", "Generate Patches"))
         self.stop_gen_patch.setText(_translate("MainWindow", "Cancel"))
+        self.start_tf_record.setText(_translate("MainWindow", "Convert to TFRecord"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
@@ -512,6 +521,7 @@ class Ui_MainWindow(object):
         self.select_gen_images.clicked.connect(self.select_gen_WSI)
         self.start_gen_patch.clicked.connect(self.start_generating_patch)
         self.start_tf_record.clicked.connect(self.start_creating_dataset)
+        self.start_train.clicked.connect(self.start_training)
 
     def initialize_worker_thread(self):
         self.test_model = Test()
@@ -535,6 +545,12 @@ class Ui_MainWindow(object):
         self.create_dataset.finished.connect(self.thread_dataset.quit)
         self.thread_dataset.started.connect(self.create_dataset.run)
         # self.stop_gen_patch.clicked.connect(lambda: self.create_dataset.stop_call())
+
+        self.train_model = Train()
+        self.thread_train = QtCore.QThread()
+        self.train_model.moveToThread(self.thread_train)
+        self.train_model.finished.connect(self.thread_train.quit)
+        self.thread_train.started.connect(self.train_model.train)
 
     def update_test_progress(self, i):
         self.test_progress.setValue(i)
@@ -819,6 +835,9 @@ class Ui_MainWindow(object):
 
     def start_creating_dataset(self):
         self.thread_dataset.start()
+
+    def start_training(self):
+        self.thread_train.start()
 
     def update_coordinates(self):
         w, h = self.ImageView.get_current_coordinates()

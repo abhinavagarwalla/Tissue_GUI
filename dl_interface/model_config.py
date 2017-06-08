@@ -38,7 +38,19 @@ class TFRConfig():
     COOR_PATH = 'F:\\abhinav\\patches\\Coors'
 
 class TrainConfig():
-    pass
+    dataset_dir = 'F:\\abhinav\\patches\\wsi'
+    log_dir = 'F:\\abhinav\\patches\\log'
+    checkpoint_file = 'F:\\abhinav\\patches\\inception_resnet_v2_2016_08_30.ckpt'
+    image_size = 299
+    num_classes = 2
+    labels_file = 'F:\\abhinav\\patches\\wsi\\labels.txt'
+    file_pattern = 'Camelyon_tfr_%s_*.tfrecord'
+    num_epochs = 5
+    batch_size = 64
+    initial_learning_rate = 0.001
+    learning_rate_decay_factor = 0.9
+    num_epochs_before_decay = 2
+    source_size = 384
 
 class TestConfig():
     pass

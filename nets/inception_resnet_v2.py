@@ -86,7 +86,8 @@ class InceptionResnetV2():
         return net
 
     def model(self, images, nclasses=None, is_training=False):
-        return self.inception_resnet_v2(images, nclasses, is_training)
+        with slim.arg_scope(self.inception_resnet_v2_arg_scope()):
+            return self.inception_resnet_v2(images, nclasses, is_training)
 
     def inception_resnet_v2(self, inputs, num_classes=1001, is_training=True,
                             dropout_keep_prob=0.8,
