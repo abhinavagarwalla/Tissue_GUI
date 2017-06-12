@@ -43,8 +43,8 @@ class Train(QObject):
 
         # Create a dictionary that will help people understand your dataset better. This is required by the Dataset class later.
         self.items_to_descriptions = {
-            'image': 'A 3-channel RGB coloured flower image that is either tulips, sunflowers, roses, dandelion, or daisy.',
-            'label': 'A label that is as such -- 0:daisy, 1:dandelion, 2:roses, 3:sunflowers, 4:tulips'
+            'image': 'A 3-channel RGB coloured flower image that is either tumor or normal.',
+            'label': 'A label that is as such -- 0:normal, 1:tumor'
         }
 
     def get_split(self, split_name):
@@ -72,13 +72,13 @@ class Train(QObject):
         file_pattern_path = os.path.join(TrainConfig.dataset_dir, TrainConfig.file_pattern % (split_name))
 
         # Count the total number of examples in all of these shard
-        num_samples = 0
-        file_pattern_for_counting = 'flowers_' + split_name
-        tfrecords_to_count = [os.path.join(TrainConfig.dataset_dir, file) for file in os.listdir(TrainConfig.dataset_dir) if
-                              file.startswith(file_pattern_for_counting)]
-        for tfrecord_file in tfrecords_to_count:
-            for record in tf.python_io.tf_record_iterator(tfrecord_file):
-                num_samples += 1
+        num_samples = 188206 #0
+        # file_pattern_for_counting = 'Camelyon_tfr_' + split_name
+        # tfrecords_to_count = [os.path.join(TrainConfig.dataset_dir, file) for file in os.listdir(TrainConfig.dataset_dir) if
+        #                       file.startswith(file_pattern_for_counting)]
+        # for tfrecord_file in tfrecords_to_count:
+        #     for record in tf.python_io.tf_record_iterator(tfrecord_file):
+        #         num_samples += 1
 
         # Create a reader, which must be a TFRecord reader in this case
         reader = tf.TFRecordReader
@@ -86,7 +86,7 @@ class Train(QObject):
         # Create the keys_to_features dictionary for the decoder
         keys_to_features = {
             'image/encoded': tf.FixedLenFeature((), tf.string, default_value=''),
-            'image/format': tf.FixedLenFeature((), tf.string, default_value='jpg'),
+            'image/format': tf.FixedLenFeature((), tf.string, default_value='PNG'),
             'image/class/label': tf.FixedLenFeature(
                 [], tf.int64, default_value=tf.zeros([], dtype=tf.int64)),
         }
@@ -163,6 +163,7 @@ class Train(QObject):
     @pyqtSlot()
     def train(self):
         # Saver and initialisation
+        print("starting training")
         self.initialize()
         # saver = tf.train.Saver()
         self.epoch.emit(0)
@@ -222,11 +223,15 @@ class Train(QObject):
             predictions = tf.argmax(end_points['Predictions'], 1)
             probabilities = end_points['Predictions']
             accuracy, accuracy_update = tf.contrib.metrics.streaming_accuracy(predictions, labels)
-            metrics_op = tf.group(accuracy_update, probabilities)
+            precision, precision_update = tf.contrib.metrics.streaming_precision(predictions, labels)
+            recall, recall_update = tf.contrib.metrics.streaming_recall(predictions, labels)
+            metrics_op = tf.group(recall_update, precision_update, accuracy_update, probabilities)
 
             # Now finally create all the summaries you need to monitor and group them into one summary op.
             tf.summary.scalar('losses/Total_Loss', total_loss)
             tf.summary.scalar('accuracy', accuracy)
+            tf.summary.scalar('precision', precision)
+            tf.summary.scalar('recall', recall)
             tf.summary.scalar('learning_rate', lr)
             my_summary_op = tf.summary.merge_all()
 
@@ -236,12 +241,14 @@ class Train(QObject):
                 Simply runs a session for the three arguments provided and gives a logging on the time elapsed for each global step
                 '''
                 # Check the time for each sess run
-                start_time = time.time()
-                total_loss, global_step_count, _ = sess.run([train_op, global_step, metrics_op])
-                time_elapsed = time.time() - start_time
+                start_time = time()
+                total_loss, global_step_count, _, acc, pre, rec = sess.run([train_op, global_step, metrics_op,
+                                                                            accuracy, precision, recall])
+                time_elapsed = time() - start_time
 
                 # Run the logging to print some results
-                logging.info('global step %s: loss: %.4f (%.2f sec/step)', global_step_count, total_loss, time_elapsed)
+                logging.info('global step %s: loss: %.4f (%.2f sec/step) accuracy=%.4f, precision=%.4f, recall=%.4f', global_step_count,
+                             total_loss, time_elapsed, acc, pre, rec)
 
                 return total_loss, global_step_count
 
@@ -256,7 +263,8 @@ class Train(QObject):
 
             # Run the managed session
             with sv.managed_session() as sess:
-                for step in range(num_steps_per_epoch * TrainConfig.num_epochs):
+                for step in range(int(num_steps_per_epoch * TrainConfig.num_epochs)):
+                    logging.info("Another step")
                     # for step in xrange(1):
                     # At the start of every epoch, show the vital information:
                     if step % num_batches_per_epoch == 0:
@@ -278,7 +286,7 @@ class Train(QObject):
                         # 'Labels:\n:', labels_value
 
                     # Log the summaries every 10 step.
-                    if step % 10 == 0:
+                    if step % 100 == 0:
                         loss, _ = train_step(sess, train_op, sv.global_step)
                         summaries = sess.run(my_summary_op)
                         sv.summary_computed(sess, summaries)
@@ -287,6 +295,8 @@ class Train(QObject):
                     else:
                         loss, _ = train_step(sess, train_op, sv.global_step)
 
+                    if step % 500==0:
+                        sv.saver.save(sess, sv.save_path, global_step=sv.global_step)
                 # We log the final training loss and accuracy
                 logging.info('Final Loss: %s', loss)
                 logging.info('Final Accuracy: %s', sess.run(accuracy))

@@ -33,7 +33,7 @@ class TFRConfig():
     tfrecord_filename = "Camelyon_tfr" #None
     dataset_dir = "F:\\abhinav\\patches\\wsi" #None
     random_seed = 378
-    num_shards = 10
+    num_shards = 20
     validation_size = 0.2
     COOR_PATH = 'F:\\abhinav\\patches\\Coors'
 
@@ -46,8 +46,8 @@ class TrainConfig():
     labels_file = 'F:\\abhinav\\patches\\wsi\\labels.txt'
     file_pattern = 'Camelyon_tfr_%s_*.tfrecord'
     num_epochs = 5
-    batch_size = 64
-    initial_learning_rate = 0.001
+    batch_size = 16
+    initial_learning_rate = 0.0002
     learning_rate_decay_factor = 0.9
     num_epochs_before_decay = 2
     source_size = 384

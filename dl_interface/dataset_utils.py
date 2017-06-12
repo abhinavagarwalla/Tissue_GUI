@@ -204,7 +204,7 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, dataset_dir, tfr
                         class_id = class_names_to_ids[class_name]
 
                         example = image_to_tfexample(
-                            image_data, b'jpg', height, width, class_id)
+                            image_data, b'png', height, width, class_id)
                         tfrecord_writer.write(example.SerializeToString())
 
     sys.stdout.write('\n')
