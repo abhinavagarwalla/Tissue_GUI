@@ -63,6 +63,9 @@ class TFRecordConverter(QObject):
         training_filenames = [i for i in photo_filenames if i.split(')_')[-1].split('.')[0] in trainWSI]
         validation_filenames = [i for i in photo_filenames if i.split(')_')[-1].split('.')[0] in validWSI]
 
+        random.shuffle(training_filenames)
+        random.shuffle(validation_filenames)
+
         # First, convert the training and validation sets.
         _convert_dataset('train', training_filenames, class_names_to_ids,
                          dataset_dir=TFRConfig.dataset_dir, tfrecord_filename=TFRConfig.tfrecord_filename,

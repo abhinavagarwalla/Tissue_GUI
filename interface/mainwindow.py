@@ -9,6 +9,7 @@ from interface.image_slide import ImageClass
 from dl_interface.gen_patch import PatchGenerator
 from dl_interface.convert_dataset import TFRecordConverter
 from dl_interface.model_train import Train
+from dl_interface.model_validation import Validate
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -341,6 +342,9 @@ class Ui_MainWindow(object):
         self.stop_train = QtWidgets.QPushButton(self.trainBox)
         self.stop_train.setGeometry(QtCore.QRect(340, 200, 121, 23))
         self.stop_train.setObjectName("stop_train")
+        self.start_validation = QtWidgets.QPushButton(self.trainBox)
+        self.start_validation.setGeometry(QtCore.QRect(340, 270, 121, 23))
+        self.start_validation.setObjectName("start_validation")
         self.patchBox = QtWidgets.QGroupBox(self.training)
         self.patchBox.setGeometry(QtCore.QRect(550, 30, 531, 191))
         self.patchBox.setObjectName("patchBox")
@@ -455,6 +459,7 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "Training Dataset"))
         self.start_train.setText(_translate("MainWindow", "Start Training"))
         self.stop_train.setText(_translate("MainWindow", "Stop Training"))
+        self.start_validation.setText(_translate("MainWindow", "Start Validation"))
         self.patchBox.setTitle(_translate("MainWindow", "Generate Patches"))
         self.select_gen_images.setText(_translate("MainWindow", "Images"))
         self.label_15.setText(_translate("MainWindow", "WSI Level:"))
@@ -522,6 +527,7 @@ class Ui_MainWindow(object):
         self.start_gen_patch.clicked.connect(self.start_generating_patch)
         self.start_tf_record.clicked.connect(self.start_creating_dataset)
         self.start_train.clicked.connect(self.start_training)
+        self.start_validation.clicked.connect(self.start_validating)
 
     def initialize_worker_thread(self):
         self.test_model = Test()
@@ -551,6 +557,12 @@ class Ui_MainWindow(object):
         self.train_model.moveToThread(self.thread_train)
         self.train_model.finished.connect(self.thread_train.quit)
         self.thread_train.started.connect(self.train_model.train)
+
+        self.validate_model = Validate()
+        self.thread_validate = QtCore.QThread()
+        self.validate_model.moveToThread(self.thread_validate)
+        self.validate_model.finished.connect(self.thread_validate.quit)
+        self.thread_validate.started.connect(self.validate_model.run)
 
     def update_test_progress(self, i):
         self.test_progress.setValue(i)
@@ -838,6 +850,9 @@ class Ui_MainWindow(object):
 
     def start_training(self):
         self.thread_train.start()
+
+    def start_validating(self):
+        self.thread_validate.start()
 
     def update_coordinates(self):
         w, h = self.ImageView.get_current_coordinates()

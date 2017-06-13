@@ -5,8 +5,6 @@ import os
 import tensorflow as tf
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
-from dl_interface.combine_predictions import combine
-from dl_interface.data_io import Data
 from dl_interface.model_config import TrainConfig
 from nets import nets_factory
 from preprocessing import preprocessing_factory
@@ -151,12 +149,14 @@ class Train(QObject):
         raw_image = tf.squeeze(raw_image)
 
         # Batch up the image by enqueing the tensors internally in a FIFO queue and dequeueing many elements with tf.train.batch.
-        images, raw_images, labels = tf.train.batch(
+        images, raw_images, labels = tf.train.shuffle_batch(
             [image, raw_image, label],
             batch_size=batch_size,
             num_threads=4,
-            capacity=4 * batch_size,
-            allow_smaller_final_batch=True)
+            capacity=5 * batch_size,
+            allow_smaller_final_batch=True,
+            enqueue_many=True,
+            min_after_dequeue=2 * batch_size)
 
         return images, raw_images, labels
 
@@ -186,7 +186,7 @@ class Train(QObject):
 
             # Create the model inference
             logits, end_points = nets_factory.get_network_fn(name='inception_resnet_v2', images=images,
-                                                             num_classes=dataset.num_classes, is_training=False)
+                                                             num_classes=dataset.num_classes, is_training=True)
 
             # with slim.arg_scope(inception_resnet_v2_arg_scope()):
             #     logits, end_points = inception_resnet_v2(images, num_classes=dataset.num_classes, is_training=True)
@@ -222,16 +222,23 @@ class Train(QObject):
             # State the metrics that you want to predict. We get a predictions that is not one_hot_encoded.
             predictions = tf.argmax(end_points['Predictions'], 1)
             probabilities = end_points['Predictions']
-            accuracy, accuracy_update = tf.contrib.metrics.streaming_accuracy(predictions, labels)
-            precision, precision_update = tf.contrib.metrics.streaming_precision(predictions, labels)
-            recall, recall_update = tf.contrib.metrics.streaming_recall(predictions, labels)
-            metrics_op = tf.group(recall_update, precision_update, accuracy_update, probabilities)
+            accuracy_streaming, accuracy_streaming_update = tf.contrib.metrics.streaming_accuracy(predictions, labels)
+            precision_streaming, precision_streaming_update = tf.contrib.metrics.streaming_precision(predictions, labels)
+            recall_streaming, recall_streaming_update = tf.contrib.metrics.streaming_recall(predictions, labels)
+            accuracy_batch, accuracy_batch_update = tf.metrics.accuracy(labels, predictions)
+            precision_batch, precision_batch_update = tf.metrics.precision(labels, predictions)
+            recall_batch, recall_batch_update = tf.metrics.recall(labels, predictions)
+            metrics_op = tf.group(recall_streaming_update, precision_streaming_update, accuracy_streaming_update,
+                                  recall_batch_update, precision_batch_update, accuracy_batch_update, probabilities)
 
             # Now finally create all the summaries you need to monitor and group them into one summary op.
             tf.summary.scalar('losses/Total_Loss', total_loss)
-            tf.summary.scalar('accuracy', accuracy)
-            tf.summary.scalar('precision', precision)
-            tf.summary.scalar('recall', recall)
+            tf.summary.scalar('accuracy_streaming', accuracy_streaming)
+            tf.summary.scalar('precision_streaming', precision_streaming)
+            tf.summary.scalar('recall_streaming', recall_streaming)
+            tf.summary.scalar('accuracy_batch', accuracy_batch)
+            tf.summary.scalar('precision_batch', precision_batch)
+            tf.summary.scalar('recall_batch', recall_batch)
             tf.summary.scalar('learning_rate', lr)
             my_summary_op = tf.summary.merge_all()
 
@@ -242,13 +249,16 @@ class Train(QObject):
                 '''
                 # Check the time for each sess run
                 start_time = time()
-                total_loss, global_step_count, _, acc, pre, rec = sess.run([train_op, global_step, metrics_op,
-                                                                            accuracy, precision, recall])
+                total_loss, global_step_count, _, acc_str, pre_str, rec_str, acc_bat, pre_bat, rec_bat = sess.run([train_op, global_step, metrics_op,
+                                                                            accuracy_streaming, precision_streaming, recall_streaming,
+                                                                            accuracy_batch, precision_batch, recall_batch])
                 time_elapsed = time() - start_time
 
                 # Run the logging to print some results
-                logging.info('global step %s: loss: %.4f (%.2f sec/step) accuracy=%.4f, precision=%.4f, recall=%.4f', global_step_count,
-                             total_loss, time_elapsed, acc, pre, rec)
+                logging.info('global step %s: loss: %.4f (%.2f sec/step) accuracy_streaming=%.4f,'
+                             ' precision_streaming=%.4f, recall_streaming=%.4f ;;'
+                             'accuracy_batch=%.4f, precision_batch=%.4f, recall_batch=%.4f', global_step_count,
+                             total_loss, time_elapsed, acc_str, pre_str, rec_str, acc_bat, pre_bat, rec_bat)
 
                 return total_loss, global_step_count
 
@@ -269,7 +279,7 @@ class Train(QObject):
                     # At the start of every epoch, show the vital information:
                     if step % num_batches_per_epoch == 0:
                         logging.info('Epoch %s/%s', step / num_batches_per_epoch + 1, TrainConfig.num_epochs)
-                        learning_rate_value, accuracy_value = sess.run([lr, accuracy])
+                        learning_rate_value, accuracy_value = sess.run([lr, accuracy_streaming])
                         logging.info('Current Learning Rate: %s', learning_rate_value)
                         logging.info('Current Streaming Accuracy: %s', accuracy_value)
 
@@ -299,7 +309,7 @@ class Train(QObject):
                         sv.saver.save(sess, sv.save_path, global_step=sv.global_step)
                 # We log the final training loss and accuracy
                 logging.info('Final Loss: %s', loss)
-                logging.info('Final Accuracy: %s', sess.run(accuracy))
+                logging.info('Final Accuracy: %s', sess.run(accuracy_streaming))
 
                 # Once all the training has been done, save the log files and checkpoint model
                 logging.info('Finished training! Saving model to disk now.')

@@ -52,5 +52,18 @@ class TrainConfig():
     num_epochs_before_decay = 2
     source_size = 384
 
+class ValidConfig():
+    dataset_dir = 'F:\\abhinav\\patches\\wsi'
+    log_dir = 'F:\\abhinav\\patches\\log_bkp'
+    log_eval = 'F:\\abhinav\\patches\\log_eval'
+    checkpoint_file = 'F:\\abhinav\\patches\\log\\model.ckpt-2292'
+    image_size = 299
+    num_classes = 2
+    labels_file = 'F:\\abhinav\\patches\\wsi\\labels.txt'
+    file_pattern = 'Camelyon_tfr_%s_*.tfrecord'
+    num_epochs = 1
+    batch_size = 16
+    source_size = 384
+
 class TestConfig():
     pass
