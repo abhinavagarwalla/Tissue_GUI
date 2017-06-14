@@ -69,14 +69,14 @@ class Validate(QObject):
         file_pattern_path = os.path.join(ValidConfig.dataset_dir, ValidConfig.file_pattern % (split_name))
 
         # Count the total number of examples in all of these shard
-        num_samples = 0
-        file_pattern_for_counting = 'Camelyon_tfr_' + split_name
-        tfrecords_to_count = [os.path.join(ValidConfig.dataset_dir, file) for file in os.listdir(ValidConfig.dataset_dir) if
-                              file.startswith(file_pattern_for_counting)]
-        for tfrecord_file in tfrecords_to_count:
-            for record in tf.python_io.tf_record_iterator(tfrecord_file):
-                num_samples += 1
-        print(num_samples)
+        num_samples = 79078 #0
+        # file_pattern_for_counting = 'Camelyon_tfr_' + split_name
+        # tfrecords_to_count = [os.path.join(ValidConfig.dataset_dir, file) for file in os.listdir(ValidConfig.dataset_dir) if
+        #                       file.startswith(file_pattern_for_counting)]
+        # for tfrecord_file in tfrecords_to_count:
+        #     for record in tf.python_io.tf_record_iterator(tfrecord_file):
+        #         num_samples += 1
+        # print(num_samples)
 
         # Create a reader, which must be a TFRecord reader in this case
         reader = tf.TFRecordReader
@@ -155,7 +155,6 @@ class Validate(QObject):
             num_threads = 4,
             capacity = 5 * batch_size,
             allow_smaller_final_batch = True,
-            enqueue_many = True,
             min_after_dequeue = 2*batch_size)
 
         return images, raw_images, labels
@@ -194,8 +193,11 @@ class Validate(QObject):
             num_steps_per_epoch = num_batches_per_epoch
 
             # Create the model inference
-            logits, end_points = nets_factory.get_network_fn(name='inception_resnet_v2', images=images,
-                                                             num_classes=dataset.num_classes, is_training=False)
+            # logits, end_points = nets_factory.get_network_fn(name='inception_resnet_v2', images=images,
+            #                                                  num_classes=dataset.num_classes, is_training=False)
+
+            logits, end_points = nets_factory.get_network_fn(name='alexnet', images=images,
+                                                             num_classes=dataset.num_classes, is_training=True)
 
             # #get all the variables to restore from the checkpoint file and create the saver function to restore
             variables_to_restore = slim.get_variables_to_restore()
@@ -205,7 +207,8 @@ class Validate(QObject):
                 return saver.restore(sess, ValidConfig.checkpoint_file)
 
             # Just define the metrics to track without the loss or whatsoever
-            predictions = tf.argmax(end_points['Predictions'], 1)
+            # predictions = tf.argmax(end_points['Predictions'], 1)
+            predictions = tf.argmax(end_points['alexnet_v2/fc8'], 1)
             accuracy_streaming, accuracy_streaming_update = tf.contrib.metrics.streaming_accuracy(predictions, labels)
             precision_streaming, precision_streaming_update = tf.contrib.metrics.streaming_precision(predictions,
                                                                                                      labels)
@@ -235,7 +238,7 @@ class Validate(QObject):
                 # Log some information
                 logging.info('Global Step %s: Streaming Accuracy: %.4f, Precision: %.4f, Recall: %.4f (%.2f sec/step)'
                              'Batch: Accuracy: %.4f, Precision: %.4f, Recall: %.4f',
-                             global_step_count, acc_str, pre_str, rec_str, acc_bat, pre_bat, rec_bat, time_elapsed)
+                             global_step_count, acc_str, pre_str, rec_str, time_elapsed, acc_bat, pre_bat, rec_bat)
 
                 return acc_str
 

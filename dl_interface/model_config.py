@@ -41,7 +41,7 @@ class TrainConfig():
     dataset_dir = 'F:\\abhinav\\patches\\wsi'
     log_dir = 'F:\\abhinav\\patches\\log'
     checkpoint_file = 'F:\\abhinav\\patches\\inception_resnet_v2_2016_08_30.ckpt'
-    image_size = 299
+    image_size = 224
     num_classes = 2
     labels_file = 'F:\\abhinav\\patches\\wsi\\labels.txt'
     file_pattern = 'Camelyon_tfr_%s_*.tfrecord'
@@ -54,10 +54,10 @@ class TrainConfig():
 
 class ValidConfig():
     dataset_dir = 'F:\\abhinav\\patches\\wsi'
-    log_dir = 'F:\\abhinav\\patches\\log_bkp'
+    log_dir = 'F:\\abhinav\\patches\\log'
     log_eval = 'F:\\abhinav\\patches\\log_eval'
-    checkpoint_file = 'F:\\abhinav\\patches\\log\\model.ckpt-2292'
-    image_size = 299
+    checkpoint_file = 'F:\\abhinav\\patches\\log\\model.ckpt-6001'
+    image_size = 224
     num_classes = 2
     labels_file = 'F:\\abhinav\\patches\\wsi\\labels.txt'
     file_pattern = 'Camelyon_tfr_%s_*.tfrecord'

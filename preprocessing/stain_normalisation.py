@@ -18,7 +18,7 @@ class StrainNormalisation():
         self.mT2, self.sdT2 = cv2.meanStdDev(t2)
         self.mT3, self.sdT3 = cv2.meanStdDev(t3)
 
-    def prepreprocess_image(self, patch):
+    def preprocess_image(self, patch):
         patch = cv2.cvtColor(patch, 44)
 
         # Mean and Standard Deviation of Source image channels in Lab Colourspace
@@ -46,7 +46,7 @@ class StrainNormalisation():
         norm = cv2.cvtColor(normLab, 56)
         return norm
 
-    def prepreprocess_batch(self, patches):
+    def preprocess_batch(self, patches):
         res = []
         for i in patches:
             res.append(self.preprocess_image(i))

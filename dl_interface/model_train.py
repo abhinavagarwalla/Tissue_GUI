@@ -155,8 +155,7 @@ class Train(QObject):
             num_threads=4,
             capacity=5 * batch_size,
             allow_smaller_final_batch=True,
-            enqueue_many=True,
-            min_after_dequeue=2 * batch_size)
+            min_after_dequeue=2*batch_size)
 
         return images, raw_images, labels
 
@@ -177,7 +176,7 @@ class Train(QObject):
 
             # First create the dataset and load one batch
             dataset = self.get_split('train')
-            images, _, labels = self.load_batch(dataset, batch_size=TrainConfig.batch_size)
+            images, _, labels = self.load_batch(dataset, batch_size=TrainConfig.batch_size, is_training=True)
 
             # Know the number steps to take before decaying the learning rate and batches per epoch
             num_batches_per_epoch = dataset.num_samples / TrainConfig.batch_size
@@ -185,15 +184,19 @@ class Train(QObject):
             decay_steps = int(TrainConfig.num_epochs_before_decay * num_steps_per_epoch)
 
             # Create the model inference
-            logits, end_points = nets_factory.get_network_fn(name='inception_resnet_v2', images=images,
+            logits, end_points = nets_factory.get_network_fn(name='alexnet', images=images,
                                                              num_classes=dataset.num_classes, is_training=True)
+
+            # logits, end_points = nets_factory.get_network_fn(name='inception_resnet_v2', images=images,
+            #                                                  num_classes=dataset.num_classes, is_training=True)
 
             # with slim.arg_scope(inception_resnet_v2_arg_scope()):
             #     logits, end_points = inception_resnet_v2(images, num_classes=dataset.num_classes, is_training=True)
 
             # Define the scopes that you want to exclude for restoration
-            exclude = ['InceptionResnetV2/Logits', 'InceptionResnetV2/AuxLogits']
-            variables_to_restore = slim.get_variables_to_restore(exclude=exclude)
+            # exclude = ['InceptionResnetV2/Logits', 'InceptionResnetV2/AuxLogits']
+            # variables_to_restore = slim.get_variables_to_restore(exclude=exclude)
+            variables_to_restore = slim.get_variables_to_restore()
 
             # Perform one-hot-encoding of the labels (Try one-hot-encoding within the load_batch function!)
             one_hot_labels = slim.one_hot_encoding(labels, dataset.num_classes)
@@ -220,8 +223,8 @@ class Train(QObject):
             train_op = slim.learning.create_train_op(total_loss, optimizer)
 
             # State the metrics that you want to predict. We get a predictions that is not one_hot_encoded.
-            predictions = tf.argmax(end_points['Predictions'], 1)
-            probabilities = end_points['Predictions']
+            predictions = tf.argmax(end_points['alexnet_v2/fc8'], 1)
+            probabilities = end_points['alexnet_v2/fc8']
             accuracy_streaming, accuracy_streaming_update = tf.contrib.metrics.streaming_accuracy(predictions, labels)
             precision_streaming, precision_streaming_update = tf.contrib.metrics.streaming_precision(predictions, labels)
             recall_streaming, recall_streaming_update = tf.contrib.metrics.streaming_recall(predictions, labels)
@@ -263,13 +266,13 @@ class Train(QObject):
                 return total_loss, global_step_count
 
             # Now we create a saver function that actually restores the variables from a checkpoint file in a sess
-            saver = tf.train.Saver(variables_to_restore)
+            saver = tf.train.Saver(variables_to_restore, max_to_keep=None)
 
             def restore_fn(sess):
                 return saver.restore(sess, TrainConfig.checkpoint_file)
 
             # Define your supervisor for running a managed session. Do not run the summary_op automatically or else it will consume too much memory
-            sv = tf.train.Supervisor(logdir=TrainConfig.log_dir, summary_op=None, init_fn=restore_fn)
+            sv = tf.train.Supervisor(logdir=TrainConfig.log_dir, summary_op=None, init_fn=None) #restore_fn)
 
             # Run the managed session
             with sv.managed_session() as sess:
