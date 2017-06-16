@@ -67,3 +67,20 @@ class ValidConfig():
 
 class TestConfig():
     pass
+
+class LSTMDataConfig():
+    WSI_FOLDER_PATH = '//shaban-pc/Camelyon16/Dataset/Original/Train'  # None
+    MASK_PATH = None #'C:\\Users\\abhinav\\Desktop\\Data\\data\\Test_005_Mask.tif'
+    WSI_PATH = None #'C:\\Users\\abhinav\\Desktop\\Data\\data\\Test_005.tif'
+    CHECKPOINT_PATH = 'F:\\abhinav\\patches\\log\\model.ckpt-6001'
+    TARGET_STAIN_PATH = 'resource' + os.sep + 'targetImage.jpg'
+    RESULT_PATH = 'F:\\abhinav\\patches\\lstm_data' #os.getcwd() + os.sep + 'results'
+    LEVEL_UPGRADE = 6
+    LEVEL_FETCH = 0
+    CONTEXT_DEPTH = 8
+    PATCH_SIZE = 224  # 252 #124
+    STRIDE = 0.5
+    OUTPUT_SIZE = None  # 164 #36
+    DIFF_SIZE = None  # PATCH_SIZE - OUTPUT_SIZE
+    BATCH_SIZE = 512
+    NUM_CLASSES = 2

@@ -123,7 +123,6 @@ class PatchGenerator(QObject):
                           'level_' + str(PatchConfig.LEVEL_FETCH) + '_' + str(coors_batch[i]) + "_" + \
                               self.wsi_list["Tumor"][self.wsi_iter].split(os.sep)[-1].split('.')[0] + ".png")
 
-
     def delete_inside(self, boxes):
         boxes = np.array(boxes)
         boxes_new = []
