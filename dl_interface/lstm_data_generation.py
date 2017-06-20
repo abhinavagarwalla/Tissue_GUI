@@ -161,7 +161,7 @@ class TestLSTMSave(QObject):
         self.classes_dict = dict((i, self.classes[i]) for i in range(len(self.classes)))
         self.initialize()
         # mlist = [i[:-5] for i in mlist]
-        for i in range(65, 70):#len(self.wsi_list["Tumor"])):
+        for i in range(87, 90):#len(self.wsi_list["Tumor"])):
             print(self.wsi_list["Tumor"][i])
             self.wsi_iter = i
             LSTMDataConfig.WSI_PATH = self.wsi_list["Tumor"][self.wsi_iter]
@@ -176,7 +176,7 @@ class TestLSTMSave(QObject):
         self.init_data_loader()
         saver = tf.train.Saver()
         self.epoch.emit(0)
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.16)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.20)
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
             saver.restore(sess, LSTMDataConfig.CHECKPOINT_PATH)
             i = 0
@@ -190,7 +190,7 @@ class TestLSTMSave(QObject):
                     self.dataloader.save_predictions(pred, mid_features, coors_batch, self.wsi_list["Tumor"][self.wsi_iter])
         if self.dataloader.data_completed:
             print("Total time taken: ", time()-self.t0)
-            self.finished.emit()
+            # self.finished.emit()
 
     @pyqtSlot()
     def stop_call(self):
@@ -204,5 +204,54 @@ class TestLSTMSave(QObject):
         #         print("Result tree removed")
         #     except:
         #         pass
+        self.epoch.emit(0)
+        self.finished.emit()
+
+
+class TestLSTMLabelSave(QObject):
+    finished = pyqtSignal()
+    epoch = pyqtSignal(int)
+
+    @pyqtSlot()
+    def test(self):
+        self.wsi_iter = None
+        self.wsi_list = os.listdir(LSTMDataConfig.RESULT_PATH)
+        for i in range(81, 100):#len(self.wsi_list)):
+            print(self.wsi_list[i])
+            self.wsi_iter = i
+            LSTMDataConfig.MASK_PATH = LSTMDataConfig.WSI_FOLDER_PATH + os.sep + "Tumor" + os.sep + "Mask_Tumor" + os.sep +\
+                             self.wsi_list[self.wsi_iter] + '.tif'
+            self.wsi_mask = ImageClass(LSTMDataConfig.MASK_PATH)
+            self.test_once()
+        print("Finished for all assigned WSIs")
+
+    @pyqtSlot()
+    def test_once(self):
+        # Saver and initialisation
+        self.epoch.emit(0)
+        wsi_name = self.wsi_list[self.wsi_iter]
+        imlist = os.listdir(LSTMDataConfig.RESULT_PATH + os.sep + wsi_name)
+        if not os.path.exists(LSTMDataConfig.LABEL_PATH + os.sep + wsi_name):
+            os.mkdir(LSTMDataConfig.LABEL_PATH + os.sep + wsi_name)
+        for i in range(len(imlist)):
+            coors = imlist[i].split('(')[1].split(')')[0]
+            w, h = list(map(int, coors.split(',')))
+            im = np.array(self.wsi_mask.read_region((w, h), 0, (LSTMDataConfig.PATCH_SIZE*LSTMDataConfig.CONTEXT_DEPTH,
+                                                       LSTMDataConfig.PATCH_SIZE * LSTMDataConfig.CONTEXT_DEPTH)).convert('1'))
+            if np.mean(im) > 0:
+                print("Found 1 with mean>0", i, len(imlist), self.wsi_iter)
+            im = [[np.mean(im[i:i + LSTMDataConfig.PATCH_SIZE, j:j + LSTMDataConfig.PATCH_SIZE]) for i in
+                range(0, LSTMDataConfig.PATCH_SIZE * LSTMDataConfig.CONTEXT_DEPTH,
+                      LSTMDataConfig.PATCH_SIZE)] for j in
+                range(0, LSTMDataConfig.PATCH_SIZE * LSTMDataConfig.CONTEXT_DEPTH,
+                      LSTMDataConfig.PATCH_SIZE)]
+            im = np.array(im).reshape(LSTMDataConfig.CONTEXT_DEPTH, LSTMDataConfig.CONTEXT_DEPTH, 1)
+            # with open(LSTMDataConfig.LABEL_PATH + os.sep + wsi_name + os.sep + wsi_name + '_(' + str(w) + ', ' + str(h) + ')_label.pkl', 'wb') as fp:
+            #     pickle.dump(im, fp)
+            np.save(LSTMDataConfig.LABEL_PATH + os.sep + wsi_name + os.sep + wsi_name + '_(' + str(w) + ', ' + str(h) + ')_label.npy', im)
+
+    @pyqtSlot()
+    def stop_call(self):
+        print("Stopping Testing..")
         self.epoch.emit(0)
         self.finished.emit()

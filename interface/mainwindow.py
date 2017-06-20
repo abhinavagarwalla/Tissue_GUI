@@ -10,7 +10,7 @@ from dl_interface.gen_patch import PatchGenerator
 from dl_interface.convert_dataset import TFRecordConverter
 from dl_interface.model_train import Train
 from dl_interface.model_validation import Validate
-from dl_interface.lstm_data_generation import TestLSTMSave
+from dl_interface.lstm_data_generation import TestLSTMSave, TestLSTMLabelSave
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -558,7 +558,7 @@ class Ui_MainWindow(object):
         self.validate_model.finished.connect(self.thread_validate.quit)
         self.thread_validate.started.connect(self.validate_model.run)
 
-        self.test_lstm_data = TestLSTMSave()
+        self.test_lstm_data = TestLSTMLabelSave()
         self.thread_lstm_data = QtCore.QThread()
         self.test_lstm_data.moveToThread(self.thread_lstm_data)
         self.test_lstm_data.finished.connect(self.thread_lstm_data.quit)

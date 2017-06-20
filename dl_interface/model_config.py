@@ -75,6 +75,7 @@ class LSTMDataConfig():
     CHECKPOINT_PATH = 'F:\\abhinav\\patches\\log\\model.ckpt-6001'
     TARGET_STAIN_PATH = 'resource' + os.sep + 'targetImage.jpg'
     RESULT_PATH = 'F:\\abhinav\\patches\\lstm_data' #os.getcwd() + os.sep + 'results'
+    LABEL_PATH = 'F:\\abhinav\\patches\\lstm_data_label'
     LEVEL_UPGRADE = 6
     LEVEL_FETCH = 0
     CONTEXT_DEPTH = 8
