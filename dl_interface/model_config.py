@@ -85,3 +85,17 @@ class LSTMDataConfig():
     DIFF_SIZE = None  # PATCH_SIZE - OUTPUT_SIZE
     BATCH_SIZE = 512
     NUM_CLASSES = 2
+
+class LSTMTrainConfig():
+    DATA_IMAGES_PATH = 'F:\\abhinav\\patches\\lstm_data'
+    DATA_LABELS_PATH = 'F:\\abhinav\\patches\\lstm_data_label'
+    PATCH_SIZE = 8
+    CHANNELS = 4096
+    HIDDEN_SIZE = 512
+    log_dir = 'F:\\abhinav\\patches\\log_lstm'
+    batch_size = 10
+    num_epochs = None
+    checkpoint_file = None
+    initial_learning_rate = 0.0001
+    learning_rate_decay_factor = 0.5
+    num_epochs_before_decay = 2

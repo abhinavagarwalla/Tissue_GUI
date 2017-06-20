@@ -11,6 +11,7 @@ from dl_interface.convert_dataset import TFRecordConverter
 from dl_interface.model_train import Train
 from dl_interface.model_validation import Validate
 from dl_interface.lstm_data_generation import TestLSTMSave, TestLSTMLabelSave
+from dl_interface.model_lstm_train import LSTMTrain
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -375,8 +376,11 @@ class Ui_MainWindow(object):
         self.start_tf_record.setGeometry(QtCore.QRect(350, 110, 121, 23))
         self.start_tf_record.setObjectName("start_tf_record")
         self.start_lstm_data_generation = QtWidgets.QPushButton(self.training)
-        self.start_lstm_data_generation.setGeometry(QtCore.QRect(880, 230, 161, 23))
+        self.start_lstm_data_generation.setGeometry(QtCore.QRect(920, 240, 161, 23))
         self.start_lstm_data_generation.setObjectName("start_lstm_data_generation")
+        self.start_lstm_model_train = QtWidgets.QPushButton(self.training)
+        self.start_lstm_model_train.setGeometry(QtCore.QRect(920, 270, 161, 23))
+        self.start_lstm_model_train.setObjectName("start_lstm_model_train")
         self.tabs.addTab(self.training, "")
         self.horizontalLayout_4.addWidget(self.tabs)
         MainWindow.setCentralWidget(self.centralWidget)
@@ -460,6 +464,7 @@ class Ui_MainWindow(object):
         self.stop_gen_patch.setText(_translate("MainWindow", "Cancel"))
         self.start_tf_record.setText(_translate("MainWindow", "Convert to TFRecord"))
         self.start_lstm_data_generation.setText(_translate("MainWindow", "Start LSTM Data Generation"))
+        self.start_lstm_model_train.setText(_translate("MainWindow", "Start LSTM Model Training"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
@@ -522,6 +527,7 @@ class Ui_MainWindow(object):
         self.start_train.clicked.connect(self.start_training)
         self.start_validation.clicked.connect(self.start_validating)
         self.start_lstm_data_generation.clicked.connect(self.start_lstm_data_generating)
+        self.start_lstm_model_train.clicked.connect(self.start_lstm_model_training)
 
     def initialize_worker_thread(self):
         self.test_model = Test()
@@ -563,6 +569,12 @@ class Ui_MainWindow(object):
         self.test_lstm_data.moveToThread(self.thread_lstm_data)
         self.test_lstm_data.finished.connect(self.thread_lstm_data.quit)
         self.thread_lstm_data.started.connect(self.test_lstm_data.test)
+
+        self.train_lstm = LSTMTrain()
+        self.thread_lstm_train = QtCore.QThread()
+        self.train_lstm.moveToThread(self.thread_lstm_train)
+        self.train_lstm.finished.connect(self.thread_lstm_train.quit)
+        self.thread_lstm_train.started.connect(self.train_lstm.train)
 
     def update_test_progress(self, i):
         self.test_progress.setValue(i)
@@ -856,6 +868,9 @@ class Ui_MainWindow(object):
 
     def start_lstm_data_generating(self):
         self.thread_lstm_data.start()
+
+    def start_lstm_model_training(self):
+        self.thread_lstm_train.start()
 
     def update_coordinates(self):
         w, h = self.ImageView.get_current_coordinates()

@@ -216,7 +216,7 @@ class TestLSTMLabelSave(QObject):
     def test(self):
         self.wsi_iter = None
         self.wsi_list = os.listdir(LSTMDataConfig.RESULT_PATH)
-        for i in range(81, 100):#len(self.wsi_list)):
+        for i in range(len(self.wsi_list)):
             print(self.wsi_list[i])
             self.wsi_iter = i
             LSTMDataConfig.MASK_PATH = LSTMDataConfig.WSI_FOLDER_PATH + os.sep + "Tumor" + os.sep + "Mask_Tumor" + os.sep +\
