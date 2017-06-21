@@ -87,7 +87,6 @@ class MultiDimensionalLSTMCell(RNNCell):
 
 class DataIter():
     def __init__(self):
-        a = 1
         self.wsi_list = glob.glob(LSTMTrainConfig.DATA_IMAGES_PATH + os.sep + '*')
         self.images_list = []
         for i in self.wsi_list:
@@ -152,7 +151,9 @@ class LSTMTrain(QObject):
             x = tf.reshape(input_data, [batch_size, h, w, features])
             if dims is not None:
                 assert dims[0] is False and dims[3] is False
-                x = tf.reverse(x, dims)
+                for i in range(len(dims)):
+                    if dims[i]:
+                        x = tf.reverse(x, [i])
             x = tf.transpose(x, [1, 2, 0, 3])
             x = tf.reshape(x, [-1, features])
             x = tf.split(axis=0, num_or_size_splits=h * w, value=x)
@@ -210,7 +211,9 @@ class LSTMTrain(QObject):
             y = tf.reshape(outputs, [h, w, batch_size, rnn_size])
             y = tf.transpose(y, [2, 0, 1, 3])
             if dims is not None:
-                y = tf.reverse(y, dims)
+                for i in range(len(dims)):
+                    if dims[i]:
+                        y = tf.reverse(y, [i])
 
             return y, states
 
@@ -233,12 +236,31 @@ class LSTMTrain(QObject):
                                              LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.CHANNELS])
         labels = tf.placeholder(tf.float32, [LSTMTrainConfig.batch_size, LSTMTrainConfig.PATCH_SIZE,
                                              LSTMTrainConfig.PATCH_SIZE, 1])
-        rnn_out, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=images,
-                                                           sh=[1, 1])
-        model_out = slim.fully_connected(inputs=rnn_out,
-                                         num_outputs=1,
-                                         activation_fn=None)
+        rnn_out_1, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=images,
+                                                           sh=[1, 1], scope_n="lstm_1")
+        rnn_out_2, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=images,
+                                                             sh=[1, 1], dims=[False, True, False, False], scope_n="lstm_2")
+        rnn_out_3, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=images,
+                                                             sh=[1, 1], dims=[False, True, True, False], scope_n="lstm_3")
+        rnn_out_4, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=images,
+                                                             sh=[1, 1], dims=[False, False, True, False], scope_n="lstm_4")
 
+        logging.info("Four LSTMs formed")
+        # model_out = slim.fully_connected(inputs=rnn_out,
+        #                                  num_outputs=1,
+        #                                  activation_fn=None)
+        model_out_1 = slim.conv2d(inputs=rnn_out_1, num_outputs=1, kernel_size=[3,3])
+        model_out_2 = slim.conv2d(inputs=rnn_out_2, num_outputs=1, kernel_size=[3, 3])
+        model_out_3 = slim.conv2d(inputs=rnn_out_3, num_outputs=1, kernel_size=[3, 3])
+        model_out_4 = slim.conv2d(inputs=rnn_out_4, num_outputs=1, kernel_size=[3, 3])
+
+        logging.info("Convolution done, reshaping")
+        # model_out_2 = tf.reverse(model_out_2, axis=[False, True, False, False])
+        # model_out_3 = tf.reverse(model_out_3, axis=[False, True, True, False])
+        # model_out_4 = tf.reverse(model_out_4, axis=[False, False, True, False])
+
+        logging.info("Doing Scalar")
+        model_out = tf.scalar_mul(tf.constant(0.25),tf.add_n([model_out_1, model_out_2, model_out_3, model_out_4]))
         loss = 1e4 * tf.reduce_mean(tf.abs(tf.subtract(labels, model_out)))
         grad_update = tf.train.AdamOptimizer(LSTMTrainConfig.initial_learning_rate).minimize(loss)
 
@@ -251,7 +273,6 @@ class LSTMTrain(QObject):
             sess.run(tf.global_variables_initializer())
             logging.info("initialiser run")
             for step in range(int(1000 * LSTMTrainConfig.num_epochs)):
-                logging.info("loading from batch")
                 batch_x, batch_y = self.dataloader.next_batch()
 
                 # Log the summaries every 10 step.
