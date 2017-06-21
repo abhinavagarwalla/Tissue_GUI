@@ -4,10 +4,13 @@ import os
 
 import tensorflow as tf
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+import random
+import glob
 
 from dl_interface.model_config import LSTMTrainConfig
 from tensorflow.contrib.framework.python.ops.variables import get_or_create_global_step
 from tensorflow.python.platform import tf_logging as logging
+import pickle
 
 from tensorflow.contrib.rnn import RNNCell, LSTMStateTuple, LayerNormBasicLSTMCell
 import numpy as np
@@ -85,43 +88,27 @@ class MultiDimensionalLSTMCell(RNNCell):
 class DataIter():
     def __init__(self):
         a = 1
-        self.num_samples = 1000 #None
-
-    # def next_batch(self):
-    #     return 1, 2
-
-    def fft_ind_gen(self, n):
-        a = list(range(0, int(n / 2 + 1)))
-        b = list(range(1, int(n / 2)))
-        b.reverse()
-        b = [-i for i in b]
-        return a + b
-
-    def gaussian_random_field(self, pk=lambda k: k ** -3.0, size1=100, size2=100, anisotropy=True):
-        def pk2(kx_, ky_):
-            if kx_ == 0 and ky_ == 0:
-                return 0.0
-            if anisotropy:
-                if kx_ != 0 and ky_ != 0:
-                    return 0.0
-            return np.sqrt(pk(np.sqrt(kx_ ** 2 + ky_ ** 2)))
-
-        noise = np.fft.fft2(np.random.normal(size=(size1, size2)))
-        amplitude = np.zeros((size1, size2))
-        for i, kx in enumerate(self.fft_ind_gen(size1)):
-            for j, ky in enumerate(self.fft_ind_gen(size2)):
-                amplitude[i, j] = pk2(kx, ky)
-        return np.fft.ifft2(noise * amplitude)
+        self.wsi_list = glob.glob(LSTMTrainConfig.DATA_IMAGES_PATH + os.sep + '*')
+        self.images_list = []
+        for i in self.wsi_list:
+            self.images_list.extend(glob.glob(i + os.sep + '*'))
+        random.shuffle(self.images_list)
+        self.num_samples = len(self.images_list)
+        self.iter = 0
 
     def next_batch(self):
         x = []
+        y = []
         for i in range(LSTMTrainConfig.batch_size):
-            o = self.gaussian_random_field(pk=lambda k: k ** -4.0, size1=LSTMTrainConfig.PATCH_SIZE,
-                                           size2=LSTMTrainConfig.PATCH_SIZE, anisotropy=False).real
-            x.append(o)
-        x = np.array(x)
-        y = np.roll(x, shift=-1, axis=2)
-        y[:, :, -1] = 0.0
+            feat = pickle.load(open(self.images_list[self.iter], 'rb'))
+            wsi_name = self.images_list[self.iter].split(os.sep)[-1]
+            label = np.load(LSTMTrainConfig.DATA_LABELS_PATH + os.sep + wsi_name.split('_(')[0] +
+                            os.sep + wsi_name.replace('features.pkl', 'label.npy'))
+            x.append(feat['fc6'].reshape(LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.CHANNELS))
+            y.append(label)
+            self.iter += 1
+            if self.iter == self.num_samples:
+                break
         return x, y
 
 class LSTMTrain(QObject):
@@ -240,6 +227,8 @@ class LSTMTrain(QObject):
         # ======================= TRAINING PROCESS =========================
         # Now we start to construct the graph and build our model
         # Create the model inference
+        tf.logging.set_verbosity(tf.logging.INFO)
+        logging.info("starting with tf")
         images = tf.placeholder(tf.float32, [LSTMTrainConfig.batch_size, LSTMTrainConfig.PATCH_SIZE,
                                              LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.CHANNELS])
         labels = tf.placeholder(tf.float32, [LSTMTrainConfig.batch_size, LSTMTrainConfig.PATCH_SIZE,
@@ -256,26 +245,25 @@ class LSTMTrain(QObject):
         # Now we create a saver function that actually restores the variables from a checkpoint file in a sess
         saver = tf.train.Saver(max_to_keep=None)
 
+        logging.info("now starting session")
         # Run the managed session
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
+            logging.info("initialiser run")
             for step in range(int(1000 * LSTMTrainConfig.num_epochs)):
-                batch = self.dataloader.next_batch()
-                batch_x = np.expand_dims(batch[0], axis=3)
-                batch_y = np.expand_dims(batch[1], axis=3)
-                # if step % 1000 == 0:
-                #     logging.info('Epoch %s/%s', step / 1000 + 1, LSTMTrainConfig.num_epochs)
+                logging.info("loading from batch")
+                batch_x, batch_y = self.dataloader.next_batch()
 
                 # Log the summaries every 10 step.
                 if step % 100 == 0:
-                    print("Step 100")
-                    loss, _ = sess.run([loss, grad_update], feed_dict={images: batch_x, labels: batch_y})
+                    loss_value, _ = sess.run([loss, grad_update], feed_dict={images: batch_x, labels: batch_y})
                 else:
-                    loss, _ = sess.run([loss, grad_update], feed_dict={images: batch_x, labels: batch_y})
+                    loss_value, _ = sess.run([loss, grad_update], feed_dict={images: batch_x, labels: batch_y})
 
+                logging.info("At step %d/%d, loss= %.4f", step, int(1000 * LSTMTrainConfig.num_epochs), loss_value)
                 if step % 500==0:
-                    saver.save(sess, LSTMTrainConfig.log_dir + os.sep + "lstm_model")
-            saver.save(sess, LSTMTrainConfig.log_dir + os.sep + "lstm_model")
+                    saver.save(sess, LSTMTrainConfig.log_dir + os.sep + "lstm_model", global_step=step)
+            saver.save(sess, LSTMTrainConfig.log_dir + os.sep + "lstm_model",global_step=step)
             self.finished.emit()
 
     @pyqtSlot()
