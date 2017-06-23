@@ -12,6 +12,7 @@ from dl_interface.model_train import Train
 from dl_interface.model_validation import Validate
 from dl_interface.lstm_data_generation import TestLSTMSave, TestLSTMLabelSave
 from dl_interface.model_lstm_train import LSTMTrain
+from dl_interface.model_lstm_validation import LSTMValidation
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -381,6 +382,9 @@ class Ui_MainWindow(object):
         self.start_lstm_model_train = QtWidgets.QPushButton(self.training)
         self.start_lstm_model_train.setGeometry(QtCore.QRect(920, 270, 161, 23))
         self.start_lstm_model_train.setObjectName("start_lstm_model_train")
+        self.start_lstm_model_validation = QtWidgets.QPushButton(self.training)
+        self.start_lstm_model_validation.setGeometry(QtCore.QRect(920, 300, 161, 23))
+        self.start_lstm_model_validation.setObjectName("start_lstm_model_validation")
         self.tabs.addTab(self.training, "")
         self.horizontalLayout_4.addWidget(self.tabs)
         MainWindow.setCentralWidget(self.centralWidget)
@@ -465,6 +469,7 @@ class Ui_MainWindow(object):
         self.start_tf_record.setText(_translate("MainWindow", "Convert to TFRecord"))
         self.start_lstm_data_generation.setText(_translate("MainWindow", "Start LSTM Data Generation"))
         self.start_lstm_model_train.setText(_translate("MainWindow", "Start LSTM Model Training"))
+        self.start_lstm_model_validation.setText(_translate("MainWindow", "Start LSTM Model Validation"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
@@ -475,6 +480,7 @@ class Ui_MainWindow(object):
         self.c_zoom_level = 0
         self.prev_mouse_pos = None
         self.if_mouse_pressed = False
+        self.default_open_location = os.getcwd()
         self.load_image.clicked.connect(self.get_file)
         self.load_overlay.clicked.connect(self.get_file_overlay)
         self.zoomSlider.valueChanged.connect(self.updateBar)
@@ -528,6 +534,7 @@ class Ui_MainWindow(object):
         self.start_validation.clicked.connect(self.start_validating)
         self.start_lstm_data_generation.clicked.connect(self.start_lstm_data_generating)
         self.start_lstm_model_train.clicked.connect(self.start_lstm_model_training)
+        self.start_lstm_model_validation.clicked.connect(self.start_lstm_model_validating)
 
     def initialize_worker_thread(self):
         self.test_model = Test()
@@ -576,15 +583,22 @@ class Ui_MainWindow(object):
         self.train_lstm.finished.connect(self.thread_lstm_train.quit)
         self.thread_lstm_train.started.connect(self.train_lstm.train)
 
+        self.valid_lstm = LSTMValidation()
+        self.thread_lstm_valid = QtCore.QThread()
+        self.valid_lstm.moveToThread(self.thread_lstm_valid)
+        self.valid_lstm.finished.connect(self.thread_lstm_valid.quit)
+        self.thread_lstm_valid.started.connect(self.valid_lstm.train)
+
     def update_test_progress(self, i):
         self.test_progress.setValue(i)
 
     ## Functions for reading files, setting PixMaps
     def get_file(self):
-        fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", os.getcwd(), "(*.tif *.jp2 *.ndpi"
+        fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", self.default_open_location, "(*.tif *.jp2 *.ndpi"
                                                                                        " *.vms *.vmu *.svs"
                                                                                        " *.tiff *.mrxs *.scn"
                                                                                        "*.svslide *.bif)")
+        self.default_open_location = fname[0].split(os.sep)[0]
         if fname[0]:
             self.ImageView = DisplayImage(fname[0],self.orig_image.height(), self.orig_image.width())
             self.if_image = True
@@ -601,7 +615,7 @@ class Ui_MainWindow(object):
         print("Reached Overlay Callback")
         if self.if_image:
             if self.overlay_method.currentText()=="Segmentation Mask (by Pixel)":
-                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", os.getcwd(), "(*.tif *.png)")
+                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", self.default_open_location, "(*.tif *.png)")
                 if fname[0]:
                     tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),
                                                             states=self.overlay_states)
@@ -610,7 +624,7 @@ class Ui_MainWindow(object):
                     self.check_segmentation.setEnabled(True)
                     self.check_segmentation.setChecked(True)
             elif self.overlay_method.currentText()=="Tumor Region":
-                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", os.getcwd(), "(*.mat)")
+                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", self.default_open_location, "(*.mat)")
                 if fname[0]:
                     tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),
                                                             states=self.overlay_states)
@@ -619,7 +633,7 @@ class Ui_MainWindow(object):
                     self.check_tumor_region.setEnabled(True)
                     self.check_tumor_region.setChecked(True)
             elif self.overlay_method.currentText()=="Heatmap":
-                fname = QFileDialog.getExistingDirectory(self.menuWindow, "Choose Directory", os.getcwd(),
+                fname = QFileDialog.getExistingDirectory(self.menuWindow, "Choose Directory", self.default_open_location,
                                                          QFileDialog.ShowDirsOnly)
                 if fname:
                     tim = self.ImageView.read_first_overlay(fname, method=self.overlay_method.currentText(),
@@ -629,7 +643,7 @@ class Ui_MainWindow(object):
                     self.check_heatmap.setEnabled(True)
                     self.check_heatmap.setChecked(True)
             elif self.overlay_method.currentText()=="Nuclei Position":
-                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", os.getcwd(), "(*.mat)")
+                fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", self.default_open_location, "(*.mat)")
                 if fname[0]:
                     tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),
                                                             states=self.overlay_states)
@@ -785,7 +799,7 @@ class Ui_MainWindow(object):
             self.overlay_image.hide()
 
     def select_WSI(self):
-        fname = QFileDialog.getOpenFileName(self.menuWindow, "Select Whole Slide Image", os.getcwd(), "(*.tif *.jp2 *.ndpi"
+        fname = QFileDialog.getOpenFileName(self.menuWindow, "Select Whole Slide Image", self.default_open_location, "(*.tif *.jp2 *.ndpi"
                                                                                        " *.vms *.vmu *.svs"
                                                                                        " *.tiff *.mrxs *.scn"
                                                                                        "*.svslide *.bif)")
@@ -800,7 +814,7 @@ class Ui_MainWindow(object):
             [self.select_wsi_level.addItem(str(i)) for i in range(nlevel)]
 
     def select_gen_WSI(self):
-        fname = QFileDialog.getExistingDirectory(self.menuWindow, "Choose Directory", os.getcwd(),
+        fname = QFileDialog.getExistingDirectory(self.menuWindow, "Choose Directory", self.default_open_location,
                                                  QFileDialog.ShowDirsOnly)
         if fname:
             print(fname)
@@ -812,14 +826,14 @@ class Ui_MainWindow(object):
             [self.select_gen_wsi_level.addItem(str(i)) for i in range(12)]
 
     def select_dl_model(self):
-        fname = QFileDialog.getOpenFileName(self.menuWindow, "Select DL Checkpoint", os.getcwd(), "*.ckpt-*")
+        fname = QFileDialog.getOpenFileName(self.menuWindow, "Select DL Checkpoint", self.default_open_location, "*.ckpt-*")
         if fname[0]:
             print(fname[0])
             self.model_path.setEnabled(True)
             self.model_path.setText(fname[0])
 
     def select_mask_path(self):
-        fname = QFileDialog.getOpenFileName(self.menuWindow, "Select Mask(if available)", os.getcwd(), "*.tif")
+        fname = QFileDialog.getOpenFileName(self.menuWindow, "Select Mask(if available)", self.default_open_location, "*.tif")
         if fname[0]:
             print(fname[0])
             self.mask_path.setEnabled(True)
@@ -872,6 +886,9 @@ class Ui_MainWindow(object):
 
     def start_lstm_model_training(self):
         self.thread_lstm_train.start()
+
+    def start_lstm_model_validating(self):
+        self.thread_lstm_valid.start()
 
     def update_coordinates(self):
         w, h = self.ImageView.get_current_coordinates()
