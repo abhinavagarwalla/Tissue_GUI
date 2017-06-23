@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QFileDialog
+from PyQt5 import QtWebEngineWidgets
 
 from dl_interface.model_config import *
 from dl_interface.model_test import Test
@@ -386,6 +387,28 @@ class Ui_MainWindow(object):
         self.start_lstm_model_validation.setGeometry(QtCore.QRect(920, 300, 161, 23))
         self.start_lstm_model_validation.setObjectName("start_lstm_model_validation")
         self.tabs.addTab(self.training, "")
+        self.tab = QtWidgets.QWidget()
+        self.tab.setObjectName("tab")
+        self.widget = QtWidgets.QWidget(self.tab)
+        self.widget.setGeometry(QtCore.QRect(10, 10, 1261, 661))
+        self.widget.setObjectName("widget")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.widget)
+        self.verticalLayout_2.setContentsMargins(11, 11, 11, 11)
+        self.verticalLayout_2.setSpacing(6)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.graph_browser = QtWebEngineWidgets.QWebEngineView(self.widget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
+                                           QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.graph_browser.sizePolicy().hasHeightForWidth())
+        self.graph_browser.setSizePolicy(sizePolicy)
+        self.graph_browser.setObjectName("graph_browser")
+        self.verticalLayout_2.addWidget(self.graph_browser)
+        self.label = QtWidgets.QLabel(self.widget)
+        self.label.setObjectName("label")
+        self.verticalLayout_2.addWidget(self.label)
+        self.tabs.addTab(self.tab, "")
         self.horizontalLayout_4.addWidget(self.tabs)
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
@@ -471,6 +494,8 @@ class Ui_MainWindow(object):
         self.start_lstm_model_train.setText(_translate("MainWindow", "Start LSTM Model Training"))
         self.start_lstm_model_validation.setText(_translate("MainWindow", "Start LSTM Model Validation"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
+        self.label.setText(_translate("MainWindow", "TextLabel"))
+        self.tabs.setTabText(self.tabs.indexOf(self.tab), _translate("MainWindow", "Tensorboard"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
     def initialize_signals_slots(self):
@@ -535,6 +560,9 @@ class Ui_MainWindow(object):
         self.start_lstm_data_generation.clicked.connect(self.start_lstm_data_generating)
         self.start_lstm_model_train.clicked.connect(self.start_lstm_model_training)
         self.start_lstm_model_validation.clicked.connect(self.start_lstm_model_validating)
+
+        self.graph_browser.load(QtCore.QUrl("http://127.0.0.1:6006"))
+        self.graph_browser.show()
 
     def initialize_worker_thread(self):
         self.test_model = Test()

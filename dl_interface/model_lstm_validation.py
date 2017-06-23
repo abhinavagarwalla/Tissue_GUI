@@ -12,7 +12,7 @@ from tensorflow.contrib.framework.python.ops.variables import get_or_create_glob
 from tensorflow.python.platform import tf_logging as logging
 import pickle
 
-from tensorflow.contrib.rnn import RNNCell, LSTMStateTuple, LayerNormBasicLSTMCell
+from tensorflow.contrib.rnn import RNNCell, LSTMStateTuple
 import numpy as np
 from tensorflow.contrib.rnn.python.ops.core_rnn_cell_impl import _linear
 
@@ -113,6 +113,9 @@ class DataIter():
             if self.iter == self.num_samples:
                 self.iter = 0
         return x, y, cnn_y, cnn_logits
+
+    def save_predictions(self, probs):
+        print(probs)
 
 class LSTMValidation(QObject):
     finished = pyqtSignal()
@@ -309,20 +312,20 @@ class LSTMValidation(QObject):
 
         # Now finally create all the summaries you need to monitor and group them into one summary op.
         tf.summary.scalar('losses/Absolute_L1_Loss', loss)
-        tf.summary.scalar('accuracy_streaming', accuracy_streaming)
-        tf.summary.scalar('precision_streaming', precision_streaming)
-        tf.summary.scalar('recall_streaming', recall_streaming)
-        tf.summary.scalar('accuracy_batch', accuracy_batch)
-        tf.summary.scalar('precision_batch', precision_batch)
-        tf.summary.scalar('recall_batch', recall_batch)
+        tf.summary.scalar('losses/accuracy_streaming', accuracy_streaming)
+        tf.summary.scalar('losses/precision_streaming', precision_streaming)
+        tf.summary.scalar('losses/recall_streaming', recall_streaming)
+        tf.summary.scalar('losses/accuracy_batch', accuracy_batch)
+        tf.summary.scalar('losses/precision_batch', precision_batch)
+        tf.summary.scalar('losses/recall_batch', recall_batch)
 
         tf.summary.scalar('losses/Absolute_L1_Loss_CNN', loss_cnn)
-        tf.summary.scalar('accuracy_streaming_cnn', accuracy_streaming_cnn)
-        tf.summary.scalar('precision_streaming_cnn', precision_streaming_cnn)
-        tf.summary.scalar('recall_streaming_cnn', recall_streaming_cnn)
-        tf.summary.scalar('accuracy_batch_cnn', accuracy_batch_cnn)
-        tf.summary.scalar('precision_batch_cnn', precision_batch_cnn)
-        tf.summary.scalar('recall_batch_cnn', recall_batch)
+        tf.summary.scalar('losses/accuracy_streaming_cnn', accuracy_streaming_cnn)
+        tf.summary.scalar('losses/precision_streaming_cnn', precision_streaming_cnn)
+        tf.summary.scalar('losses/recall_streaming_cnn', recall_streaming_cnn)
+        tf.summary.scalar('losses/accuracy_batch_cnn', accuracy_batch_cnn)
+        tf.summary.scalar('losses/precision_batch_cnn', precision_batch_cnn)
+        tf.summary.scalar('losses/recall_batch_cnn', recall_batch)
 
         my_summary_op = tf.summary.merge_all()
 
@@ -343,8 +346,8 @@ class LSTMValidation(QObject):
                 batch_x, batch_y, cnn_y, cnn_logits = self.dataloader.next_batch()
 
                 # Log the summaries every 10 step.
-                loss_value, loss_cnn_value, summaries,\
-                global_step_count, _1, _2, acc_value, acc_value_cnn = sess.run([loss, loss_cnn, my_summary_op,
+                loss_value, loss_cnn_value, labels_flat_value, summaries,\
+                global_step_count, _1, _2, acc_value, acc_value_cnn = sess.run([loss, loss_cnn, labels_flat, my_summary_op,
                             sv.global_step, metrics_op, metrics_op_cnn, accuracy_batch, accuracy_batch_cnn],
                             feed_dict={images: batch_x, labels: batch_y, cnn_preds: cnn_logits})
                 sv.summary_computed(sess, summaries, global_step=step)
@@ -352,6 +355,7 @@ class LSTMValidation(QObject):
                 logging.info("At step %d/%d, loss= %.4f, accuracy=%.2f; cnn_only_loss= %.4f, cnn_only_accuracy=%.2f",
                              step, int(num_steps_per_epoch * LSTMValidConfig.num_epochs),
                              loss_value, 100*acc_value, loss_cnn_value, 100*acc_value_cnn)
+                self.dataloader.save_predictions(labels_flat_value)
             logging.info('Finished validation! Saving model to disk now.')
             self.finished.emit()
 
