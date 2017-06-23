@@ -96,7 +96,7 @@ class LSTMTrainConfig():
     log_dir = 'F:\\abhinav\\patches\\log_lstm'
     batch_size = 10
     num_epochs = 10 #None
-    checkpoint_file = 'F:\\abhinav\\patches\\log_lstm\\model.ckpt-0'
+    checkpoint_file = 'F:\\abhinav\\patches\\log_lstm\\model.ckpt-27000'
     initial_learning_rate = 0.0001
     learning_rate_decay_factor = 0.5
     num_epochs_before_decay = 2

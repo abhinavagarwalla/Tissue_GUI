@@ -12,6 +12,10 @@ class NucleiPoints():
         self.overlayim = None
         self.preds_class = self.ovObj[:,2]
         self.nclasses = np.max(self.preds_class)
+
+        self.class_names = None
+        tmpc = open(filename.split('.')[0] + '_labels.txt').readlines()
+        self.class_names = [i.split(',')[1].strip() for i in tmpc]
         self.npoints = len(self.preds_class)
         self.colors = [(255,0,255,255), (255,0,0,255), (0,255,0,255),
                        (255,128,0,255), (0,0,0,255), (0,0,255,255)]
@@ -40,5 +44,9 @@ class NucleiPoints():
             if self.clsdict[i]:
                 coors = list(zip(pointsW[points[:,2]==(i+1)], pointsH[points[:,2]==(i+1)]))
                 d.point(coors, self.colors[i])
+                if level<=4 and len(coors)!=0:
+                    coor_array = np.array(coors)
+                    for j in range(len(coor_array)):
+                        d.ellipse([tuple(coor_array[j] - (2, 2)), tuple(coor_array[j] + (2, 2))], fill=self.colors[i])
         self.overlayim = pim
         return self.overlayim

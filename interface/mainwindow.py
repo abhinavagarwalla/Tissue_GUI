@@ -759,9 +759,10 @@ class Ui_MainWindow(object):
                                                                    class_states=self.overlay_group_states))
                 if self.overlay_states["Nuclei"]:
                     self.overlay_group.setEnabled(True)
-                    for i in range(self.ImageView.get_number_classes()):
+                    number, names = self.ImageView.get_number_classes()
+                    for i in range(number):
                         self.overlay_group_dict[i].setEnabled(True)
-                        self.overlay_group_dict[i].setText("Class " + str(i))
+                        self.overlay_group_dict[i].setText(names[i])
                         self.overlay_group_dict[i].setStyleSheet("color: rgb" + str(self.colors[i]))
                         self.overlay_group_dict[i].setChecked(True)
                     self.overlay_group.show()

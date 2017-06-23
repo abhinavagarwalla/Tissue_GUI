@@ -111,7 +111,7 @@ class DataIter():
             cnn_logits.append(feat['fc8'].reshape(LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.NUM_CLASSES))
             self.iter += 1
             if self.iter == self.num_samples:
-                break
+                self.iter = 0
         return x, y, cnn_y, cnn_logits
 
 class LSTMTrain(QObject):
@@ -352,13 +352,13 @@ class LSTMTrain(QObject):
         my_summary_op = tf.summary.merge_all()
 
         # Now we create a saver function that actually restores the variables from a checkpoint file in a sess
-        saver = tf.train.Saver(max_to_keep=None)
+        saver_all = tf.train.Saver(max_to_keep=None)
 
         def restore_fn(sess):
-            return saver.restore(sess, LSTMTrainConfig.checkpoint_file)
+            return saver_all.restore(sess, LSTMTrainConfig.checkpoint_file)
 
         # Define your supervisor for running a managed session. Do not run the summary_op automatically or else it will consume too much memory
-        sv = tf.train.Supervisor(logdir=LSTMTrainConfig.log_dir, summary_op=None, init_fn=None)  # restore_fn)
+        sv = tf.train.Supervisor(logdir=LSTMTrainConfig.log_dir, summary_op=None, init_fn=None, saver=saver_all)  # restore_fn)
 
         logging.info("now starting session")
         # Run the managed session
@@ -377,7 +377,7 @@ class LSTMTrain(QObject):
                                 sv.global_step, metrics_op, metrics_op_cnn, accuracy_batch, accuracy_batch_cnn],
                                 feed_dict={images: batch_x, labels: batch_y, cnn_preds: cnn_logits})
                     # summaries = sess.run(my_summary_op)
-                    sv.summary_computed(sess, summaries)
+                    sv.summary_computed(sess, summaries, global_step=step)
                     # writer.add_summary(summaries, step)
                 else:
                     loss_value, loss_cnn_value, _, \
@@ -388,17 +388,17 @@ class LSTMTrain(QObject):
                                                                                cnn_preds: cnn_logits})
 
                 logging.info("At step %d/%d, loss= %.4f, accuracy=%.2f; cnn_only_loss= %.4f, cnn_only_accuracy=%.2f",
-                             global_step_count, int(num_steps_per_epoch * LSTMTrainConfig.num_epochs),
+                             step, int(num_steps_per_epoch * LSTMTrainConfig.num_epochs),
                              loss_value, 100*acc_value, loss_cnn_value, 100*acc_value_cnn)
                 if step % 500==0:
                     logging.info("Saving model as at step%500")
                     # saver.save(sess, LSTMTrainConfig.log_dir + os.sep + "lstm_model", global_step=step)
-                    sv.saver.save(sess, sv.save_path, global_step=sv.global_step)
+                    sv.saver.save(sess, sv.save_path, global_step=step)
             # writer.close()
             # Once all the training has been done, save the log files and checkpoint model
             logging.info('Finished training! Saving model to disk now.')
             # saver.save(sess, LSTMTrainConfig.log_dir + os.sep + "lstm_model",global_step=step)
-            sv.saver.save(sess, sv.save_path, global_step=sv.global_step)
+            sv.saver.save(sess, sv.save_path, global_step=step)
             self.finished.emit()
 
     @pyqtSlot()

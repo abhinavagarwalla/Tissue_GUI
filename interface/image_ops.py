@@ -321,7 +321,7 @@ class DisplayImage():
 
     def get_number_classes(self):
         if self.overlayim["Nuclei"]:
-            return self.overlayObj["Nuclei"].nclasses
+            return self.overlayObj["Nuclei"].nclasses, self.overlayObj["Nuclei"].class_names
 
     def get_info(self):
         ocvim = cv.cvtColor(np.array(self.orim), cv.COLOR_RGB2BGR)
