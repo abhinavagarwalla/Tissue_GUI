@@ -28,14 +28,19 @@ class ImageClass():
         if os.path.isdir(filename):
             self.wsiObj = []
             self.tlist = os.listdir(filename)
+            print(self.tlist)
             self.level_count = len(self.tlist)
             self.level_dimensions = []
             for i in range(self.level_count):
                 self.wsiObj.append(ops.ImageSlide(filename + "/" + self.tlist[i]))
                 self.wsiObj[i].read_region((0, 0), 0, (10, 10))
                 self.level_dimensions.append(self.wsiObj[i].level_dimensions[0])
+            self.level_dimensions = np.array(self.level_dimensions)
+            inds = self.level_dimensions[:,0].argsort()[::-1]
+            self.level_dimensions = list(self.level_dimensions[inds])
+            self.wsiObj = list(np.array(self.wsiObj)[inds])
             self.type = "png_folder"
-        print(self.level_count, self.level_dimensions, type(self.level_dimensions))
+            print(self.level_count, self.level_dimensions, type(self.level_dimensions), type(self.wsiObj), len(self.wsiObj))
 
     def read_region(self, coor_low, level, dim):
         # print("Reading Region: ", coor_low, level, dim)
@@ -53,4 +58,5 @@ class ImageClass():
             # print("Inside 1st condition", Image.fromarray(im).convert("RGBA").size)
             return Image.fromarray(im).convert("RGBA")
         elif self.type=="png_folder":
+            print("Reading Region")
             return self.wsiObj[level].read_region(coor_low, 0, dim)

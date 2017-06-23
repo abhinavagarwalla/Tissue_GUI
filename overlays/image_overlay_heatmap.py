@@ -11,7 +11,7 @@ class HeatMap():
         self.ovObj = ImageClass(filename)
         self.level_fetch = 0
         for i in range(len(self.wsidim)):
-            if self.wsidim[i] == self.ovObj.level_dimensions[0]:
+            if (self.wsidim[i] == self.ovObj.level_dimensions[0]).all():
                 self.level_fetch = i
                 continue
 
@@ -30,7 +30,7 @@ class HeatMap():
             width_low = int(pow(2, level_diff) * width)
             height_low = int(pow(2, level_diff) * height)
             self.overlayim = self.ovObj.read_region((coor_low_w, coor_low_h), 0, (width_low, height_low))
-            self.overlayim = self.overlayim.resize((width, height))
+            self.overlayim = self.overlayim.resize((width, height), Image.BILINEAR)
 
         self.overlayim = np.array(self.overlayim.convert("L")) / 99
         self.overlayim = np.uint8(self.cmap(self.overlayim) * 255)
