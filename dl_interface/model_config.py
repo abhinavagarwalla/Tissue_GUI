@@ -72,9 +72,9 @@ class LSTMDataConfig():
     WSI_FOLDER_PATH = '//shaban-pc/Camelyon16/Dataset/Original/Train'  # None
     MASK_PATH = None #'C:\\Users\\abhinav\\Desktop\\Data\\data\\Test_005_Mask.tif'
     WSI_PATH = None #'C:\\Users\\abhinav\\Desktop\\Data\\data\\Test_005.tif'
-    CHECKPOINT_PATH = 'F:\\abhinav\\patches\\log\\model.ckpt-6001'
+    CHECKPOINT_PATH = 'F:\\abhinav\\patches\\log_cnn2\\model.ckpt-3000'
     TARGET_STAIN_PATH = 'resource' + os.sep + 'targetImage.jpg'
-    RESULT_PATH = 'F:\\abhinav\\patches\\lstm_data' #os.getcwd() + os.sep + 'results'
+    RESULT_PATH = 'F:\\abhinav\\patches\\lstm_data_second' #os.getcwd() + os.sep + 'results'
     LABEL_PATH = 'F:\\abhinav\\patches\\lstm_data_label'
     LEVEL_UPGRADE = 6
     LEVEL_FETCH = 0
@@ -100,6 +100,21 @@ class LSTMTrainConfig():
     initial_learning_rate = 0.0001
     learning_rate_decay_factor = 0.5
     num_epochs_before_decay = 2
+
+class CNN2TrainConfig():
+    DATA_IMAGES_PATH = 'F:\\abhinav\\patches\\lstm_data\\train'
+    DATA_LABELS_PATH = 'F:\\abhinav\\patches\\lstm_data_label'
+    WSI_BASE_PATH = '//shaban-pc/Camelyon16/Dataset/Original/Train/Tumor'
+    PATCH_SIZE = 8
+    IMAGE_SIZE = 224
+    NUM_CLASSES = 2
+    log_dir = 'F:\\abhinav\\patches\\log_cnn2'
+    batch_size = 64
+    num_epochs = 10 #None
+    checkpoint_file = 'F:\\abhinav\\patches\\log\\model.ckpt-6001'
+    initial_learning_rate = 0.0001
+    learning_rate_decay_factor = 0.5
+    num_epochs_before_decay = 1
 
 class LSTMValidConfig():
     DATA_IMAGES_PATH = 'F:\\abhinav\\patches\\lstm_data\\vis' #'F:\\abhinav\\patches\\lstm_data\\validation'

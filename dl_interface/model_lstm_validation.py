@@ -325,7 +325,7 @@ class LSTMValidation(QObject):
         tf.summary.scalar('losses/recall_streaming_cnn', recall_streaming_cnn)
         tf.summary.scalar('losses/accuracy_batch_cnn', accuracy_batch_cnn)
         tf.summary.scalar('losses/precision_batch_cnn', precision_batch_cnn)
-        tf.summary.scalar('losses/recall_batch_cnn', recall_batch)
+        tf.summary.scalar('losses/recall_batch_cnn', recall_batch_cnn)
 
         my_summary_op = tf.summary.merge_all()
 

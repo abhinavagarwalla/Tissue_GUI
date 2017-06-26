@@ -14,6 +14,7 @@ from dl_interface.model_validation import Validate
 from dl_interface.lstm_data_generation import TestLSTMSave, TestLSTMLabelSave
 from dl_interface.model_lstm_train import LSTMTrain
 from dl_interface.model_lstm_validation import LSTMValidation
+from dl_interface.cnn_train import CNN2Train
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -28,10 +29,10 @@ class Ui_MainWindow(object):
         self.centralWidget = QtWidgets.QWidget(MainWindow)
         self.centralWidget.setMouseTracking(True)
         self.centralWidget.setObjectName("centralWidget")
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.centralWidget)
-        self.horizontalLayout_4.setContentsMargins(11, 11, 11, 11)
-        self.horizontalLayout_4.setSpacing(6)
-        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.centralWidget)
+        self.verticalLayout_2.setContentsMargins(11, 11, 11, 11)
+        self.verticalLayout_2.setSpacing(6)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.tabs = QtWidgets.QTabWidget(self.centralWidget)
         self.tabs.setMouseTracking(True)
         self.tabs.setMovable(False)
@@ -386,17 +387,14 @@ class Ui_MainWindow(object):
         self.start_lstm_model_validation = QtWidgets.QPushButton(self.training)
         self.start_lstm_model_validation.setGeometry(QtCore.QRect(920, 300, 161, 23))
         self.start_lstm_model_validation.setObjectName("start_lstm_model_validation")
+        self.start_cnn2_train = QtWidgets.QPushButton(self.training)
+        self.start_cnn2_train.setGeometry(QtCore.QRect(920, 360, 161, 23))
+        self.start_cnn2_train.setObjectName("start_cnn2_train")
         self.tabs.addTab(self.training, "")
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
-        self.widget = QtWidgets.QWidget(self.tab)
-        self.widget.setGeometry(QtCore.QRect(10, 10, 1261, 661))
-        self.widget.setObjectName("widget")
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.widget)
-        self.verticalLayout_2.setContentsMargins(11, 11, 11, 11)
-        self.verticalLayout_2.setSpacing(6)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.graph_browser = QtWebEngineWidgets.QWebEngineView(self.widget)
+        self.graph_browser = QtWebEngineWidgets.QWebEngineView(self.tab)
+        self.graph_browser.setGeometry(QtCore.QRect(10, 10, 1261, 661))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
                                            QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
@@ -404,12 +402,8 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.graph_browser.sizePolicy().hasHeightForWidth())
         self.graph_browser.setSizePolicy(sizePolicy)
         self.graph_browser.setObjectName("graph_browser")
-        self.verticalLayout_2.addWidget(self.graph_browser)
-        self.label = QtWidgets.QLabel(self.widget)
-        self.label.setObjectName("label")
-        self.verticalLayout_2.addWidget(self.label)
         self.tabs.addTab(self.tab, "")
-        self.horizontalLayout_4.addWidget(self.tabs)
+        self.verticalLayout_2.addWidget(self.tabs)
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 1306, 21))
@@ -493,8 +487,8 @@ class Ui_MainWindow(object):
         self.start_lstm_data_generation.setText(_translate("MainWindow", "Start LSTM Data Generation"))
         self.start_lstm_model_train.setText(_translate("MainWindow", "Start LSTM Model Training"))
         self.start_lstm_model_validation.setText(_translate("MainWindow", "Start LSTM Model Validation"))
+        self.start_cnn2_train.setText(_translate("MainWindow", "Start CNN Training - Phase II"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
-        self.label.setText(_translate("MainWindow", "TextLabel"))
         self.tabs.setTabText(self.tabs.indexOf(self.tab), _translate("MainWindow", "Tensorboard"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
@@ -560,6 +554,7 @@ class Ui_MainWindow(object):
         self.start_lstm_data_generation.clicked.connect(self.start_lstm_data_generating)
         self.start_lstm_model_train.clicked.connect(self.start_lstm_model_training)
         self.start_lstm_model_validation.clicked.connect(self.start_lstm_model_validating)
+        self.start_cnn2_train.clicked.connect(self.start_cnn2_training)
 
         self.graph_browser.load(QtCore.QUrl("http://127.0.0.1:6006"))
         self.graph_browser.show()
@@ -599,7 +594,7 @@ class Ui_MainWindow(object):
         self.validate_model.finished.connect(self.thread_validate.quit)
         self.thread_validate.started.connect(self.validate_model.run)
 
-        self.test_lstm_data = TestLSTMLabelSave()
+        self.test_lstm_data = TestLSTMSave()
         self.thread_lstm_data = QtCore.QThread()
         self.test_lstm_data.moveToThread(self.thread_lstm_data)
         self.test_lstm_data.finished.connect(self.thread_lstm_data.quit)
@@ -616,6 +611,12 @@ class Ui_MainWindow(object):
         self.valid_lstm.moveToThread(self.thread_lstm_valid)
         self.valid_lstm.finished.connect(self.thread_lstm_valid.quit)
         self.thread_lstm_valid.started.connect(self.valid_lstm.train)
+
+        self.train_cnn2 = CNN2Train()
+        self.thread_cnn2_train = QtCore.QThread()
+        self.train_cnn2.moveToThread(self.thread_cnn2_train)
+        self.train_cnn2.finished.connect(self.thread_cnn2_train.quit)
+        self.thread_cnn2_train.started.connect(self.train_cnn2.train)
 
     def update_test_progress(self, i):
         self.test_progress.setValue(i)
@@ -917,6 +918,9 @@ class Ui_MainWindow(object):
 
     def start_lstm_model_validating(self):
         self.thread_lstm_valid.start()
+
+    def start_cnn2_training(self):
+        self.thread_cnn2_train.start()
 
     def update_coordinates(self):
         w, h = self.ImageView.get_current_coordinates()
