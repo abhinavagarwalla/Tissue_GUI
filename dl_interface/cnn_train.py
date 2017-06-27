@@ -62,7 +62,7 @@ class DataIter():
             label = np.load(CNN2TrainConfig.DATA_LABELS_PATH + os.sep + patch_id.split(os.sep)[-1].split('_(')[0]
                             + os.sep + patch_id.split(os.sep)[-1].replace('features.pkl', 'label.npy')).reshape(-1)
             label_inv = 1-label
-            label = np.vstack((label, label_inv)).T
+            label = np.vstack((label_inv, label)).T
             y.extend(label)
             self.iter += 1
             if self.iter == self.num_samples:
@@ -118,11 +118,19 @@ class CNN2Train(QObject):
         precision_streaming_cnn, precision_streaming_cnn_update = tf.contrib.metrics.streaming_precision(cnn_preds_class,
                                                                                                  labels_class)
         recall_streaming_cnn, recall_streaming_cnn_update = tf.contrib.metrics.streaming_recall(cnn_preds_class, labels_class)
-        accuracy_batch_cnn, accuracy_batch_cnn_update = tf.metrics.accuracy(labels_class, cnn_preds_class)
-        precision_batch_cnn, precision_batch_cnn_update = tf.metrics.precision(labels_class, cnn_preds_class)
-        recall_batch_cnn, recall_batch_cnn_update = tf.metrics.recall(labels_class, cnn_preds_class)
+        # accuracy_batch_cnn, accuracy_batch_cnn_update = tf.metrics.accuracy(labels_class, cnn_preds_class)
+        # precision_batch_cnn, precision_batch_cnn_update = tf.metrics.precision(labels_class, cnn_preds_class)
+        # recall_batch_cnn, recall_batch_cnn_update = tf.metrics.recall(labels_class, cnn_preds_class)
+        tp_streaming_cnn, tp_streaming_cnn_update = tf.contrib.metrics.streaming_true_positives(cnn_preds_class,
+                                                                                                labels_class)
+        tn_streaming_cnn, tn_streaming_cnn_update = tf.contrib.metrics.streaming_true_negatives(cnn_preds_class,
+                                                                                                labels_class)
+        fp_streaming_cnn, fp_streaming_cnn_update = tf.contrib.metrics.streaming_false_positives(cnn_preds_class,
+                                                                                                labels_class)
+        fn_streaming_cnn, fn_streaming_cnn_update = tf.contrib.metrics.streaming_false_negatives(cnn_preds_class,
+                                                                                                labels_class)
         metrics_op_cnn = tf.group(recall_streaming_cnn_update, precision_streaming_cnn_update, accuracy_streaming_cnn_update,
-                              recall_batch_cnn_update, precision_batch_cnn_update, accuracy_batch_cnn_update)
+                                  tp_streaming_cnn_update, tn_streaming_cnn_update, fp_streaming_cnn_update, fn_streaming_cnn_update)
 
         # Create the global step for monitoring the learning_rate and training.
         global_step = get_or_create_global_step()
@@ -146,9 +154,10 @@ class CNN2Train(QObject):
         tf.summary.scalar('accuracy_streaming_cnn', accuracy_streaming_cnn)
         tf.summary.scalar('precision_streaming_cnn', precision_streaming_cnn)
         tf.summary.scalar('recall_streaming_cnn', recall_streaming_cnn)
-        tf.summary.scalar('accuracy_batch_cnn', accuracy_batch_cnn)
-        tf.summary.scalar('precision_batch_cnn', precision_batch_cnn)
-        tf.summary.scalar('recall_batch_cnn', recall_batch_cnn)
+        tf.summary.scalar('tp_streaming_cnn', tp_streaming_cnn)
+        tf.summary.scalar('tn_streaming_cnn', tn_streaming_cnn)
+        tf.summary.scalar('fp_streaming_cnn', fp_streaming_cnn)
+        tf.summary.scalar('fn_streaming_cnn', fn_streaming_cnn)
 
         tf.summary.scalar('learning_rate', lr)
         my_summary_op = tf.summary.merge_all()
@@ -160,7 +169,7 @@ class CNN2Train(QObject):
             return saver_all.restore(sess, CNN2TrainConfig.checkpoint_file)
 
         # Define your supervisor for running a managed session. Do not run the summary_op automatically or else it will consume too much memory
-        sv = tf.train.Supervisor(logdir=CNN2TrainConfig.log_dir, summary_op=None, init_fn=restore_fn, saver=saver_all)  # restore_fn)
+        sv = tf.train.Supervisor(logdir=CNN2TrainConfig.log_dir, summary_op=None, init_fn=None, saver=saver_all)  # restore_fn)
 
         logging.info("now starting session")
         # Run the managed session
@@ -173,13 +182,13 @@ class CNN2Train(QObject):
                 if step % 100 == 0:
                     loss_cnn_value, _, summaries,\
                     global_step_count, _1, acc_value_cnn = sess.run([loss_cnn, grad_update, my_summary_op,
-                                sv.global_step,  metrics_op_cnn, accuracy_batch_cnn],
+                                sv.global_step,  metrics_op_cnn, accuracy_streaming_cnn],
                                 feed_dict={images: batch_x, labels: batch_y})
                     sv.summary_computed(sess, summaries, global_step=step)
                 else:
                     loss_cnn_value, _, \
                     global_step_count, _1, acc_value_cnn = sess.run([loss_cnn, grad_update, sv.global_step,
-                                                                     metrics_op_cnn, accuracy_batch_cnn],
+                                                                     metrics_op_cnn, accuracy_streaming_cnn],
                                                                     feed_dict={images: batch_x, labels: batch_y})
 
                 logging.info("At step %d/%d, loss= %.4f, accuracy=%.2f;",

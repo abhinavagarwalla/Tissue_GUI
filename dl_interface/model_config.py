@@ -56,7 +56,7 @@ class ValidConfig():
     dataset_dir = 'F:\\abhinav\\patches\\wsi'
     log_dir = 'F:\\abhinav\\patches\\log'
     log_eval = 'F:\\abhinav\\patches\\log_eval'
-    checkpoint_file = 'F:\\abhinav\\patches\\log\\model.ckpt-6001'
+    # checkpoint_file = 'F:\\abhinav\\patches\\log\\model.ckpt-6001'
     image_size = 224
     num_classes = 2
     labels_file = 'F:\\abhinav\\patches\\wsi\\labels.txt'
@@ -85,6 +85,7 @@ class LSTMDataConfig():
     DIFF_SIZE = None  # PATCH_SIZE - OUTPUT_SIZE
     BATCH_SIZE = 512
     NUM_CLASSES = 2
+    READ_FROM_COOR = True
 
 class LSTMTrainConfig():
     DATA_IMAGES_PATH = 'F:\\abhinav\\patches\\lstm_data\\train'
@@ -111,7 +112,7 @@ class CNN2TrainConfig():
     log_dir = 'F:\\abhinav\\patches\\log_cnn2'
     batch_size = 64
     num_epochs = 10 #None
-    checkpoint_file = 'F:\\abhinav\\patches\\log\\model.ckpt-6001'
+    checkpoint_file = 'F:\\abhinav\\patches\\log_cnn2\\model.ckpt-70500'
     initial_learning_rate = 0.0001
     learning_rate_decay_factor = 0.5
     num_epochs_before_decay = 1
@@ -124,6 +125,6 @@ class LSTMValidConfig():
     HIDDEN_SIZE = 512
     NUM_CLASSES = 2
     log_dir = 'F:\\abhinav\\patches\\lstm_data\\vis'
-    batch_size = 10
+    batch_size = 1
     num_epochs = 1 #None
-    checkpoint_file = 'F:\\abhinav\\patches\\log_lstm\\model.ckpt-27000'
+    checkpoint_file = 'F:\\abhinav\\patches\\log_lstm_bkp\\model.ckpt-27000'

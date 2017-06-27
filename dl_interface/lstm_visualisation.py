@@ -7,12 +7,12 @@ from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import random
 import glob
 
-from dl_interface.model_config import LSTMTrainConfig
+from dl_interface.model_config import LSTMValidConfig
 from tensorflow.contrib.framework.python.ops.variables import get_or_create_global_step
 from tensorflow.python.platform import tf_logging as logging
 import pickle
 
-from tensorflow.contrib.rnn import RNNCell, LSTMStateTuple, LayerNormBasicLSTMCell
+from tensorflow.contrib.rnn import RNNCell, LSTMStateTuple
 import numpy as np
 from tensorflow.contrib.rnn.python.ops.core_rnn_cell_impl import _linear
 
@@ -87,34 +87,44 @@ class MultiDimensionalLSTMCell(RNNCell):
 
 class DataIter():
     def __init__(self):
-        self.wsi_list = glob.glob(LSTMTrainConfig.DATA_IMAGES_PATH + os.sep + '*')
+        self.wsi_list = glob.glob(LSTMValidConfig.DATA_IMAGES_PATH + os.sep + 'Tumor*')
         self.images_list = []
         for i in self.wsi_list:
             self.images_list.extend(glob.glob(i + os.sep + '*'))
         random.shuffle(self.images_list)
         self.num_samples = len(self.images_list)
         self.iter = 0
+        self.save_coor = None
 
     def next_batch(self):
         x = []
         y = []
         cnn_logits = []
         cnn_y = []
-        for i in range(LSTMTrainConfig.batch_size):
+        for i in range(LSTMValidConfig.batch_size):
             feat = pickle.load(open(self.images_list[self.iter], 'rb'))
             wsi_name = self.images_list[self.iter].split(os.sep)[-1]
-            label = np.load(LSTMTrainConfig.DATA_LABELS_PATH + os.sep + wsi_name.split('_(')[0] +
+            label = np.load(LSTMValidConfig.DATA_LABELS_PATH + os.sep + wsi_name.split('_(')[0] +
                             os.sep + wsi_name.replace('features.pkl', 'label.npy'))
-            x.append(feat['fc6'].reshape(LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.CHANNELS))
+            x.append(feat['fc6'].reshape(LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.CHANNELS))
             y.append(label)
-            cnn_y.append(feat['predictions'].reshape(LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, 1))
-            cnn_logits.append(feat['fc8'].reshape(LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.NUM_CLASSES))
+            cnn_y.append(feat['predictions'].reshape(LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.PATCH_SIZE, 1))
+            cnn_logits.append(feat['fc8'].reshape(LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.NUM_CLASSES))
+            self.save_coor = self.images_list[self.iter].replace('_features.pkl', '_preds.npy')
             self.iter += 1
             if self.iter == self.num_samples:
                 self.iter = 0
         return x, y, cnn_y, cnn_logits
 
-class LSTMTrain(QObject):
+    def save_predictions(self, probs):
+        np.save(LSTMValidConfig.DATA_IMAGES_PATH + os.sep + 'predictions' + os.sep + self.save_coor.split(os.sep)[-1],
+                probs)
+
+    def combine_prediction(self):
+        pred_list = glob.glob(LSTMValidConfig.DATA_IMAGES_PATH + os.sep + 'predictions' + os.sep + '*')
+        print(pred_list)
+
+class LSTMVis(QObject):
     finished = pyqtSignal()
     epoch = pyqtSignal(int)
 
@@ -222,14 +232,13 @@ class LSTMTrain(QObject):
             return y, states
 
     @pyqtSlot()
-    def train(self):
+    def vis(self):
         # Saver and initialisation
         print("starting training")
         self.initialize()
-        # saver = tf.train.Saver()
         self.epoch.emit(0)
-        if not os.path.exists(LSTMTrainConfig.log_dir):
-            os.mkdir(LSTMTrainConfig.log_dir)
+        if not os.path.exists(LSTMValidConfig.log_dir):
+            os.mkdir(LSTMValidConfig.log_dir)
 
         # ======================= TRAINING PROCESS =========================
         # Now we start to construct the graph and build our model
@@ -238,53 +247,44 @@ class LSTMTrain(QObject):
         logging.info("starting with tf")
 
         # Know the number steps to take before decaying the learning rate and batches per epoch
-        num_batches_per_epoch = self.dataloader.num_samples / LSTMTrainConfig.batch_size
+        num_batches_per_epoch = self.dataloader.num_samples / LSTMValidConfig.batch_size
         num_steps_per_epoch = num_batches_per_epoch  # Because one step is one batch processed
-        decay_steps = int(LSTMTrainConfig.num_epochs_before_decay * num_steps_per_epoch)
 
 
-        images = tf.placeholder(tf.float32, [LSTMTrainConfig.batch_size, LSTMTrainConfig.PATCH_SIZE,
-                                             LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.CHANNELS])
-        labels = tf.placeholder(tf.float32, [LSTMTrainConfig.batch_size, LSTMTrainConfig.PATCH_SIZE,
-                                             LSTMTrainConfig.PATCH_SIZE, 1])#
-        cnn_preds = tf.placeholder(tf.float32, [LSTMTrainConfig.batch_size, LSTMTrainConfig.PATCH_SIZE,
-                                             LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.NUM_CLASSES])
-        rnn_out_1, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=images,
+        images = tf.placeholder(tf.float32, [LSTMValidConfig.batch_size, LSTMValidConfig.PATCH_SIZE,
+                                             LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.CHANNELS])
+        labels = tf.placeholder(tf.float32, [LSTMValidConfig.batch_size, LSTMValidConfig.PATCH_SIZE,
+                                             LSTMValidConfig.PATCH_SIZE, 1])#
+        cnn_preds = tf.placeholder(tf.float32, [LSTMValidConfig.batch_size, LSTMValidConfig.PATCH_SIZE,
+                                                LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.NUM_CLASSES])
+        rnn_out_1, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMValidConfig.HIDDEN_SIZE, input_data=images,
                                                            sh=[1, 1], scope_n="lstm_1")
-        rnn_out_2, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=images,
+        rnn_out_2, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMValidConfig.HIDDEN_SIZE, input_data=images,
                                                              sh=[1, 1], dims=[False, True, False, False], scope_n="lstm_2")
-        rnn_out_3, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=images,
+        rnn_out_3, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMValidConfig.HIDDEN_SIZE, input_data=images,
                                                              sh=[1, 1], dims=[False, True, True, False], scope_n="lstm_3")
-        rnn_out_4, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=images,
+        rnn_out_4, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMValidConfig.HIDDEN_SIZE, input_data=images,
                                                              sh=[1, 1], dims=[False, False, True, False], scope_n="lstm_4")
 
         logging.info("Four LSTMs formed")
-        # model_out = slim.fully_connected(inputs=rnn_out,
-        #                                  num_outputs=1,
-        #                                  activation_fn=None)
-        model_out_1 = slim.conv2d(inputs=rnn_out_1, num_outputs=LSTMTrainConfig.NUM_CLASSES, kernel_size=[3,3], activation_fn=None)
-        model_out_2 = slim.conv2d(inputs=rnn_out_2, num_outputs=LSTMTrainConfig.NUM_CLASSES, kernel_size=[3, 3], activation_fn=None)
-        model_out_3 = slim.conv2d(inputs=rnn_out_3, num_outputs=LSTMTrainConfig.NUM_CLASSES, kernel_size=[3, 3], activation_fn=None)
-        model_out_4 = slim.conv2d(inputs=rnn_out_4, num_outputs=LSTMTrainConfig.NUM_CLASSES, kernel_size=[3, 3], activation_fn=None)
-
-        logging.info("Convolution done, reshaping")
-        # model_out_2 = tf.reverse(model_out_2, axis=[False, True, False, False])
-        # model_out_3 = tf.reverse(model_out_3, axis=[False, True, True, False])
-        # model_out_4 = tf.reverse(model_out_4, axis=[False, False, True, False])
+        model_out_1 = slim.conv2d(inputs=rnn_out_1, num_outputs=LSTMValidConfig.NUM_CLASSES, kernel_size=[3,3], activation_fn=None)
+        model_out_2 = slim.conv2d(inputs=rnn_out_2, num_outputs=LSTMValidConfig.NUM_CLASSES, kernel_size=[3, 3], activation_fn=None)
+        model_out_3 = slim.conv2d(inputs=rnn_out_3, num_outputs=LSTMValidConfig.NUM_CLASSES, kernel_size=[3, 3], activation_fn=None)
+        model_out_4 = slim.conv2d(inputs=rnn_out_4, num_outputs=LSTMValidConfig.NUM_CLASSES, kernel_size=[3, 3], activation_fn=None)
 
         logging.info("Doing Scalar")
         model_out = tf.scalar_mul(tf.constant(0.25),tf.add_n([model_out_1, model_out_2, model_out_3, model_out_4]))
 
-        model_out_flat = tf.reshape(model_out, shape=(-1, LSTMTrainConfig.NUM_CLASSES))
+        model_out_flat = tf.reshape(model_out, shape=(-1, LSTMValidConfig.NUM_CLASSES))
 
-        non_tumor_label = tf.subtract(tf.ones((LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, 1)), labels)
-        combined_label = tf.concat([non_tumor_label, labels], axis=3)
-        labels_flat = tf.reshape(combined_label, shape=(-1,LSTMTrainConfig.NUM_CLASSES))
+        non_tumor_label = tf.subtract(tf.ones((LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.PATCH_SIZE, 1)), labels)
+        combined_label = tf.concat([labels, non_tumor_label], axis=3)
+        labels_flat = tf.reshape(combined_label, shape=(-1,LSTMValidConfig.NUM_CLASSES))
 
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=model_out_flat,
                                                                   labels=labels_flat))
 
-        cnn_preds_flat = tf.reshape(cnn_preds, shape=(-1, LSTMTrainConfig.NUM_CLASSES))
+        cnn_preds_flat = tf.reshape(cnn_preds, shape=(-1, LSTMValidConfig.NUM_CLASSES))
         loss_cnn = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=cnn_preds_flat,
                                                                   labels=labels_flat))
 
@@ -298,8 +298,8 @@ class LSTMTrain(QObject):
         accuracy_batch, accuracy_batch_update = tf.metrics.accuracy(labels_class, model_out_class)
         precision_batch, precision_batch_update = tf.metrics.precision(labels_class, model_out_class)
         recall_batch, recall_batch_update = tf.metrics.recall(labels_class, model_out_class)
-        # metrics_op = tf.group(recall_streaming_update, precision_streaming_update, accuracy_streaming_update,
-        #                       recall_batch_update, precision_batch_update, accuracy_batch_update)
+        metrics_op = tf.group(recall_streaming_update, precision_streaming_update, accuracy_streaming_update,
+                              recall_batch_update, precision_batch_update, accuracy_batch_update)
 
         accuracy_streaming_cnn, accuracy_streaming_cnn_update = tf.contrib.metrics.streaming_accuracy(cnn_preds_class,
                                                                                               labels_class)
@@ -309,9 +309,7 @@ class LSTMTrain(QObject):
         accuracy_batch_cnn, accuracy_batch_cnn_update = tf.metrics.accuracy(labels_class, cnn_preds_class)
         precision_batch_cnn, precision_batch_cnn_update = tf.metrics.precision(labels_class, cnn_preds_class)
         recall_batch_cnn, recall_batch_cnn_update = tf.metrics.recall(labels_class, cnn_preds_class)
-        metrics_op = tf.group(recall_streaming_update, precision_streaming_update, accuracy_streaming_update,
-                              recall_batch_update, precision_batch_update, accuracy_batch_update,
-                                  recall_streaming_cnn_update, precision_streaming_cnn_update, accuracy_streaming_cnn_update,
+        metrics_op_cnn = tf.group(recall_streaming_cnn_update, precision_streaming_cnn_update, accuracy_streaming_cnn_update,
                               recall_batch_cnn_update, precision_batch_cnn_update, accuracy_batch_cnn_update)
         # loss = 1e4 * tf.reduce_mean(tf.abs(tf.subtract(labels, model_out)))
         # loss_cnn = 1e4 * tf.reduce_mean(tf.abs(tf.subtract(labels, cnn_preds)))
@@ -319,88 +317,57 @@ class LSTMTrain(QObject):
         # Create the global step for monitoring the learning_rate and training.
         global_step = get_or_create_global_step()
 
-        # Define your exponentially decaying learning rate
-        lr = tf.train.exponential_decay(
-            learning_rate=LSTMTrainConfig.initial_learning_rate,
-            global_step=global_step,
-            decay_steps=decay_steps,
-            decay_rate=LSTMTrainConfig.learning_rate_decay_factor,
-            staircase=True)
-
-        # Now we can define the optimizer that takes on the learning rate
-        grad_update = tf.train.AdamOptimizer(learning_rate=lr).minimize(loss)
-
-        # predictions = tf.reshape(model_out, [-1])
-        # labels_flat = tf.reshape(labels, [-1])
-
         # Now finally create all the summaries you need to monitor and group them into one summary op.
         tf.summary.scalar('losses/Absolute_L1_Loss', loss)
-        tf.summary.scalar('accuracy_streaming', accuracy_streaming)
-        tf.summary.scalar('precision_streaming', precision_streaming)
-        tf.summary.scalar('recall_streaming', recall_streaming)
-        tf.summary.scalar('accuracy_batch', accuracy_batch)
-        tf.summary.scalar('precision_batch', precision_batch)
-        tf.summary.scalar('recall_batch', recall_batch)
+        tf.summary.scalar('losses/accuracy_streaming', accuracy_streaming)
+        tf.summary.scalar('losses/precision_streaming', precision_streaming)
+        tf.summary.scalar('losses/recall_streaming', recall_streaming)
+        tf.summary.scalar('losses/accuracy_batch', accuracy_batch)
+        tf.summary.scalar('losses/precision_batch', precision_batch)
+        tf.summary.scalar('losses/recall_batch', recall_batch)
 
         tf.summary.scalar('losses/Absolute_L1_Loss_CNN', loss_cnn)
-        tf.summary.scalar('accuracy_streaming_cnn', accuracy_streaming_cnn)
-        tf.summary.scalar('precision_streaming_cnn', precision_streaming_cnn)
-        tf.summary.scalar('recall_streaming_cnn', recall_streaming_cnn)
-        tf.summary.scalar('accuracy_batch_cnn', accuracy_batch_cnn)
-        tf.summary.scalar('precision_batch_cnn', precision_batch_cnn)
-        tf.summary.scalar('recall_batch_cnn', recall_batch_cnn)
+        tf.summary.scalar('losses/accuracy_streaming_cnn', accuracy_streaming_cnn)
+        tf.summary.scalar('losses/precision_streaming_cnn', precision_streaming_cnn)
+        tf.summary.scalar('losses/recall_streaming_cnn', recall_streaming_cnn)
+        tf.summary.scalar('losses/accuracy_batch_cnn', accuracy_batch_cnn)
+        tf.summary.scalar('losses/precision_batch_cnn', precision_batch_cnn)
+        tf.summary.scalar('losses/recall_batch_cnn', recall_batch_cnn)
 
-        tf.summary.scalar('learning_rate', lr)
         my_summary_op = tf.summary.merge_all()
 
         # Now we create a saver function that actually restores the variables from a checkpoint file in a sess
         saver_all = tf.train.Saver(max_to_keep=None)
 
         def restore_fn(sess):
-            return saver_all.restore(sess, LSTMTrainConfig.checkpoint_file)
+            return saver_all.restore(sess, LSTMValidConfig.checkpoint_file)
 
         # Define your supervisor for running a managed session. Do not run the summary_op automatically or else it will consume too much memory
-        sv = tf.train.Supervisor(logdir=LSTMTrainConfig.log_dir, summary_op=None, init_fn=None, saver=saver_all)  # restore_fn)
+        sv = tf.train.Supervisor(logdir=LSTMValidConfig.log_dir, summary_op=None, init_fn=restore_fn)
 
         logging.info("now starting session")
         # Run the managed session
-        # with tf.Session() as sess:
-        with sv.managed_session() as sess:
-            # writer = tf.summary.FileWriter(LSTMTrainConfig.log_dir, sess.graph)
-            # sess.run(tf.global_variables_initializer())
+        # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.40)
+        # tcp_opt = tf.ConfigProto()
+        # tcp_opt.gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.40)
+        with sv.managed_session(config=tf.ConfigProto(gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.40))) as sess:
             logging.info("initialiser run")
-            for step in range(int(num_steps_per_epoch * LSTMTrainConfig.num_epochs)):
+            for step in range(int(num_steps_per_epoch)):
                 batch_x, batch_y, cnn_y, cnn_logits = self.dataloader.next_batch()
 
-                # Log the summaries every 10 step.
-                if step % 100 == 0:
-                    loss_value, loss_cnn_value, _, summaries,\
-                    global_step_count, _1, acc_value, acc_value_cnn = sess.run([loss, loss_cnn, grad_update, my_summary_op,
-                                sv.global_step, metrics_op, accuracy_batch, accuracy_batch_cnn],
-                                feed_dict={images: batch_x, labels: batch_y, cnn_preds: cnn_logits})
-                    # summaries = sess.run(my_summary_op)
-                    sv.summary_computed(sess, summaries, global_step=step)
-                    # writer.add_summary(summaries, step)
-                else:
-                    loss_value, loss_cnn_value, _, \
-                    global_step_count, _1, acc_value, acc_value_cnn = sess.run([loss, loss_cnn, grad_update,
-                                                                     sv.global_step, metrics_op,
-                                                                     accuracy_batch, accuracy_batch_cnn],
-                                                                    feed_dict={images: batch_x, labels: batch_y,
-                                                                               cnn_preds: cnn_logits})
-
-                logging.info("At step %d/%d, loss= %.4f, accuracy=%.2f; cnn_only_loss= %.4f, cnn_only_accuracy=%.2f",
-                             step, int(num_steps_per_epoch * LSTMTrainConfig.num_epochs),
-                             loss_value, 100*acc_value, loss_cnn_value, 100*acc_value_cnn)
-                if step % 500==0:
-                    logging.info("Saving model as at step%500")
-                    # saver.save(sess, LSTMTrainConfig.log_dir + os.sep + "lstm_model", global_step=step)
-                    sv.saver.save(sess, sv.save_path, global_step=step)
-            # writer.close()
-            # Once all the training has been done, save the log files and checkpoint model
-            logging.info('Finished training! Saving model to disk now.')
-            # saver.save(sess, LSTMTrainConfig.log_dir + os.sep + "lstm_model",global_step=step)
-            sv.saver.save(sess, sv.save_path, global_step=step)
+                # # Log the summaries every 10 step.
+                # loss_value, loss_cnn_value, cnn_preds_class_value, summaries,\
+                # global_step_count, _1, _2, acc_value, acc_value_cnn = sess.run([loss, loss_cnn, cnn_preds_class, my_summary_op,
+                #             sv.global_step, metrics_op, metrics_op_cnn, accuracy_batch, accuracy_batch_cnn],
+                #             feed_dict={images: batch_x, labels: batch_y, cnn_preds: cnn_logits})
+                # sv.summary_computed(sess, summaries, global_step=step)
+                #
+                # logging.info("At step %d/%d, loss= %.4f, accuracy=%.2f; cnn_only_loss= %.4f, cnn_only_accuracy=%.2f",
+                #              step, int(num_steps_per_epoch * LSTMValidConfig.num_epochs),
+                #              loss_value, 100*acc_value, loss_cnn_value, 100*acc_value_cnn)
+                self.dataloader.save_predictions(cnn_y)
+            logging.info('Finished validation! Combining all validation now.')
+            self.dataloader.combine_prediction()
             self.finished.emit()
 
     @pyqtSlot()

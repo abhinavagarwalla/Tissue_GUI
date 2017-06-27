@@ -15,6 +15,7 @@ from dl_interface.lstm_data_generation import TestLSTMSave, TestLSTMLabelSave
 from dl_interface.model_lstm_train import LSTMTrain
 from dl_interface.model_lstm_validation import LSTMValidation
 from dl_interface.cnn_train import CNN2Train
+from dl_interface.lstm_visualisation import LSTMVis
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -390,6 +391,9 @@ class Ui_MainWindow(object):
         self.start_cnn2_train = QtWidgets.QPushButton(self.training)
         self.start_cnn2_train.setGeometry(QtCore.QRect(920, 360, 161, 23))
         self.start_cnn2_train.setObjectName("start_cnn2_train")
+        self.start_lstm_vis = QtWidgets.QPushButton(self.training)
+        self.start_lstm_vis.setGeometry(QtCore.QRect(920, 390, 161, 23))
+        self.start_lstm_vis.setObjectName("start_lstm_vis")
         self.tabs.addTab(self.training, "")
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
@@ -488,6 +492,7 @@ class Ui_MainWindow(object):
         self.start_lstm_model_train.setText(_translate("MainWindow", "Start LSTM Model Training"))
         self.start_lstm_model_validation.setText(_translate("MainWindow", "Start LSTM Model Validation"))
         self.start_cnn2_train.setText(_translate("MainWindow", "Start CNN Training - Phase II"))
+        self.start_lstm_vis.setText(_translate("MainWindow", "Get Visual Results"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.tabs.setTabText(self.tabs.indexOf(self.tab), _translate("MainWindow", "Tensorboard"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
@@ -555,6 +560,7 @@ class Ui_MainWindow(object):
         self.start_lstm_model_train.clicked.connect(self.start_lstm_model_training)
         self.start_lstm_model_validation.clicked.connect(self.start_lstm_model_validating)
         self.start_cnn2_train.clicked.connect(self.start_cnn2_training)
+        self.start_lstm_vis.clicked.connect(self.start_lstm_visualisation)
 
         self.graph_browser.load(QtCore.QUrl("http://127.0.0.1:6006"))
         self.graph_browser.show()
@@ -617,6 +623,12 @@ class Ui_MainWindow(object):
         self.train_cnn2.moveToThread(self.thread_cnn2_train)
         self.train_cnn2.finished.connect(self.thread_cnn2_train.quit)
         self.thread_cnn2_train.started.connect(self.train_cnn2.train)
+
+        self.vis_lstm = LSTMVis()
+        self.thread_lstm_visualisation = QtCore.QThread()
+        self.vis_lstm.moveToThread(self.thread_lstm_visualisation)
+        self.vis_lstm.finished.connect(self.thread_lstm_visualisation.quit)
+        self.thread_lstm_visualisation.started.connect(self.vis_lstm.vis)
 
     def update_test_progress(self, i):
         self.test_progress.setValue(i)
@@ -921,6 +933,9 @@ class Ui_MainWindow(object):
 
     def start_cnn2_training(self):
         self.thread_cnn2_train.start()
+
+    def start_lstm_visualisation(self):
+        self.thread_lstm_visualisation.start()
 
     def update_coordinates(self):
         w, h = self.ImageView.get_current_coordinates()

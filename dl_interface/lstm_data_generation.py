@@ -51,30 +51,40 @@ class DataMod():
         return np.array(boxes_new)
 
     def get_coordinates(self):
-        img = ndimage.imread(LSTMDataConfig.MASK_PATH)
-        contours = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        a = np.array([cv2.contourArea(i) for i in contours[1]])
-        b = np.array(contours[1])
-        order = a.argsort()[::-1]
-        a, b = a[order], b[order]
-        threshArea, threshPoints = 200, 10
-        boxes = [cv2.boundingRect(i) for i in b[a > threshArea] if len(i) > threshPoints]
-        boxes = self.delete_inside(boxes)
+        if not LSTMDataConfig.READ_FROM_COOR:
+            img = ndimage.imread(LSTMDataConfig.MASK_PATH)
+            contours = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+            a = np.array([cv2.contourArea(i) for i in contours[1]])
+            b = np.array(contours[1])
+            order = a.argsort()[::-1]
+            a, b = a[order], b[order]
+            threshArea, threshPoints = 200, 10
+            boxes = [cv2.boundingRect(i) for i in b[a > threshArea] if len(i) > threshPoints]
+            boxes = self.delete_inside(boxes)
 
-        boxes = boxes * pow(2, LSTMDataConfig.LEVEL_UPGRADE)
-        print(boxes)
-        coors = []
-        for i in range(len(boxes)):
-            a = range(max(0, boxes[i, 0]),
-                      min(self.wsi.level_dimensions[LSTMDataConfig.LEVEL_FETCH][0],
-                          boxes[i, 0] + boxes[i, 2]), int((1-LSTMDataConfig.STRIDE)*LSTMDataConfig.CONTEXT_DEPTH*LSTMDataConfig.PATCH_SIZE))
-            b = range(max(0, boxes[i, 1]),
-                      min(self.wsi.level_dimensions[LSTMDataConfig.LEVEL_FETCH][1],
-                          boxes[i, 1] + boxes[i, 3]), int((1-LSTMDataConfig.STRIDE)*LSTMDataConfig.CONTEXT_DEPTH*LSTMDataConfig.PATCH_SIZE))
-            coors.extend(list(product(a, b)))
-        random.shuffle(coors)
-        print("All coordinates has been fetched")
-        return coors
+            boxes = boxes * pow(2, LSTMDataConfig.LEVEL_UPGRADE)
+            print(boxes)
+            coors = []
+            for i in range(len(boxes)):
+                a = range(max(0, boxes[i, 0]),
+                          min(self.wsi.level_dimensions[LSTMDataConfig.LEVEL_FETCH][0],
+                              boxes[i, 0] + boxes[i, 2]), int((1-LSTMDataConfig.STRIDE)*LSTMDataConfig.CONTEXT_DEPTH*LSTMDataConfig.PATCH_SIZE))
+                b = range(max(0, boxes[i, 1]),
+                          min(self.wsi.level_dimensions[LSTMDataConfig.LEVEL_FETCH][1],
+                              boxes[i, 1] + boxes[i, 3]), int((1-LSTMDataConfig.STRIDE)*LSTMDataConfig.CONTEXT_DEPTH*LSTMDataConfig.PATCH_SIZE))
+                coors.extend(list(product(a, b)))
+            random.shuffle(coors)
+            print("All coordinates has been fetched")
+            return coors
+        else:
+            coors = []
+            wsp = LSTMDataConfig.LABEL_PATH + os.sep + LSTMDataConfig.WSI_PATH.split(os.sep)[-1][:-4]
+            for j in os.listdir(wsp):
+                coorst = j.split('(')[1].split(')')[0]
+                w, h = list(map(int, coorst.split(',')))
+                coors.append((w, h))
+            print("All coordinates have been fetched")
+            return coors
 
     def get_image_from_coor(self):
         # assert (LSTMDataConfig.BATCH_SIZE == 1)
@@ -161,7 +171,7 @@ class TestLSTMSave(QObject):
         self.classes_dict = dict((i, self.classes[i]) for i in range(len(self.classes)))
         self.initialize()
         # mlist = [i[:-5] for i in mlist]
-        for i in range(30, 40):#len(self.wsi_list["Tumor"])):
+        for i in range(32, 40):#len(self.wsi_list["Tumor"])):
             print(self.wsi_list["Tumor"][i])
             self.wsi_iter = i
             LSTMDataConfig.WSI_PATH = self.wsi_list["Tumor"][self.wsi_iter]
