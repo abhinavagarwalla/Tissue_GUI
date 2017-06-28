@@ -350,8 +350,8 @@ class LSTMValidation(QObject):
         tf.summary.scalar('losses/accuracy_batch', accuracy_batch)
         tf.summary.scalar('losses/precision_batch', precision_batch)
         tf.summary.scalar('losses/recall_batch', recall_batch)
-        [tf.summary.scalar('thresh/precision_' + str(i / 20), precision_thresh[i]) for i in range(20)]
-        [tf.summary.scalar('thresh/recall_' + str(i / 20), recall_thresh[i]) for i in range(20)]
+        [tf.summary.scalar('thresh/precision/precision_' + str(i / 20), precision_thresh[i]) for i in range(20)]
+        [tf.summary.scalar('thresh/recall/recall_' + str(i / 20), recall_thresh[i]) for i in range(20)]
         # tf.summary.scalar('thresh/precision_thresh', precision_thresh)
         # tf.summary.scalar('thresh/recall_thresh', recall_thresh)
 
@@ -362,8 +362,8 @@ class LSTMValidation(QObject):
         tf.summary.scalar('losses/accuracy_batch_cnn', accuracy_batch_cnn)
         tf.summary.scalar('losses/precision_batch_cnn', precision_batch_cnn)
         tf.summary.scalar('losses/recall_batch_cnn', recall_batch_cnn)
-        [tf.summary.scalar('thresh/precision_cnn_' + str(i / 20), precision_thresh_cnn[i]) for i in range(20)]
-        [tf.summary.scalar('thresh/recall_cnn_' + str(i / 20), recall_thresh_cnn[i]) for i in range(20)]
+        [tf.summary.scalar('thresh/precision_cnn/precision_cnn_' + str(i / 20), precision_thresh_cnn[i]) for i in range(20)]
+        [tf.summary.scalar('thresh/recall_cnn/recall_cnn_' + str(i / 20), recall_thresh_cnn[i]) for i in range(20)]
         # tf.summary.histogram('thresh/precision_thresh_cnn', precision_thresh_cnn)
         # tf.summary.histogram('thresh/recall_thresh_cnn', recall_thresh_cnn)
 

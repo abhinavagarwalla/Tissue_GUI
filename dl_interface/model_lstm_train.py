@@ -95,7 +95,7 @@ class DataIter():
         #     self.images_list.extend(glob.glob(i + os.sep + '*'))
         # random.shuffle(self.images_list)
         self.iter = 0
-        plist = sio.loadmat('resource/wsi_names_list.mat')['wsi_names']
+        plist = sio.loadmat('resource/wsi_names_list_v2.mat')['wsi_names']
         self.images_list = [LSTMTrainConfig.DATA_IMAGES_PATH + os.sep + i[:9] + os.sep + i for i in plist]
         # print(self.images_list[:100])
         self.num_samples = len(self.images_list)
@@ -403,7 +403,7 @@ class LSTMTrain(QObject):
             # writer = tf.summary.FileWriter(LSTMTrainConfig.log_dir, sess.graph)
             # sess.run(tf.global_variables_initializer())
             logging.info("initialiser run")
-            for step in range(6000, int(num_steps_per_epoch * LSTMTrainConfig.num_epochs)):
+            for step in range(int(num_steps_per_epoch * LSTMTrainConfig.num_epochs)):
                 batch_x, batch_y, cnn_y, cnn_logits = self.dataloader.next_batch()
 
                 # Log the summaries every 10 step.
@@ -426,15 +426,15 @@ class LSTMTrain(QObject):
                 logging.info("At step %d/%d, loss= %.4f, accuracy=%.2f; cnn_only_loss= %.4f, cnn_only_accuracy=%.2f",
                              step, int(num_steps_per_epoch * LSTMTrainConfig.num_epochs),
                              loss_value, 100*acc_value, loss_cnn_value, 100*acc_value_cnn)
-                if step % 500==0:
+                if step % 200==0:
                     logging.info("Saving model as at step%500")
                     # saver.save(sess, LSTMTrainConfig.log_dir + os.sep + "lstm_model", global_step=step)
-                    sv.saver.save(sess, sv.save_path, global_step=step)
+                    sv.saver.save(sess, sv.save_path, global_step=step+29511)
             # writer.close()
             # Once all the training has been done, save the log files and checkpoint model
             logging.info('Finished training! Saving model to disk now.')
             # saver.save(sess, LSTMTrainConfig.log_dir + os.sep + "lstm_model",global_step=step)
-            sv.saver.save(sess, sv.save_path, global_step=step)
+            sv.saver.save(sess, sv.save_path, global_step=step+29511)
             self.finished.emit()
 
     @pyqtSlot()
