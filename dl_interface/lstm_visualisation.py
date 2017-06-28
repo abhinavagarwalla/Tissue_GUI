@@ -356,16 +356,16 @@ class LSTMVis(QObject):
                 batch_x, batch_y, cnn_y, cnn_logits = self.dataloader.next_batch()
 
                 # # Log the summaries every 10 step.
-                # loss_value, loss_cnn_value, cnn_preds_class_value, summaries,\
-                # global_step_count, _1, _2, acc_value, acc_value_cnn = sess.run([loss, loss_cnn, cnn_preds_class, my_summary_op,
-                #             sv.global_step, metrics_op, metrics_op_cnn, accuracy_batch, accuracy_batch_cnn],
-                #             feed_dict={images: batch_x, labels: batch_y, cnn_preds: cnn_logits})
-                # sv.summary_computed(sess, summaries, global_step=step)
-                #
-                # logging.info("At step %d/%d, loss= %.4f, accuracy=%.2f; cnn_only_loss= %.4f, cnn_only_accuracy=%.2f",
-                #              step, int(num_steps_per_epoch * LSTMValidConfig.num_epochs),
-                #              loss_value, 100*acc_value, loss_cnn_value, 100*acc_value_cnn)
-                self.dataloader.save_predictions(cnn_y)
+                loss_value, loss_cnn_value, model_out_class_value, summaries,\
+                global_step_count, _1, _2, acc_value, acc_value_cnn = sess.run([loss, loss_cnn, model_out_class, my_summary_op,
+                            sv.global_step, metrics_op, metrics_op_cnn, accuracy_batch, accuracy_batch_cnn],
+                            feed_dict={images: batch_x, labels: batch_y, cnn_preds: cnn_logits})
+                sv.summary_computed(sess, summaries, global_step=step)
+
+                logging.info("At step %d/%d, loss= %.4f, accuracy=%.2f; cnn_only_loss= %.4f, cnn_only_accuracy=%.2f",
+                             step, int(num_steps_per_epoch * LSTMValidConfig.num_epochs),
+                             loss_value, 100*acc_value, loss_cnn_value, 100*acc_value_cnn)
+                self.dataloader.save_predictions(model_out_class_value)
             logging.info('Finished validation! Combining all validation now.')
             self.dataloader.combine_prediction()
             self.finished.emit()

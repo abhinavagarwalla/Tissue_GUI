@@ -17,6 +17,8 @@ from dl_interface.model_lstm_validation import LSTMValidation
 from dl_interface.cnn_train import CNN2Train
 from dl_interface.lstm_visualisation import LSTMVis
 
+import os
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -67,6 +69,14 @@ class Ui_MainWindow(object):
         self.info.setObjectName("info")
         self.verticalLayout.addWidget(self.info)
         self.verticalLayout_4.addLayout(self.verticalLayout)
+        self.file_name = QtWidgets.QLabel(self.vis)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.file_name.sizePolicy().hasHeightForWidth())
+        self.file_name.setSizePolicy(sizePolicy)
+        self.file_name.setObjectName("file_name")
+        self.verticalLayout_4.addWidget(self.file_name)
         self.zoomSlider = QtWidgets.QSlider(self.vis)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -394,6 +404,9 @@ class Ui_MainWindow(object):
         self.start_lstm_vis = QtWidgets.QPushButton(self.training)
         self.start_lstm_vis.setGeometry(QtCore.QRect(920, 390, 161, 23))
         self.start_lstm_vis.setObjectName("start_lstm_vis")
+        self.start_end_to_end_train = QtWidgets.QPushButton(self.training)
+        self.start_end_to_end_train.setGeometry(QtCore.QRect(920, 450, 161, 23))
+        self.start_end_to_end_train.setObjectName("start_end_to_end_train")
         self.tabs.addTab(self.training, "")
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
@@ -435,6 +448,7 @@ class Ui_MainWindow(object):
         MainWindow.setToolTip(_translate("MainWindow", "Inside Main Window"))
         self.load_image.setText(_translate("MainWindow", "Load Image"))
         self.info.setText(_translate("MainWindow", "TextLabel"))
+        self.file_name.setText(_translate("MainWindow", "TextLabel"))
         self.overlay_group.setTitle(_translate("MainWindow", "GroupBox"))
         self.class_0.setText(_translate("MainWindow", "CheckBox"))
         self.class_1.setText(_translate("MainWindow", "CheckBox"))
@@ -493,6 +507,7 @@ class Ui_MainWindow(object):
         self.start_lstm_model_validation.setText(_translate("MainWindow", "Start LSTM Model Validation"))
         self.start_cnn2_train.setText(_translate("MainWindow", "Start CNN Training - Phase II"))
         self.start_lstm_vis.setText(_translate("MainWindow", "Get Visual Results"))
+        self.start_end_to_end_train.setText(_translate("MainWindow", "Start End-to-End Training"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.tabs.setTabText(self.tabs.indexOf(self.tab), _translate("MainWindow", "Tensorboard"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
@@ -651,6 +666,7 @@ class Ui_MainWindow(object):
             self.zoomSlider.setValue(0)
             self.c_zoom_level = 0
             self.current_level.setText(str(self.ImageView.level))
+            self.file_name.setText(fname[0].split('/')[-1])
 
     def get_file_overlay(self):
         print("Reached Overlay Callback")

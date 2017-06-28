@@ -123,7 +123,7 @@ class DataMod():
         return image_batch, coor_batch
 
     def save_predictions(self, preds, mid_features, coors_batch, wsi_name, images=None):
-        # fc8 = mid_features['alexnet_v2/fc8']
+        fc8 = mid_features['alexnet_v2/fc8']
         fc6 = mid_features['alexnet_v2/fc6']
         # fc7 = mid_features['alexnet_v2/fc7']
         preds = np.argmax(preds, axis=1)
@@ -132,7 +132,7 @@ class DataMod():
             os.mkdir(LSTMDataConfig.RESULT_PATH + os.sep + wsi_name)
         for i in range(len(coors_batch)):
             features = {'predictions': preds[i*LSTMDataConfig.CONTEXT_DEPTH**2: (i+1)*LSTMDataConfig.CONTEXT_DEPTH**2],
-                        # 'fc8': fc8[i*LSTMDataConfig.CONTEXT_DEPTH**2: (i+1)*LSTMDataConfig.CONTEXT_DEPTH**2],
+                        'fc8': fc8[i*LSTMDataConfig.CONTEXT_DEPTH**2: (i+1)*LSTMDataConfig.CONTEXT_DEPTH**2],
                         # 'fc7': fc7[i*LSTMDataConfig.CONTEXT_DEPTH**2: (i+1)*LSTMDataConfig.CONTEXT_DEPTH**2],
                         'fc6': fc6[i*LSTMDataConfig.CONTEXT_DEPTH**2: (i+1)*LSTMDataConfig.CONTEXT_DEPTH**2]}
             with open(LSTMDataConfig.RESULT_PATH + os.sep + wsi_name + os.sep + wsi_name + '_' + str(coors_batch[i]) + '_features.pkl', 'wb') as fp:

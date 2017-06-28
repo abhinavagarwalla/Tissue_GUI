@@ -29,14 +29,14 @@
    <property name="mouseTracking">
     <bool>true</bool>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_4">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
      <widget class="QTabWidget" name="tabs">
       <property name="mouseTracking">
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="movable">
        <bool>false</bool>
@@ -95,6 +95,19 @@
              </widget>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="file_name">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QSlider" name="zoomSlider">
@@ -1079,6 +1092,66 @@
          <string>Start LSTM Model Validation</string>
         </property>
        </widget>
+       <widget class="QPushButton" name="start_cnn2_train">
+        <property name="geometry">
+         <rect>
+          <x>920</x>
+          <y>360</y>
+          <width>161</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Start CNN Training - Phase II</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="start_lstm_vis">
+        <property name="geometry">
+         <rect>
+          <x>920</x>
+          <y>390</y>
+          <width>161</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Get Visual Results</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="start_end_to_end_train">
+        <property name="geometry">
+         <rect>
+          <x>920</x>
+          <y>450</y>
+          <width>161</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Start End-to-End Training</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Tensorboard</string>
+       </attribute>
+       <widget class="QWebEngineView" name="graph_browser" native="true">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>1261</width>
+          <height>661</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
       </widget>
      </widget>
     </item>
@@ -1111,6 +1184,14 @@
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QWebEngineView</class>
+   <extends>QWidget</extends>
+   <header>qwebengineview.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
