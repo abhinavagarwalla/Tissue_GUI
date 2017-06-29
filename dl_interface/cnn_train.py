@@ -15,6 +15,7 @@ from dl_interface.model_config import CNN2TrainConfig
 from tensorflow.contrib.framework.python.ops.variables import get_or_create_global_step
 from tensorflow.python.platform import tf_logging as logging
 import pickle
+import scipy.io as sio
 
 import numpy as np
 
@@ -23,11 +24,13 @@ slim = tf.contrib.slim
 
 class DataIter():
     def __init__(self):
-        self.wsi_list = glob.glob(CNN2TrainConfig.DATA_IMAGES_PATH + os.sep + '*')
-        self.images_list = []
-        for i in self.wsi_list:
-            self.images_list.extend(glob.glob(i + os.sep + '*'))
-        random.shuffle(self.images_list)
+        # self.wsi_list = glob.glob(CNN2TrainConfig.DATA_IMAGES_PATH + os.sep + '*')
+        # self.images_list = []
+        # for i in self.wsi_list:
+        #     self.images_list.extend(glob.glob(i + os.sep + '*'))
+        # random.shuffle(self.images_list)
+        plist = sio.loadmat('resource/wsi_names_list.mat')['wsi_names']
+        self.images_list = [CNN2TrainConfig.DATA_IMAGES_PATH + os.sep + i[:9] + os.sep + i for i in plist]
         self.num_samples = len(self.images_list)
         self.iter = 0
         self.preprocessor = preprocessing_factory.get_preprocessing_fn(name='camelyon')
@@ -49,7 +52,7 @@ class DataIter():
 
             for i in range(0, CNN2TrainConfig.IMAGE_SIZE * CNN2TrainConfig.PATCH_SIZE, CNN2TrainConfig.IMAGE_SIZE):
                 for j in range(0, CNN2TrainConfig.IMAGE_SIZE * CNN2TrainConfig.PATCH_SIZE, CNN2TrainConfig.IMAGE_SIZE):
-                    img = im[i:i + CNN2TrainConfig.IMAGE_SIZE, j:j + CNN2TrainConfig.IMAGE_SIZE]
+                    img = im[i:i + CNN2TrainConfig.IMAGE_SIZE, j:j + CNN2TrainConfig.IMAGE_SIZE]/255 # - 1.0
                     x.append(img)
                     # x.append(self.preprocessor.preprocess_image(tf.convert_to_tensor(img),
                     #                                             CNN2TrainConfig.IMAGE_SIZE, CNN2TrainConfig.IMAGE_SIZE,
@@ -80,7 +83,7 @@ class CNN2Train(QObject):
     @pyqtSlot()
     def train(self):
         # Saver and initialisation
-        print("starting training")
+        print("starting CNN training")
         self.initialize()
         # saver = tf.train.Saver()
         self.epoch.emit(0)
@@ -173,7 +176,7 @@ class CNN2Train(QObject):
 
         logging.info("now starting session")
         # Run the managed session
-        with sv.managed_session() as sess:
+        with sv.managed_session(config=tf.ConfigProto(gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.40))) as sess:
             logging.info("initialiser run")
             for step in range(int(num_steps_per_epoch * CNN2TrainConfig.num_epochs)):
                 batch_x, batch_y = self.dataloader.next_batch()
@@ -194,7 +197,7 @@ class CNN2Train(QObject):
                 logging.info("At step %d/%d, loss= %.4f, accuracy=%.2f;",
                              step, int(num_steps_per_epoch * CNN2TrainConfig.num_epochs),
                              loss_cnn_value, 100*acc_value_cnn)
-                if step % 500==0:
+                if step % 100==0:
                     logging.info("Saving model as at step%500")
                     sv.saver.save(sess, sv.save_path, global_step=step)
 

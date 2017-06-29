@@ -110,10 +110,10 @@ class CNN2TrainConfig():
     IMAGE_SIZE = 224
     NUM_CLASSES = 2
     log_dir = 'F:\\abhinav\\patches\\log_cnn2'
-    batch_size = 64
+    batch_size = 256
     num_epochs = 10 #None
-    checkpoint_file = 'F:\\abhinav\\patches\\log_cnn2\\model.ckpt-70500'
-    initial_learning_rate = 0.0001
+    checkpoint_file = 'F:\\abhinav\\patches\\log\\model.ckpt-6001' #'F:\\abhinav\\patches\\log_cnn2\\model.ckpt-70500'
+    initial_learning_rate = 0.001
     learning_rate_decay_factor = 0.5
     num_epochs_before_decay = 1
 
@@ -127,4 +127,4 @@ class LSTMValidConfig():
     log_dir = 'F:\\abhinav\\patches\\log_lstm_val_c1' #'F:\\abhinav\\patches\\lstm_data\\vis'
     batch_size = 32
     num_epochs = 1 #None
-    checkpoint_file = 'F:\\abhinav\\patches\\log_lstm\\model.ckpt-26500'
+    checkpoint_file = 'F:\\abhinav\\patches\\log_lstm_run2\\model.ckpt-30711'
