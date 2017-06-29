@@ -94,10 +94,10 @@ class LSTMTrainConfig():
     CHANNELS = 4096
     HIDDEN_SIZE = 512
     NUM_CLASSES = 2
-    log_dir = 'F:\\abhinav\\patches\\log_lstm_run2'
+    log_dir = 'F:\\abhinav\\patches\\log_lstm_stacked'
     batch_size = 10
     num_epochs = 10 #None
-    checkpoint_file = 'F:\\abhinav\\patches\\log_lstm_run2\\model.ckpt-29511'
+    checkpoint_file = None #'F:\\abhinav\\patches\\log_lstm_run2\\model.ckpt-29511'
     initial_learning_rate = 0.0001
     learning_rate_decay_factor = 0.5
     num_epochs_before_decay = 2
@@ -110,7 +110,7 @@ class CNN2TrainConfig():
     IMAGE_SIZE = 224
     NUM_CLASSES = 2
     log_dir = 'F:\\abhinav\\patches\\log_cnn2'
-    batch_size = 256
+    batch_size = 64
     num_epochs = 10 #None
     checkpoint_file = 'F:\\abhinav\\patches\\log\\model.ckpt-6001' #'F:\\abhinav\\patches\\log_cnn2\\model.ckpt-70500'
     initial_learning_rate = 0.001

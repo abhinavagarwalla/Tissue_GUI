@@ -52,7 +52,7 @@ class DataIter():
 
             for i in range(0, CNN2TrainConfig.IMAGE_SIZE * CNN2TrainConfig.PATCH_SIZE, CNN2TrainConfig.IMAGE_SIZE):
                 for j in range(0, CNN2TrainConfig.IMAGE_SIZE * CNN2TrainConfig.PATCH_SIZE, CNN2TrainConfig.IMAGE_SIZE):
-                    img = im[i:i + CNN2TrainConfig.IMAGE_SIZE, j:j + CNN2TrainConfig.IMAGE_SIZE]/255 # - 1.0
+                    img = im[j:j + CNN2TrainConfig.IMAGE_SIZE, i:i + CNN2TrainConfig.IMAGE_SIZE]/255 # - 1.0
                     x.append(img)
                     # x.append(self.preprocessor.preprocess_image(tf.convert_to_tensor(img),
                     #                                             CNN2TrainConfig.IMAGE_SIZE, CNN2TrainConfig.IMAGE_SIZE,
@@ -148,9 +148,6 @@ class CNN2Train(QObject):
 
         # Now we can define the optimizer that takes on the learning rate
         grad_update = tf.train.AdamOptimizer(learning_rate=lr).minimize(loss_cnn)
-
-        # predictions = tf.reshape(model_out, [-1])
-        # labels_flat = tf.reshape(labels, [-1])
 
         # Now finally create all the summaries you need to monitor and group them into one summary op.
         tf.summary.scalar('losses/Absolute_L1_Loss_CNN', loss_cnn)
