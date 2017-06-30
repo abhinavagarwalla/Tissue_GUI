@@ -16,7 +16,7 @@ from tensorflow.python.ops import init_ops
 import tensorflow as tf
 from tensorflow.contrib.rnn import RNNCell, LSTMStateTuple
 from tensorflow.contrib.rnn.python.ops.core_rnn_cell_impl import _linear
-
+from dl_interface.model_config import LSTMTrainConfig
 
 slim = tf.contrib.slim
 
@@ -185,5 +185,26 @@ class LSTM2D():
             return y, states
 
 
-    def model(self, images, nclasses=None, is_training=False):
-        return self.multi_dimensional_rnn_while_loop(images, nclasses, is_training)
+    def model(self, images, nclasses=None, is_training=False, hidden_size=LSTMTrainConfig.HIDDEN_SIZE):
+        rnn_out_1, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size, input_data=images,
+                                                             sh=[1, 1], scope_n="lstm_1")
+        rnn_out_2, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size, input_data=images,
+                                                             sh=[1, 1], dims=[False, True, False, False],
+                                                             scope_n="lstm_2")
+        rnn_out_3, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size, input_data=images,
+                                                             sh=[1, 1], dims=[False, True, True, False],
+                                                             scope_n="lstm_3")
+        rnn_out_4, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size, input_data=images,
+                                                             sh=[1, 1], dims=[False, False, True, False],
+                                                             scope_n="lstm_4")
+        model_out_1 = slim.conv2d(inputs=rnn_out_1, num_outputs=nclasses, kernel_size=[3, 3],
+                                  activation_fn=None)
+        model_out_2 = slim.conv2d(inputs=rnn_out_2, num_outputs=nclasses, kernel_size=[3, 3],
+                                  activation_fn=None)
+        model_out_3 = slim.conv2d(inputs=rnn_out_3, num_outputs=nclasses, kernel_size=[3, 3],
+                                  activation_fn=None)
+        model_out_4 = slim.conv2d(inputs=rnn_out_4, num_outputs=nclasses, kernel_size=[3, 3],
+                                  activation_fn=None)
+
+        model_out = tf.scalar_mul(tf.constant(0.25), tf.add_n([model_out_1, model_out_2, model_out_3, model_out_4]))
+        return model_out
