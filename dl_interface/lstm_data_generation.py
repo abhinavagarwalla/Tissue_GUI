@@ -17,6 +17,7 @@ from preprocessing import preprocessing_factory
 
 from itertools import product
 from scipy import ndimage
+import scipy.io as sio
 
 class DataMod():
     def __init__(self, preprocessor):
@@ -102,11 +103,17 @@ class DataMod():
             if np.mean(im) <= 220:
                 im = np.array(im).reshape(LSTMDataConfig.CONTEXT_DEPTH * LSTMDataConfig.PATCH_SIZE,
                                                             LSTMDataConfig.CONTEXT_DEPTH * LSTMDataConfig.PATCH_SIZE, 3)
-                im = [[self.preprocessor.preprocess_image(im[i:i + LSTMDataConfig.PATCH_SIZE, j:j + LSTMDataConfig.PATCH_SIZE]) for i in
-                                range(0, LSTMDataConfig.PATCH_SIZE * LSTMDataConfig.CONTEXT_DEPTH,
-                                      LSTMDataConfig.PATCH_SIZE)] for j in
-                               range(0, LSTMDataConfig.PATCH_SIZE * LSTMDataConfig.CONTEXT_DEPTH,
-                                     LSTMDataConfig.PATCH_SIZE)]
+                im = im/127.5 - 1
+                # im = [[self.preprocessor.preprocess_image(im[i:i + LSTMDataConfig.PATCH_SIZE, j:j + LSTMDataConfig.PATCH_SIZE]) for i in
+                #                 range(0, LSTMDataConfig.PATCH_SIZE * LSTMDataConfig.CONTEXT_DEPTH,
+                #                       LSTMDataConfig.PATCH_SIZE)] for j in
+                #                range(0, LSTMDataConfig.PATCH_SIZE * LSTMDataConfig.CONTEXT_DEPTH,
+                #                      LSTMDataConfig.PATCH_SIZE)]
+                im = [[im[i:i + LSTMDataConfig.PATCH_SIZE, j:j + LSTMDataConfig.PATCH_SIZE] for i in
+                       range(0, LSTMDataConfig.PATCH_SIZE * LSTMDataConfig.CONTEXT_DEPTH,
+                             LSTMDataConfig.PATCH_SIZE)] for j in
+                      range(0, LSTMDataConfig.PATCH_SIZE * LSTMDataConfig.CONTEXT_DEPTH,
+                            LSTMDataConfig.PATCH_SIZE)]
                 im = np.array(im).reshape(-1, LSTMDataConfig.PATCH_SIZE, LSTMDataConfig.PATCH_SIZE, 3)
 
                 for i in im:
@@ -138,6 +145,14 @@ class DataMod():
             with open(LSTMDataConfig.RESULT_PATH + os.sep + wsi_name + os.sep + wsi_name + '_' + str(coors_batch[i]) + '_features.pkl', 'wb') as fp:
                 pickle.dump(features, fp)
 
+        # conv5 = mid_features['alexnet_v2/conv5']
+        # wsi_name = wsi_name.split(os.sep)[-1].split('.')[0]
+        # if not os.path.exists(LSTMDataConfig.RESULT_PATH + os.sep + wsi_name):
+        #     os.mkdir(LSTMDataConfig.RESULT_PATH + os.sep + wsi_name)
+        # for i in range(len(coors_batch)):
+        #     np.save(LSTMDataConfig.RESULT_PATH + os.sep + wsi_name + os.sep + wsi_name + '_' + str(coors_batch[i]) + '_conv5.npy',
+        #             conv5[i*LSTMDataConfig.CONTEXT_DEPTH**2: (i+1)*LSTMDataConfig.CONTEXT_DEPTH**2])
+
         # if self.write_to_folder_flag:
         #     np.save(LSTMDataConfig.RESULT_PATH + os.sep + wsi_name.split(os.sep)[-1].split('.')[0] + '_' + str(coors_batch[0]) + '_preds.npy', preds)
         #     np.save(LSTMDataConfig.RESULT_PATH + os.sep + wsi_name.split(os.sep)[-1].split('.')[0] + '_' + str(coors_batch[0]) + '_fc6.npy', fc6)
@@ -155,7 +170,7 @@ class TestLSTMSave(QObject):
                                                          num_classes=LSTMDataConfig.NUM_CLASSES, is_training=False)
 
     def init_data_loader(self):
-        self.dataloader = DataMod(preprocessor='stain_norm')
+        self.dataloader = DataMod(preprocessor='camelyon')
 
         # if os.path.exists(LSTMDataConfig.RESULT_PATH):
         #     shutil.rmtree(Config.RESULT_PATH)
@@ -171,7 +186,7 @@ class TestLSTMSave(QObject):
         self.classes_dict = dict((i, self.classes[i]) for i in range(len(self.classes)))
         self.initialize()
         # mlist = [i[:-5] for i in mlist]
-        for i in range(32, 40):#len(self.wsi_list["Tumor"])):
+        for i in range(len(self.wsi_list["Tumor"])):
             print(self.wsi_list["Tumor"][i])
             self.wsi_iter = i
             LSTMDataConfig.WSI_PATH = self.wsi_list["Tumor"][self.wsi_iter]

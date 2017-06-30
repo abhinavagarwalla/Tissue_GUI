@@ -19,6 +19,8 @@ from dl_interface.lstm_visualisation import LSTMVis
 from dl_interface.model_stacked_lstm_train import StackedLSTMTrain
 
 import os
+import subprocess
+from time import sleep
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -433,38 +435,38 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setContentsMargins(5, 5, 5, 5)
         self.horizontalLayout.setSpacing(6)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.pushButton_2 = QtWidgets.QPushButton(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        self.select_tensorboard_directory = QtWidgets.QPushButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton_2.sizePolicy().hasHeightForWidth())
-        self.pushButton_2.setSizePolicy(sizePolicy)
-        self.pushButton_2.setObjectName("pushButton_2")
-        self.horizontalLayout.addWidget(self.pushButton_2)
-        self.label = QtWidgets.QLabel(self.layoutWidget)
+        sizePolicy.setHeightForWidth(self.select_tensorboard_directory.sizePolicy().hasHeightForWidth())
+        self.select_tensorboard_directory.setSizePolicy(sizePolicy)
+        self.select_tensorboard_directory.setObjectName("select_tensorboard_directory")
+        self.horizontalLayout.addWidget(self.select_tensorboard_directory)
+        self.tensorboard_dir = QtWidgets.QLabel(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy)
-        self.label.setObjectName("label")
-        self.horizontalLayout.addWidget(self.label)
-        self.pushButton_3 = QtWidgets.QPushButton(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHeightForWidth(self.tensorboard_dir.sizePolicy().hasHeightForWidth())
+        self.tensorboard_dir.setSizePolicy(sizePolicy)
+        self.tensorboard_dir.setObjectName("tensorboard_dir")
+        self.horizontalLayout.addWidget(self.tensorboard_dir)
+        self.start_tensorboard = QtWidgets.QPushButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton_3.sizePolicy().hasHeightForWidth())
-        self.pushButton_3.setSizePolicy(sizePolicy)
-        self.pushButton_3.setObjectName("pushButton_3")
-        self.horizontalLayout.addWidget(self.pushButton_3)
-        self.pushButton_4 = QtWidgets.QPushButton(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHeightForWidth(self.start_tensorboard.sizePolicy().hasHeightForWidth())
+        self.start_tensorboard.setSizePolicy(sizePolicy)
+        self.start_tensorboard.setObjectName("start_tensorboard")
+        self.horizontalLayout.addWidget(self.start_tensorboard)
+        self.stop_tensorboard = QtWidgets.QPushButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton_4.sizePolicy().hasHeightForWidth())
-        self.pushButton_4.setSizePolicy(sizePolicy)
-        self.pushButton_4.setObjectName("pushButton_4")
-        self.horizontalLayout.addWidget(self.pushButton_4)
+        sizePolicy.setHeightForWidth(self.stop_tensorboard.sizePolicy().hasHeightForWidth())
+        self.stop_tensorboard.setSizePolicy(sizePolicy)
+        self.stop_tensorboard.setObjectName("stop_tensorboard")
+        self.horizontalLayout.addWidget(self.stop_tensorboard)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
         self.graph_browser = QtWebEngineWidgets.QWebEngineView(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
@@ -566,10 +568,10 @@ class Ui_MainWindow(object):
         self.start_end_to_end_train.setText(_translate("MainWindow", "Start End-to-End Training"))
         self.start_stacked_lstm_train.setText(_translate("MainWindow", "Start Stacked LSTM Training"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
-        self.pushButton_2.setText(_translate("MainWindow", "Specify Tensorboard Directory"))
-        self.label.setText(_translate("MainWindow", "TextLabel"))
-        self.pushButton_3.setText(_translate("MainWindow", "Start"))
-        self.pushButton_4.setText(_translate("MainWindow", "Stop"))
+        self.select_tensorboard_directory.setText(_translate("MainWindow", "Specify Tensorboard Directory"))
+        self.tensorboard_dir.setText(_translate("MainWindow", "TextLabel"))
+        self.start_tensorboard.setText(_translate("MainWindow", "Start"))
+        self.stop_tensorboard.setText(_translate("MainWindow", "Stop"))
         self.tabs.setTabText(self.tabs.indexOf(self.tensorboard), _translate("MainWindow", "Tensorboard"))
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
@@ -580,6 +582,8 @@ class Ui_MainWindow(object):
         self.c_zoom_level = 0
         self.prev_mouse_pos = None
         self.if_mouse_pressed = False
+        self.tensorboard_folder = None
+        self.tensorboard_process = None
         self.default_open_location = os.getcwd()
         self.load_image.clicked.connect(self.get_file)
         self.load_overlay.clicked.connect(self.get_file_overlay)
@@ -639,8 +643,8 @@ class Ui_MainWindow(object):
         self.start_lstm_vis.clicked.connect(self.start_lstm_visualisation)
         self.start_stacked_lstm_train.clicked.connect(self.start_stacked_lstm_training)
 
-        self.graph_browser.load(QtCore.QUrl("http://127.0.0.1:6006"))
-        self.graph_browser.show()
+        self.select_tensorboard_directory.clicked.connect(self.get_tensorboard_dir)
+        self.stop_tensorboard.clicked.connect(lambda: self.tensorboard_process.kill())
 
     def initialize_worker_thread(self):
         self.test_model = Test()
@@ -776,6 +780,17 @@ class Ui_MainWindow(object):
                     self.if_image_overlay += 1
                     self.check_nuclei.setEnabled(True)
                     self.check_nuclei.setChecked(True)
+
+    def get_tensorboard_dir(self):
+        fname = QFileDialog.getExistingDirectory(self.menuWindow, "Choose Directory", self.default_open_location,
+                                                 QFileDialog.ShowDirsOnly)
+        self.default_open_location = fname.split(os.sep)[0]
+        if fname:
+            self.tensorboard_dir.setText(fname)
+            self.tensorboard_process = subprocess.Popen("tensorboard --logdir=training:" + str(fname))
+            sleep(3)
+            self.graph_browser.load(QtCore.QUrl("http://127.0.0.1:6006"))
+            self.graph_browser.show()
 
     def setImage(self, image):
         self.orig_image.setPixmap(QPixmap.fromImage(image))

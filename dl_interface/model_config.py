@@ -72,9 +72,9 @@ class LSTMDataConfig():
     WSI_FOLDER_PATH = '//shaban-pc/Camelyon16/Dataset/Original/Train'  # None
     MASK_PATH = None #'C:\\Users\\abhinav\\Desktop\\Data\\data\\Test_005_Mask.tif'
     WSI_PATH = None #'C:\\Users\\abhinav\\Desktop\\Data\\data\\Test_005.tif'
-    CHECKPOINT_PATH = 'F:\\abhinav\\patches\\log_cnn2\\model.ckpt-3000'
+    CHECKPOINT_PATH = 'F:\\abhinav\\patches\\log\\model.ckpt-6001' #'F:\\abhinav\\patches\\log_cnn2\\model.ckpt-3000'
     TARGET_STAIN_PATH = 'resource' + os.sep + 'targetImage.jpg'
-    RESULT_PATH = 'F:\\abhinav\\patches\\lstm_data_second' #os.getcwd() + os.sep + 'results'
+    RESULT_PATH = 'F:\\abhinav\\patches\\lstm_data_pool' #os.getcwd() + os.sep + 'results'
     LABEL_PATH = 'F:\\abhinav\\patches\\lstm_data_label'
     LEVEL_UPGRADE = 6
     LEVEL_FETCH = 0

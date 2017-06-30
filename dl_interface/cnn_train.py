@@ -54,16 +54,9 @@ class DataIter():
                 for j in range(0, CNN2TrainConfig.IMAGE_SIZE * CNN2TrainConfig.PATCH_SIZE, CNN2TrainConfig.IMAGE_SIZE):
                     img = im[j:j + CNN2TrainConfig.IMAGE_SIZE, i:i + CNN2TrainConfig.IMAGE_SIZE]/255 # - 1.0
                     x.append(img)
-                    # x.append(self.preprocessor.preprocess_image(tf.convert_to_tensor(img),
-                    #                                             CNN2TrainConfig.IMAGE_SIZE, CNN2TrainConfig.IMAGE_SIZE,
-                    #                                             CNN2TrainConfig.IMAGE_SIZE, CNN2TrainConfig.IMAGE_SIZE,
-                    #                                             is_training=True))
 
-            # im = np.array(im).reshape(CNN2TrainConfig.IMAGE_SIZE, CNN2TrainConfig.IMAGE_SIZE, 3)
-            # feat = pickle.load(open(self.images_list[self.iter], 'rb'))
-            # wsi_name = self.images_list[self.iter].split(os.sep)[-1]
-            label = np.load(CNN2TrainConfig.DATA_LABELS_PATH + os.sep + patch_id.split(os.sep)[-1].split('_(')[0]
-                            + os.sep + patch_id.split(os.sep)[-1].replace('features.pkl', 'label.npy')).reshape(-1)
+            label = np.load(CNN2TrainConfig.DATA_LABELS_PATH + os.sep + wsi_id +
+                            os.sep + patch_id.split(os.sep)[-1].replace('features.pkl', 'label.npy')).reshape(-1)
             label_inv = 1-label
             label = np.vstack((label_inv, label)).T
             y.extend(label)
@@ -173,7 +166,7 @@ class CNN2Train(QObject):
 
         logging.info("now starting session")
         # Run the managed session
-        with sv.managed_session(config=tf.ConfigProto(gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.40))) as sess:
+        with sv.managed_session(config=tf.ConfigProto(gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.20))) as sess:
             logging.info("initialiser run")
             for step in range(int(num_steps_per_epoch * CNN2TrainConfig.num_epochs)):
                 batch_x, batch_y = self.dataloader.next_batch()
