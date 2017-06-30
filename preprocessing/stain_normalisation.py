@@ -9,6 +9,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Provides utilities for stain normalisation of patches."""
 
 import cv2
 import numpy as np
@@ -31,6 +32,14 @@ class StrainNormalisation():
         self.mT3, self.sdT3 = cv2.meanStdDev(t3)
 
     def preprocess_image(self, patch):
+        """Pre-process one image for training or evaluation.
+
+        Args:
+          patch: 3-D numpy array [height, width, channels] with the image.
+
+        Returns:
+          3-D numpy array containing an appropriately scaled image
+        """
         patch = cv2.cvtColor(patch, 44)
 
         # Mean and Standard Deviation of Source image channels in Lab Colourspace

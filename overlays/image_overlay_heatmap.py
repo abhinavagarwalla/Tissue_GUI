@@ -7,16 +7,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Contains class for overlaying heatmaps"""
 
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
-
 from interface.image_slide import ImageClass
-
 
 class HeatMap():
     def __init__(self, filename, wsiObj, bb_height, bb_width):
+        """Initialises a Heatmap object
+        
+        Args:
+            filename: Folder containing heatmaps at various resolutions
+            wsiObj: Whole-Slide Image to be overlayed
+            bb_height: height of viewing window
+            bb_width: width of viewing window
+        """
         self.wsidim = [wsiObj.level_dimensions[i] for i in range(len(wsiObj.level_dimensions))]
         self.ovObj = ImageClass(filename)
         self.level_fetch = 0
@@ -30,6 +37,18 @@ class HeatMap():
         self.cmap = plt.get_cmap("jet")
 
     def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None, class_states=None):
+        """Fetches heatmap overlay for the specified region, and level
+
+        Args:
+            level: Current level of self.wsiObj
+            coorw: Width Coordinate of top left corner
+            coorh: Height Coordinate of top left corner
+            width: width of the overlay
+            height: height of the overlay
+        
+        Return:
+            overlayim: Overlay image of size [width, height, 1]
+        """
         print("Getting Simple Overlay", self.level_fetch, level, coorw, coorh, width, height)
         if level >= self.level_fetch:
             self.overlayim = self.ovObj.read_region((coorw, coorh), level - self.level_fetch, (width, height))

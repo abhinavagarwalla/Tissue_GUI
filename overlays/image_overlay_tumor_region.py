@@ -7,6 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Contains class for overlaying tumor regions"""
 
 import numpy as np
 from PIL import Image
@@ -16,6 +17,14 @@ import cv2 as cv
 
 class TumorRegion():
     def __init__(self, filename, wsiObj, bb_height, bb_width):
+        """Initialises a TumorRegion object
+
+        Args:
+            filename:  MAT file with "predictions" columns
+            wsiObj: Whole-Slide Image to be overlayed
+            bb_height: height of viewing window
+            bb_width: width of viewing window
+        """
         self.ovObj = loadmat(filename)["predictions"]
         self.bb_height = bb_height
         self.bb_width = bb_width
@@ -25,6 +34,19 @@ class TumorRegion():
         self.npolygons = len(self.low_polygons)
 
     def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None, class_states=None):
+        """Fetches tumor region overlay for the specified region, and level
+
+        Args:
+            level: Current level of self.wsiObj
+            coorw: Width Coordinate of top left corner
+            coorh: Height Coordinate of top left corner
+            width: width of the overlay
+            height: height of the overlay
+            class_states: class labels to be fetched
+
+        Return:
+            overlayim: Overlay image of size [width, height, 1]
+        """
         print("Started Getting Overlay in Tumor Region")
         self.clevel = level-1
         self.coor_low_w = pow(2, self.clevel) * coorw

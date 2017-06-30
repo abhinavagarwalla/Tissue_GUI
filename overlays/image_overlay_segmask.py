@@ -7,12 +7,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Contains class for overlaying segmentation maps"""
 
 import openslide as ops
 from PIL import Image
 
 class SegMaskByPixel():
     def __init__(self, filename, wsiObj, bb_height, bb_width):
+        """Initialises a SegMaskByPixel object
+
+        Args:
+            filename: WSI file containing the overlay (either TIFF, NDPI, JP2..)
+            wsiObj: Whole-Slide Image to be overlayed
+            bb_height: height of viewing window
+            bb_width: width of viewing window
+        """
         if 'tif' in filename:
             try:
                 self.ovObj = ops.OpenSlide(filename)
@@ -55,6 +64,20 @@ class SegMaskByPixel():
         return self.overlayim
 
     def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None, class_states=None):
+        """Fetches segmentation for the specified region, and level
+
+        Args:
+            level: Current level of self.wsiObj
+            coorw: Width Coordinate of top left corner
+            coorh: Height Coordinate of top left corner
+            width: width of the overlay
+            height: height of the overlay
+            method: Operation performed {'zoom_in', 'zoom_out', 'pan', ..}
+            step: Pan step
+
+        Return:
+            overlayim: Overlay image of size [width, height, 1]
+        """
         if self.type=="OpenSlide":
             return self.get_overlay_openslide(level, coorw, coorh, width, height, method, step)
         elif self.type=="Image":

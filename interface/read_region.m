@@ -7,6 +7,7 @@
 % See the License for the specific language governing permissions and
 % limitations under the License.
 % ==============================================================================
+% MATLAB wrapper for reading a region in JP2 images
 
 function res = read_region(image_path, level, region)
     res = imread(image_path, 'ReductionLevel', level, 'PixelRegion', {[region(1),region(2)],[region(3),region(4)]});

@@ -7,6 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Contains class for overlaying nuclei positions"""
 
 import numpy as np
 from PIL import Image, ImageDraw
@@ -14,6 +15,14 @@ from scipy.io import loadmat
 
 class NucleiPoints():
     def __init__(self, filename, wsiObj, bb_height, bb_width):
+        """Initialises a NucleiPoints object
+
+        Args:
+            filename: MAT file with "predictions" columns
+            wsiObj: Whole-Slide Image to be overlayed
+            bb_height: height of viewing window
+            bb_width: width of viewing window
+        """
         self.ovObj = loadmat(filename)["predictions"]
         self.bb_height = bb_height
         self.bb_width = bb_width
@@ -31,6 +40,19 @@ class NucleiPoints():
         self.clsdict = {0: False, 1: False, 2: False, 3: False, 4: False, 5: False}
 
     def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None, class_states=None):
+        """Fetches nuclei position overlay for the specified region, and level
+
+        Args:
+            level: Current level of self.wsiObj
+            coorw: Width Coordinate of top left corner
+            coorh: Height Coordinate of top left corner
+            width: width of the overlay
+            height: height of the overlay
+            class_states: class labels to be fetched
+
+        Return:
+            overlayim: Overlay image of size [width, height, 1]
+        """
         print("Started Getting Overlay inside Nuclei position")
         self.clevel = level-1
         self.coor_low_w = pow(2, self.clevel) * (coorw)

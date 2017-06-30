@@ -21,7 +21,7 @@ def get_network_fn(name, images, num_classes=None, is_training=False):
     """Returns the requested network.
 
     Args:
-      name: 
+      name: Name of the network to be returned, must be in networks_map
       images: a 4-D tensor of size [batch_size, height, width, 3]
       num_classes: int
       is_training: bool
