@@ -1,12 +1,18 @@
+# Copyright 2016 Abhinav Agarwalla. All Rights Reserved.
+# Contact: agarwallaabhinav@gmail.com, abhinavagarwalla@iitkgp.ac.in
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
 import os
-import shutil
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
-import time
+from PyQt5.QtCore import QObject, pyqtSignal
 from dl_interface.model_config import TFRConfig
-from PIL import Image
 import glob
 import random
-import tensorflow as tf
 from dl_interface.dataset_utils import _dataset_exists, _get_filenames_and_classes, write_label_file, _convert_dataset
 
 class TFRecordConverter(QObject):

@@ -1,3 +1,15 @@
+# Copyright 2016 Abhinav Agarwalla. All Rights Reserved.
+# Contact: agarwallaabhinav@gmail.com, abhinavagarwalla@iitkgp.ac.in
+#
+# Portions of code borrowed from https://github.com/philipperemy/tensorflow-multi-dimensional-lstm
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
 from tensorflow.python.ops import init_ops
 
 import tensorflow as tf

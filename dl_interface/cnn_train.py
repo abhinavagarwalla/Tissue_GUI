@@ -1,12 +1,18 @@
-import shutil
+# Copyright 2016 Abhinav Agarwalla. All Rights Reserved.
+# Contact: agarwallaabhinav@gmail.com, abhinavagarwalla@iitkgp.ac.in
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
 from time import time
 import os
 
 import tensorflow as tf
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
-import random
-import glob
-
 from nets import nets_factory
 from preprocessing import preprocessing_factory
 from interface.image_slide import ImageClass
@@ -14,7 +20,6 @@ from interface.image_slide import ImageClass
 from dl_interface.model_config import CNN2TrainConfig
 from tensorflow.contrib.framework.python.ops.variables import get_or_create_global_step
 from tensorflow.python.platform import tf_logging as logging
-import pickle
 import scipy.io as sio
 
 import numpy as np

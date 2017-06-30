@@ -13,6 +13,8 @@ import os
 
 import tensorflow as tf
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+import random
+import glob
 import scipy.io as sio
 from pathos.multiprocessing import ProcessingPool as Pool
 
@@ -96,10 +98,19 @@ class MultiDimensionalLSTMCell(RNNCell):
 
 class DataIter():
     def __init__(self):
+        # self.wsi_list = glob.glob(LSTMTrainConfig.DATA_IMAGES_PATH + os.sep + '*')
+        # self.images_list = []
+        # for i in self.wsi_list:
+        #     self.images_list.extend(glob.glob(i + os.sep + '*'))
+        # random.shuffle(self.images_list)
         self.iter = 0
-        plist = sio.loadmat('resource/wsi_names_list.mat')['wsi_names']
+        plist = sio.loadmat('resource/wsi_names_list_v2.mat')['wsi_names']
         self.images_list = [LSTMTrainConfig.DATA_IMAGES_PATH + os.sep + i[:9] + os.sep + i for i in plist]
+        # print(self.images_list[:100])
         self.num_samples = len(self.images_list)
+        # self.negative_list = [i for i in self.images_list if i not in self.positive_list]
+        # print(len(self.images_list), len(self.positive_list), len(self.negative_list))
+        # self.feat = [pickle.load(open(i, 'rb')) for i in self.images_list]
         self.p = Pool(LSTMTrainConfig.batch_size)
 
     def next_batch(self):
@@ -109,6 +120,7 @@ class DataIter():
         cnn_y = []
         for i in range(LSTMTrainConfig.batch_size):
             feat = pickle.load(open(self.images_list[self.iter], 'rb'))
+            # feat = self.feat[self.iter]
             wsi_name = self.images_list[self.iter].split(os.sep)[-1]
             label = np.load(LSTMTrainConfig.DATA_LABELS_PATH + os.sep + wsi_name.split('_(')[0] +
                             os.sep + wsi_name.replace('features.pkl', 'label.npy'))
@@ -119,9 +131,33 @@ class DataIter():
             self.iter += 1
             if self.iter == self.num_samples:
                 self.iter = 0
+        # self.x = np.zeros((LSTMTrainConfig.batch_size,LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.CHANNELS))
+        # self.y = np.zeros((LSTMTrainConfig.batch_size,LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, 1))
+        # self.cnn_logits = np.zeros((LSTMTrainConfig.batch_size, LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.NUM_CLASSES))
+        # self.cnn_y = np.zeros((LSTMTrainConfig.batch_size,LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, 1))
+        # def f(self, i):
+        #     feat = pickle.load(open(self.images_list[i], 'rb'))
+        #     wsi_name = self.images_list[i].split(os.sep)[-1]
+        #     label = np.load(LSTMTrainConfig.DATA_LABELS_PATH + os.sep + wsi_name.split('_(')[0] +
+        #                     os.sep + wsi_name.replace('features.pkl', 'label.npy'))
+        #     pos = i-self.iter
+        #     if pos<0:
+        #         pos = self.num_samples - self.iter - i
+        #     print(i, self.iter, pos)
+        #     self.x[pos] = feat['fc6'].reshape(LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.CHANNELS)
+        #     self.y[pos] = label
+        #     self.cnn_y[pos] = feat['predictions'].reshape(LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, 1)
+        #     self.cnn_logits[pos] = feat['fc8'].reshape(LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.NUM_CLASSES)
+        # iters = np.array(range(self.iter, self.iter+LSTMTrainConfig.batch_size))%self.num_samples
+        # print(iters)
+        # # pos = range(len(LSTMTrainConfig.batch_size))
+        # self.p.map(self.f, iters)
+        # self.iter = (self.iter+LSTMTrainConfig.batch_size)%self.num_samples
+        # print(self.iter)
+        # return self.x, self.y, self.cnn_y, self.cnn_logits
         return x, y, cnn_y, cnn_logits
 
-class StackedLSTMTrain(QObject):
+class ConvLSTMTrain(QObject):
     finished = pyqtSignal()
     epoch = pyqtSignal(int)
 
@@ -231,7 +267,7 @@ class StackedLSTMTrain(QObject):
     @pyqtSlot()
     def train(self):
         # Saver and initialisation
-        print("starting stacked training")
+        print("starting training")
         self.initialize()
         # saver = tf.train.Saver()
         self.epoch.emit(0)
@@ -266,36 +302,22 @@ class StackedLSTMTrain(QObject):
                                                              sh=[1, 1], dims=[False, False, True, False], scope_n="lstm_4")
 
         logging.info("Four LSTMs formed")
-        model_out_1 = slim.conv2d(inputs=rnn_out_1, num_outputs=LSTMTrainConfig.HIDDEN_SIZE, kernel_size=[3,3])#, activation_fn=None)
-        model_out_2 = slim.conv2d(inputs=rnn_out_2, num_outputs=LSTMTrainConfig.HIDDEN_SIZE, kernel_size=[3, 3])#, activation_fn=None)
-        model_out_3 = slim.conv2d(inputs=rnn_out_3, num_outputs=LSTMTrainConfig.HIDDEN_SIZE, kernel_size=[3, 3])#, activation_fn=None)
-        model_out_4 = slim.conv2d(inputs=rnn_out_4, num_outputs=LSTMTrainConfig.HIDDEN_SIZE, kernel_size=[3, 3])#, activation_fn=None)
-        stack_out = tf.scalar_mul(tf.constant(0.25),tf.add_n([model_out_1, model_out_2, model_out_3, model_out_4]))
+        # model_out = slim.fully_connected(inputs=rnn_out,
+        #                                  num_outputs=1,
+        #                                  activation_fn=None)
+        model_out_1 = slim.conv2d(inputs=rnn_out_1, num_outputs=LSTMTrainConfig.NUM_CLASSES, kernel_size=[3,3], activation_fn=None)
+        model_out_2 = slim.conv2d(inputs=rnn_out_2, num_outputs=LSTMTrainConfig.NUM_CLASSES, kernel_size=[3, 3], activation_fn=None)
+        model_out_3 = slim.conv2d(inputs=rnn_out_3, num_outputs=LSTMTrainConfig.NUM_CLASSES, kernel_size=[3, 3], activation_fn=None)
+        model_out_4 = slim.conv2d(inputs=rnn_out_4, num_outputs=LSTMTrainConfig.NUM_CLASSES, kernel_size=[3, 3], activation_fn=None)
 
-        s2_rnn_out_1, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=stack_out,
-                                                             sh=[1, 1], scope_n="s2_lstm_1")
-        s2_rnn_out_2, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=stack_out,
-                                                             sh=[1, 1], dims=[False, True, False, False],
-                                                             scope_n="s2_lstm_2")
-        s2_rnn_out_3, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=stack_out,
-                                                             sh=[1, 1], dims=[False, True, True, False],
-                                                             scope_n="s2_lstm_3")
-        s2_rnn_out_4, _ = self.multi_dimensional_rnn_while_loop(rnn_size=LSTMTrainConfig.HIDDEN_SIZE, input_data=stack_out,
-                                                             sh=[1, 1], dims=[False, False, True, False],
-                                                             scope_n="s2_lstm_4")
+        logging.info("Convolution done, reshaping")
+        # model_out_2 = tf.reverse(model_out_2, axis=[False, True, False, False])
+        # model_out_3 = tf.reverse(model_out_3, axis=[False, True, True, False])
+        # model_out_4 = tf.reverse(model_out_4, axis=[False, False, True, False])
 
-        logging.info("Stacked LSTMs formed")
-        s2_model_out_1 = slim.conv2d(inputs=s2_rnn_out_1, num_outputs=LSTMTrainConfig.NUM_CLASSES, kernel_size=[3, 3],
-                                  activation_fn=None)
-        s2_model_out_2 = slim.conv2d(inputs=s2_rnn_out_2, num_outputs=LSTMTrainConfig.NUM_CLASSES, kernel_size=[3, 3],
-                                  activation_fn=None)
-        s2_model_out_3 = slim.conv2d(inputs=s2_rnn_out_3, num_outputs=LSTMTrainConfig.NUM_CLASSES, kernel_size=[3, 3],
-                                  activation_fn=None)
-        s2_model_out_4 = slim.conv2d(inputs=s2_rnn_out_4, num_outputs=LSTMTrainConfig.NUM_CLASSES, kernel_size=[3, 3],
-                                  activation_fn=None)
-        model_out = tf.scalar_mul(tf.constant(0.25), tf.add_n([s2_model_out_1, s2_model_out_2, s2_model_out_3, s2_model_out_4]))
+        logging.info("Doing Scalar")
+        model_out = tf.scalar_mul(tf.constant(0.25),tf.add_n([model_out_1, model_out_2, model_out_3, model_out_4]))
 
-        logging.info("Stacking out input")
         model_out_flat = tf.reshape(model_out, shape=(-1, LSTMTrainConfig.NUM_CLASSES))
 
         non_tumor_label = tf.subtract(tf.ones((LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.PATCH_SIZE, 1)), labels)
@@ -381,12 +403,12 @@ class StackedLSTMTrain(QObject):
             return saver_all.restore(sess, LSTMTrainConfig.checkpoint_file)
 
         # Define your supervisor for running a managed session. Do not run the summary_op automatically or else it will consume too much memory
-        sv = tf.train.Supervisor(logdir=LSTMTrainConfig.log_dir, summary_op=None, init_fn=None, saver=saver_all)  # restore_fn)
+        sv = tf.train.Supervisor(logdir=LSTMTrainConfig.log_dir, summary_op=None, init_fn=restore_fn, saver=saver_all)  # restore_fn)
 
         logging.info("now starting session")
         # Run the managed session
         # with tf.Session() as sess:
-        with sv.managed_session(config=tf.ConfigProto(gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.70))) as sess:
+        with sv.managed_session(config=tf.ConfigProto(gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.40))) as sess:
             # writer = tf.summary.FileWriter(LSTMTrainConfig.log_dir, sess.graph)
             # sess.run(tf.global_variables_initializer())
             logging.info("initialiser run")
