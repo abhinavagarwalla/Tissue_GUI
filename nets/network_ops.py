@@ -1,4 +1,4 @@
-# Copyright 2016 Abhinav Agarwalla. All Rights Reserved.
+# Copyright 2017 Abhinav Agarwalla. All Rights Reserved.
 # Contact: agarwallaabhinav@gmail.com, abhinavagarwalla@iitkgp.ac.in
 #
 # Portion of code borrowed from: Shan, Shaban Camelyon'16 Attempt
@@ -9,6 +9,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Helper ops for quickly defining networks"""
 
 import tensorflow as tf
 
@@ -31,6 +32,7 @@ def activation(x):
     return tf.nn.tanh(x)
 
 def conv2d_full(inTensor, in_ch_dim, out_ch_dim, name_conv, kdim=3):
+    """Convolution op"""
     kshape = [kdim, kdim, in_ch_dim, out_ch_dim]
     stddev = tf.sqrt(2 / (kshape[0] * kshape[1] * kshape[2]))
 
@@ -43,6 +45,7 @@ def conv2d_full(inTensor, in_ch_dim, out_ch_dim, name_conv, kdim=3):
     return tf.nn.bias_add(conv2d(inTensor, conv_filter), conv_bias)
 
 def deconv2d_full(inTensor, in_ch_dim, out_ch_dim, name_de_conv, output_shape):
+    """Deconvolution op"""
     kshape = [2, 2, in_ch_dim, out_ch_dim]
     stddev = tf.sqrt(2 / (kshape[0] * kshape[1] * kshape[2]))
 
@@ -57,6 +60,7 @@ def deconv2d_full(inTensor, in_ch_dim, out_ch_dim, name_de_conv, output_shape):
         de_conv_bais)
 
 def down_sample(inTensor, x_dim, y_dim, in_ch_dim, out_ch_dim, layerID, maxPool=1, dropOut=1):
+    """Downsamples the input tensor"""
     with tf.name_scope('Pooling'):
         if maxPool == 1:
             disp('Pooling')
@@ -97,6 +101,7 @@ def down_sample(inTensor, x_dim, y_dim, in_ch_dim, out_ch_dim, layerID, maxPool=
     return outTensor, x_dim, y_dim, out_ch_dim
 
 def up_sample(inTensor, symTensor, x_dim, y_dim, sx_dim, sy_dim, in_ch_dim, out_ch_dim, layerID):
+    """Upsamples the input tensor"""
     with tf.name_scope('Deconvolution'):
         disp('Deconvolution')
         batch_size = tf.shape(inTensor)[0]

@@ -1,4 +1,4 @@
-# Copyright 2016 Abhinav Agarwalla. All Rights Reserved.
+# Copyright 2017 Abhinav Agarwalla. All Rights Reserved.
 # Contact: agarwallaabhinav@gmail.com, abhinavagarwalla@iitkgp.ac.in
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -7,6 +7,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
+__author__ = "Abhinav Agarwalla"
+__copyright__ = "Copyright (C) 2017 Abhinav Agarwalla"
+__version__ = "0.1"
 
 import sys
 from PyQt5 import QtWidgets

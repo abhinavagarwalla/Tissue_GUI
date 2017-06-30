@@ -1,4 +1,4 @@
-# Copyright 2016 Abhinav Agarwalla. All Rights Reserved.
+# Copyright 2017 Abhinav Agarwalla. All Rights Reserved.
 # Contact: agarwallaabhinav@gmail.com, abhinavagarwalla@iitkgp.ac.in
 #
 # Portion of code borrowed from: Shan, Shaban Camelyon'16 Attempt
@@ -9,6 +9,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Contains the definition of U-net architecture."""
 
 from dl_interface.model_config import *
 from nets.network_ops import *
@@ -21,6 +22,14 @@ class UNet():
         return self.model_test(images)
 
     def model_test(self, images):
+        """Creates the U-net model.
+
+        Args:
+          images: a 4-D tensor of size [batch_size, height, width, 3]
+
+        Returns:
+          softMask: class probabilities, a 4-D tensor of size [batch_size, height, width, 1]
+        """
         with tf.name_scope('Down_Sample_1'):
             x_dim = Config.PATCH_SIZE
             y_dim = Config.PATCH_SIZE

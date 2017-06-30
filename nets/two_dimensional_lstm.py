@@ -1,4 +1,4 @@
-# Copyright 2016 Abhinav Agarwalla. All Rights Reserved.
+# Copyright 2017 Abhinav Agarwalla. All Rights Reserved.
 # Contact: agarwallaabhinav@gmail.com, abhinavagarwalla@iitkgp.ac.in
 #
 # Portions of code borrowed from https://github.com/philipperemy/tensorflow-multi-dimensional-lstm
@@ -9,6 +9,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Contains the definition of 2D-LSTM architecture."""
 
 from tensorflow.python.ops import init_ops
 
