@@ -17,6 +17,7 @@ from dl_interface.model_lstm_validation import LSTMValidation
 from dl_interface.cnn_train import CNN2Train
 from dl_interface.lstm_visualisation import LSTMVis
 from dl_interface.model_stacked_lstm_train import StackedLSTMTrain
+from dl_interface.model_stacked_lstm_validation import StackedLSTMValidation
 
 import os
 import subprocess
@@ -416,6 +417,9 @@ class Ui_MainWindow(object):
         self.start_conv_lstm_train = QtWidgets.QPushButton(self.training)
         self.start_conv_lstm_train.setGeometry(QtCore.QRect(920, 490, 161, 21))
         self.start_conv_lstm_train.setObjectName("start_conv_lstm_train")
+        self.start_stacked_lstm_valid = QtWidgets.QPushButton(self.training)
+        self.start_stacked_lstm_valid.setGeometry(QtCore.QRect(1090, 450, 161, 23))
+        self.start_stacked_lstm_valid.setObjectName("start_stacked_lstm_valid")
         self.tabs.addTab(self.training, "")
         self.tensorboard = QtWidgets.QWidget()
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
@@ -563,6 +567,7 @@ class Ui_MainWindow(object):
         self.start_end_to_end_train.setText(_translate("MainWindow", "Start End-to-End Training"))
         self.start_stacked_lstm_train.setText(_translate("MainWindow", "Start Stacked LSTM Training"))
         self.start_conv_lstm_train.setText(_translate("MainWindow", "Start ConvLSTM Training"))
+        self.start_stacked_lstm_valid.setText(_translate("MainWindow", "Start Stacked LSTM Validation"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.select_tensorboard_directory.setText(_translate("MainWindow", "Specify Tensorboard Directory"))
         self.tensorboard_dir.setText(_translate("MainWindow", "TextLabel"))
@@ -637,6 +642,7 @@ class Ui_MainWindow(object):
         self.start_cnn2_train.clicked.connect(self.start_cnn2_training)
         self.start_lstm_vis.clicked.connect(self.start_lstm_visualisation)
         self.start_stacked_lstm_train.clicked.connect(self.start_stacked_lstm_training)
+        self.start_stacked_lstm_valid.clicked.connect(self.start_stacked_lstm_validating)
 
         self.select_tensorboard_directory.clicked.connect(self.get_tensorboard_dir)
         self.stop_tensorboard.clicked.connect(lambda: self.tensorboard_process.kill())
@@ -711,6 +717,12 @@ class Ui_MainWindow(object):
         self.train_stacked_lstm.moveToThread(self.thread_stacked_lstm_train)
         self.train_stacked_lstm.finished.connect(self.thread_stacked_lstm_train.quit)
         self.thread_stacked_lstm_train.started.connect(self.train_stacked_lstm.train)
+
+        self.valid_stacked_lstm = StackedLSTMValidation()
+        self.thread_stacked_lstm_valid = QtCore.QThread()
+        self.valid_stacked_lstm.moveToThread(self.thread_stacked_lstm_valid)
+        self.valid_stacked_lstm.finished.connect(self.thread_stacked_lstm_valid.quit)
+        self.thread_stacked_lstm_valid.started.connect(self.valid_stacked_lstm.valid)
 
     def update_test_progress(self, i):
         self.test_progress.setValue(i)
@@ -1033,6 +1045,9 @@ class Ui_MainWindow(object):
 
     def start_stacked_lstm_training(self):
         self.thread_stacked_lstm_train.start()
+
+    def start_stacked_lstm_validating(self):
+        self.thread_stacked_lstm_valid.start()
 
     def update_coordinates(self):
         w, h = self.ImageView.get_current_coordinates()
