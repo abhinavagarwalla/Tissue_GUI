@@ -7,6 +7,7 @@
 % See the License for the specific language governing permissions and
 % limitations under the License.
 % ==============================================================================
+% Get levels, width and height of a JP2 Image
 
 function [levels, width, height] = get_info(image_path)
     a = imfinfo(image_path, 'JP2');

@@ -7,6 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Contains wrapper for reading different image formats (TIFF, JP2, PNG_Folder) """
 
 import numpy as np
 import openslide as ops
@@ -17,6 +18,14 @@ import os
 
 class ImageClass():
     def __init__(self, filename):
+        """Initiates the appropriate format depending on file name
+        
+        Args:
+            filename: Complete path to file, along with format
+        
+        Returns:
+            ImageClass object
+        """
         print("Initiating class with ", filename)
         olist = ["tif", "ndpi", "vms", "vmu", "svs", "mrxs", "scn", "svslide", "bif"]
         if filename.split('.')[-1] in olist:
@@ -53,6 +62,16 @@ class ImageClass():
             print(self.level_count, self.level_dimensions, type(self.level_dimensions), type(self.wsiObj), len(self.wsiObj))
 
     def read_region(self, coor_low, level, dim):
+        """Reads the specified region
+        
+        Args:
+            coor_low: Coordinates (w, h) at the lowest level (highest resolution)
+            level: level to be fetched
+            dim: dimensions of the region to be fetched
+        
+        Returns:
+            RGBA Image of size dim
+        """
         # print("Reading Region: ", coor_low, level, dim)
         if self.type=="tiff":
             return self.wsiObj.read_region(coor_low, level, dim)

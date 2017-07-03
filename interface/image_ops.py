@@ -7,6 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Provides the main class that interacts with MainWindow UI"""
 
 import cv2 as cv
 import numpy as np
@@ -22,6 +23,15 @@ from overlays.image_overlay_tumor_region import TumorRegion
 
 class DisplayImage():
     def __init__(self, filename, bb_height, bb_width):
+        """
+        Args:
+             filename: WSI file path
+             bb_height: Height of viewing region
+             bb_width: Width of viewing region
+        
+        Returns:
+            DisplayImage object
+        """
         self.wsiObj = ImageClass(filename)
         self.bb_height = bb_height
         self.bb_width = bb_width
@@ -37,6 +47,14 @@ class DisplayImage():
         self.overlayim = dict()
 
     def read_first(self):
+        """Initiated when WSI is loaded for the first time
+        It reads the highest level present in the WSI
+        
+        Returns:
+            self.orim: Original region read from WSI
+            pim: Padded image, in case region read is smaller than (bb_width, bb_height)
+            self.level: Current WSI Level
+        """
         self.curim = self.wsiObj.read_region((0,0), self.level, self.wsiObj.level_dimensions[self.level])
         self.orim = self.curim.copy()
         print(self.curim.size)
@@ -51,6 +69,14 @@ class DisplayImage():
         return ImageQt(self.orim), ImageQt(self.curim), self.level
 
     def get_image_in(self, factor=2):
+        """Zooming in a region
+        
+        Args:
+            factor: Do not use
+        
+        Returns:
+            Zoomed, padded (if necessary) RGBA Image
+        """
         if self.imheight*factor < self.bb_height and self.imwidth*factor < self.bb_width:
             self.curim = self.curim.resize((2*self.curim.size[0], 2*self.curim.size[1]), Image.ANTIALIAS)
             self.imheight = self.curim.size[1]
@@ -128,6 +154,14 @@ class DisplayImage():
                 return ImageQt(self.curim)
 
     def get_image_out(self, factor=2):
+        """Zooming out of a region
+
+        Args:
+            factor: Do not use
+
+        Returns:
+            Zoomed, padded (if necessary) RGBA Image
+        """
         if self.imheight < self.bb_height and self.imwidth < self.bb_width:
             print("Inside the right box")
             self.curim = self.curim.resize((int(self.curim.size[0]/2), int(self.curim.size[1]/2)), Image.ANTIALIAS)
@@ -202,6 +236,19 @@ class DisplayImage():
                 return ImageQt(self.curim)
 
     def check_boundaries(self, w, h, W, H, imw, imh):
+        """Insures the read region falls within the level dimension
+        
+        Args:
+            w: Width coordinate of requested region
+            h: Height coordinate of requested region
+            W: WSI Width
+            H: WSI Height
+            imw: Width of the requested region
+            imh: Height of the requested region
+        
+        Returns:
+            True, if conditions met
+        """
         if w>W or w<0:
             return False
         if h>H or h<0:
@@ -213,6 +260,14 @@ class DisplayImage():
         return True
 
     def pad_image(self, image=None):
+        """Utility for padding image in case its smaller than viewing region
+        
+        Args:
+            image: Image to be padded, taken as self.curim if not specified
+        
+        Returns:
+            pim: Padded RGBA Image
+        """
         if image:
             pim = Image.new("RGBA", (self.bb_width, self.bb_height), (255, 255, 255, 0))
             self.startw = int((pim.size[0] - image.size[0]) / 2)
@@ -226,6 +281,16 @@ class DisplayImage():
         return pim
 
     def pan(self, value_x=None, value_y=None):
+        """Panning image by value_x, and value_y in X, Y direction respectively
+        
+        Args:
+            value_x: width coordinate increment (decrement)
+            value_y: height coordinate increment (decrement)
+        
+        Returns:
+            self.curim: Updated region based on new coordinates
+            updated: bool, True if coordinates were updated
+        """
         if_updated = False
         if value_x != None and value_y != None:
             if self.check_boundaries(self.coor_cur_w + value_x, self.coor_cur_h + value_y,
@@ -248,6 +313,18 @@ class DisplayImage():
         return ImageQt(self.curim), if_updated
 
     def read_first_overlay(self, filename, method=None, method_update="init", states=None):
+        """
+        Initialises Overlay Class corresponding to the requested method
+        
+        Args:
+            filename: Overlay file
+            method: type of overlay, one of {Segmentation, Tumor Region, Nuclei Position, Heatmap..}
+            method_update: type of operation, {init, pan, zoom_in, ..}
+            states: Bool array, specify which overlays to be shown
+        
+        Returns:
+            Overlayed RGBA Image
+        """
         print(method)
         if method=="Segmentation Mask (by Pixel)":
             print("Inside Segmentation")
@@ -280,6 +357,19 @@ class DisplayImage():
             return self.overlay_all(states)
 
     def update_overlay(self, method_update="init", step=None, states=None, ov_no_update=None, class_states=None):
+        """
+        Updates overlay on pan, zoom operation
+
+        Args:
+            method_update: type of operation, {init, pan, zoom_in, ..}
+            step: pan step
+            states: Bool array, specify which overlays to be shown
+            ov_no_update: True, if overlay need not be updated; used when toggling overlays
+            class_states: Used with heatmap for different classes 
+
+        Returns:
+            Overlayed RGBA Image
+        """
         print("inside update_overlay in ImageOps ", states)
         if ov_no_update:
             return self.overlay_all(states)
@@ -291,6 +381,14 @@ class DisplayImage():
         return self.overlay_all(states)
 
     def overlay_all(self, states):
+        """Implements different overlaying strategies
+        
+        Args:
+            states: Bool array, specify which overlays to be shown
+        
+        Returns:
+            pim: Overlayed RGBA Image
+        """
         print("Value of states: ", states)
         self.t = self.curim.copy()
         for k, v in states.items():
@@ -314,6 +412,11 @@ class DisplayImage():
         return ImageQt(self.t)
 
     def overlay_on_orig_image(self, state=None):
+        """Implements different overlaying strategies, and just update the overlay
+
+        Args:
+            states: Bool array, specify which overlays to be shown
+        """
         if state=="Seg":
             # self.overlayim["Seg"].save("Segmentation_overlay.png")
             self.overlayim["Seg"] = Image.blend(self.curim, self.overlayim["Seg"], 0.7)
@@ -330,10 +433,16 @@ class DisplayImage():
         # self.curim.save("Current_Image.png")
 
     def get_number_classes(self):
+        """Get number of classes in the nuclei mat file"""
         if self.overlayim["Nuclei"]:
             return self.overlayObj["Nuclei"].nclasses, self.overlayObj["Nuclei"].class_names
 
     def get_info(self):
+        """Initialises, and updates the info pane for randomly seeking a region
+        
+        Returns:
+            WSI Image at the highest level (lowest resolution)
+        """
         ocvim = cv.cvtColor(np.array(self.orim), cv.COLOR_RGB2BGR)
         left = int(pow(2, self.level-len(self.leveldim)+1) * self.coor_cur_w)
         top = int(pow(2, self.level-len(self.leveldim)+1) * self.coor_cur_h)
@@ -344,6 +453,13 @@ class DisplayImage():
         return ImageQt(Image.fromarray(ocvim).convert("RGBA"))
 
     def random_seek(self, w, h, isize):
+        """Makes info pane interactive through seek feature
+        
+        Args:
+            w: Width coordinate of the seek position
+            h: Height coordinate of the seek position
+            isize: Width, Height of the requested region
+        """
         if int(w) > self.leveldim[-1][0]:
             return ImageQt(self.curim)
         if int(h - (isize.height()-self.leveldim[-1][1])/2) > self.leveldim[-1][1]:
@@ -368,4 +484,5 @@ class DisplayImage():
         return ImageQt(self.curim)
 
     def get_current_coordinates(self):
+        """Get current coordinates of top-left corner of view"""
         return self.coor_cur_w, self.coor_cur_h

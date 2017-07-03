@@ -137,4 +137,4 @@ class LSTMValidConfig():
     log_dir = 'F:\\abhinav\\patches\\log_stacked_lstm_val_c1' #'F:\\abhinav\\patches\\lstm_data\\vis'
     batch_size = 16
     num_epochs = 1 #None
-    checkpoint_file = 'F:\\abhinav\\patches\\log_lstm_stacked\\model.ckpt-57911'
+    checkpoint_file = 'F:\\abhinav\\patches\\log_lstm_stacked\\model.ckpt-59222'
