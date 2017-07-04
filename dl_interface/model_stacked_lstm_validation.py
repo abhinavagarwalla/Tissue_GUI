@@ -425,7 +425,7 @@ class StackedLSTMValidation(QObject):
 
         logging.info("now starting session")
         # Run the managed session
-        with sv.managed_session(config=tf.ConfigProto(gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.20))) as sess:
+        with sv.managed_session(config=tf.ConfigProto(gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.40))) as sess:
             logging.info("initialiser run")
             for step in range(int(num_steps_per_epoch)):
                 batch_x, batch_y, cnn_y, cnn_logits = self.dataloader.next_batch()
@@ -440,6 +440,6 @@ class StackedLSTMValidation(QObject):
                 logging.info("At step %d/%d, loss= %.4f, accuracy=%.2f; cnn_only_loss= %.4f, cnn_only_accuracy=%.2f",
                              step, int(num_steps_per_epoch * LSTMValidConfig.num_epochs),
                              loss_value, 100*acc_value, loss_cnn_value, 100*acc_value_cnn)
-                self.dataloader.save_predictions(model_out_flat_value)
+                # self.dataloader.save_predictions(model_out_flat_value)
             logging.info('Finished validation! Saving model to disk now.')
             self.finished.emit()

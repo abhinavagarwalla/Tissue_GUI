@@ -1,3 +1,14 @@
+# Copyright 2017 Abhinav Agarwalla. All Rights Reserved.
+# Contact: agarwallaabhinav@gmail.com, abhinavagarwalla@iitkgp.ac.in
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Contains all UI elements, along with signals/slots, threads, web engine"""
+
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QFileDialog
@@ -25,6 +36,9 @@ from time import sleep
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
+        """Initialises the UI, places buttons, widgets, and set their size policies
+        Update this if any UI element added, deleted, or its setting modified
+        """
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1306, 772)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
@@ -500,6 +514,9 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
+        """Sets the text displayed on the UI
+        Update this if any UI element added, deleted, or its setting modified
+        """
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         MainWindow.setToolTip(_translate("MainWindow", "Inside Main Window"))
@@ -576,7 +593,7 @@ class Ui_MainWindow(object):
         self.menuWindow.setTitle(_translate("MainWindow", "Window"))
 
     def initialize_signals_slots(self):
-        # Bind all the signal and slots here
+        """Initialises all the signals, and connects them with the slots"""
         self.if_image = False
         self.if_image_overlay = 0
         self.c_zoom_level = 0
@@ -648,6 +665,9 @@ class Ui_MainWindow(object):
         self.stop_tensorboard.clicked.connect(lambda: self.tensorboard_process.kill())
 
     def initialize_worker_thread(self):
+        """Initialises different threads for handling training, testing of networks, patch generation,
+        viewing tensorboard, etc..
+        """
         self.test_model = Test()
         self.thread_test = QtCore.QThread()
         self.test_model.epoch.connect(self.update_test_progress)
@@ -725,10 +745,13 @@ class Ui_MainWindow(object):
         self.thread_stacked_lstm_valid.started.connect(self.valid_stacked_lstm.valid)
 
     def update_test_progress(self, i):
+        """Updates the progress bar, to reflect the percentage work done"""
         self.test_progress.setValue(i)
 
-    ## Functions for reading files, setting PixMaps
     def get_file(self):
+        """Fetces WSI file, reads and then displays it
+        Signal: Load Image button
+        """
         fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", self.default_open_location, "(*.tif *.jp2 *.ndpi"
                                                                                        " *.vms *.vmu *.svs"
                                                                                        " *.tiff *.mrxs *.scn"
@@ -748,6 +771,9 @@ class Ui_MainWindow(object):
             self.file_name.setText(fname[0].split('/')[-1])
 
     def get_file_overlay(self):
+        """Fetces overlay file, can be (tif, png, mat, or directory)
+        Signal: Load Overlay button
+        """
         print("Reached Overlay Callback")
         if self.if_image:
             if self.overlay_method.currentText()=="Segmentation Mask (by Pixel)":
@@ -789,6 +815,8 @@ class Ui_MainWindow(object):
                     self.check_nuclei.setChecked(True)
 
     def get_tensorboard_dir(self):
+        """Fetches the tensorflow log directory to be viewed on Tensorboard tab
+        """
         fname = QFileDialog.getExistingDirectory(self.menuWindow, "Choose Directory", self.default_open_location,
                                                  QFileDialog.ShowDirsOnly)
         self.default_open_location = fname.split(os.sep)[0]
@@ -800,23 +828,27 @@ class Ui_MainWindow(object):
             self.graph_browser.show()
 
     def setImage(self, image):
+        """Sets the main view after converting Image to Pixmaps"""
         self.orig_image.setPixmap(QPixmap.fromImage(image))
 
     def setImageOverlay(self, image):
+        """Sets the main view with the overlayed Image"""
         if self.overlay_side_by_side.isChecked():
             self.overlay_image.setPixmap(QPixmap.fromImage(image))
         else:
             self.orig_image.setPixmap(QPixmap.fromImage(image))
 
     def updateInfo(self, image):
+        """Updates info pane that shows global position"""
         self.info.setPixmap(QPixmap.fromImage(image))
 
-    ## Panning Operation
     def mouse_orig_clear(self, event):
+        """Clears previous mouse tracking for new pan operations"""
         self.if_mouse_pressed = False
         self.prev_mouse_pos = None
 
     def mouse_orig(self, event):
+        """Tracks mouse movement after mouse click for panning"""
         if event.button()==QtCore.Qt.LeftButton:
             self.if_mouse_pressed = True
         if self.if_mouse_pressed:
@@ -829,6 +861,7 @@ class Ui_MainWindow(object):
             self.prev_mouse_pos = None
 
     def pan_direction_ops(self, value):
+        """Loads the panned region from the WSI"""
         if self.if_image:
             im, updated = self.ImageView.pan(value_x=value.x(), value_y=value.y())
             if updated:
@@ -838,8 +871,8 @@ class Ui_MainWindow(object):
                 if self.if_image_overlay:
                     self.setImageOverlay(self.ImageView.update_overlay(method_update="down", states = self.overlay_states))
 
-    ## Zooming Operations
     def wheel_zoom(self, event):
+        """Tracks mouse wheel movement to zoom in, or zoom out"""
         # print("Wheel Event has been called", event, event.angleDelta())
         if event.angleDelta().y() > 0:
             self.c_zoom_level += 1
@@ -851,6 +884,7 @@ class Ui_MainWindow(object):
             self.zoom_out_ops()
 
     def updateBar(self):
+        """Updates zoom level information on a zoom operation"""
         zdiff = self.c_zoom_level - self.zoomSlider.value() - 1
         if zdiff==0:
             return
@@ -862,6 +896,7 @@ class Ui_MainWindow(object):
             self.zoom_out_ops()
 
     def zoom_in_ops(self):
+        """Loads the zoomed in image from the WSI"""
         if self.if_image:
             factor = 2
             self.setImage(self.ImageView.get_image_in(factor))
@@ -872,6 +907,7 @@ class Ui_MainWindow(object):
             self.current_level.setText(str(self.ImageView.level))
 
     def zoom_out_ops(self):
+        """Loads zoomed out image from the WSI"""
         if self.if_image:
             factor = 2
             self.setImage(self.ImageView.get_image_out(factor))
@@ -881,8 +917,8 @@ class Ui_MainWindow(object):
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="zoom_out", states = self.overlay_states))
             self.current_level.setText(str(self.ImageView.level))
 
-    ## Random seek using info
     def get_random_location(self, event):
+        """Provides random seek feature through the info bar"""
         print(event.pos())
         if self.if_image:
             # print(self.info.size())
@@ -893,8 +929,8 @@ class Ui_MainWindow(object):
             if self.if_image_overlay:
                 self.setImageOverlay(self.ImageView.update_overlay(method_update="init", states=self.overlay_states))
 
-    ## Managing Overlays
     def select_overlays(self):
+        """Overlays the image with the selected overlays, after identifying the sender"""
         snd = self.menuWindow.sender()
         print("Inside Selecting Overlays: ", snd.text())
         if snd.text()=="Segmentation":
@@ -931,6 +967,7 @@ class Ui_MainWindow(object):
                     self.overlay_group.hide()
 
     def select_class(self):
+        """Utility for toggling different classes in nuclei position"""
         print("Value of state changed of ", self.menuWindow.sender().objectName(), self.menuWindow.sender())
         snd = self.menuWindow.sender().objectName()
         self.overlay_group_states[int(snd.split('_')[1])] = not self.overlay_group_states[int(snd.split('_')[1])]
@@ -940,12 +977,16 @@ class Ui_MainWindow(object):
                                                            class_states=self.overlay_group_states))
 
     def overlay_state_changed(self):
+        """Obsolete: Start modifying in case overlay is required side-by-side"""
         if self.overlay_side_by_side.isChecked():
             self.overlay_image.show()
         else:
             self.overlay_image.hide()
 
     def select_WSI(self):
+        """Select the WSI to test the trained model on
+        Signal: Training tab, Select WSI button
+        """
         fname = QFileDialog.getOpenFileName(self.menuWindow, "Select Whole Slide Image", self.default_open_location, "(*.tif *.jp2 *.ndpi"
                                                                                        " *.vms *.vmu *.svs"
                                                                                        " *.tiff *.mrxs *.scn"
@@ -961,6 +1002,7 @@ class Ui_MainWindow(object):
             [self.select_wsi_level.addItem(str(i)) for i in range(nlevel)]
 
     def select_gen_WSI(self):
+        """Select WSI Directory for patch generation"""
         fname = QFileDialog.getExistingDirectory(self.menuWindow, "Choose Directory", self.default_open_location,
                                                  QFileDialog.ShowDirsOnly)
         if fname:
@@ -973,6 +1015,7 @@ class Ui_MainWindow(object):
             [self.select_gen_wsi_level.addItem(str(i)) for i in range(12)]
 
     def select_dl_model(self):
+        """Select the checkpoint file of the trained model"""
         fname = QFileDialog.getOpenFileName(self.menuWindow, "Select DL Checkpoint", self.default_open_location, "*.ckpt-*")
         if fname[0]:
             print(fname[0])
@@ -980,6 +1023,7 @@ class Ui_MainWindow(object):
             self.model_path.setText(fname[0])
 
     def select_mask_path(self):
+        """Select the Tissue Mask file, used for selecting prediction coordinates"""
         fname = QFileDialog.getOpenFileName(self.menuWindow, "Select Mask(if available)", self.default_open_location, "*.tif")
         if fname[0]:
             print(fname[0])
@@ -990,6 +1034,9 @@ class Ui_MainWindow(object):
             [self.select_mask_level.addItem(str(i)) for i in range(12)]
 
     def check_test_fields(self):
+        """Returns:
+            True, if all the fields in Evaluation form are correct
+        """
         if self.image_path.isEnabled() and self.model_path.isEnabled() and self.mask_path.isEnabled() \
                 and self.select_patch_size.text()!='' and self.select_wsi_level.currentIndex()!=0\
                 and self.select_mask_level.currentIndex()!=0:
@@ -997,6 +1044,7 @@ class Ui_MainWindow(object):
         return False
 
     def start_testing(self):
+        """Set config parameters, and start testing thread"""
         if self.check_test_fields():
             Config.WSI_PATH = self.image_path.text()
             Config.CHECKPOINT_PATH = self.model_path.text()
@@ -1007,6 +1055,9 @@ class Ui_MainWindow(object):
             self.thread_test.start()
 
     def check_patch_fields(self):
+        """Returns:
+            True, if all the fields in the Generate Patch form are correct
+        """
         if self.gen_image_path.isEnabled() and self.select_gen_patch_size.text()!=''\
                 and self.select_gen_wsi_level.currentIndex()!=0:
             return True
