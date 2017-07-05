@@ -107,8 +107,8 @@ class DataIter():
         self.non_tumor_list = sio.loadmat('resource/non_tumor_wsi_list.mat')['wsi_names']
         random.shuffle(self.non_tumor_list)
         random.shuffle(self.tumor_list)
-        self.images_list = [LSTMTrainConfig.DATA_IMAGES_PATH + os.sep + i[:9] + os.sep + i for i in self.tumor_list[:int(len(self.tumor_list)/2)]]
-        self.images_list.extend([LSTMTrainConfig.DATA_IMAGES_PATH + os.sep + i[:9] + os.sep + i for i in self.non_tumor_list[:len(self.tumor_list)]])
+        self.images_list = [LSTMTrainConfig.DATA_IMAGES_PATH + os.sep + i[:9] + os.sep + i for i in self.tumor_list]
+        self.images_list.extend([LSTMTrainConfig.DATA_IMAGES_PATH + os.sep + i[:9] + os.sep + i for i in self.non_tumor_list[:int(1.5*len(self.tumor_list))]])
         random.shuffle(self.images_list)
         self.num_samples = len(self.images_list)
 
@@ -426,12 +426,12 @@ class StackedLSTMTrain(QObject):
                 if step % 200==0:
                     logging.info("Saving model as at step%500")
                     # saver.save(sess, LSTMTrainConfig.log_dir + os.sep + "lstm_model", global_step=step)
-                    sv.saver.save(sess, sv.save_path, global_step=step+64422)
+                    sv.saver.save(sess, sv.save_path, global_step=step+67022)
             # writer.close()
             # Once all the training has been done, save the log files and checkpoint model
             logging.info('Finished training! Saving model to disk now.')
             # saver.save(sess, LSTMTrainConfig.log_dir + os.sep + "lstm_model",global_step=step)
-            sv.saver.save(sess, sv.save_path, global_step=step+64422)
+            sv.saver.save(sess, sv.save_path, global_step=step+67022)
             self.finished.emit()
 
     @pyqtSlot()

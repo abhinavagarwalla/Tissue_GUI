@@ -13,11 +13,12 @@ then this software is for you.
 For any queries, contact the undersigned.
 
 ## Installation Instructions
-Install all packages mentioned in requirements.txt
+Install all packages mentioned in requirements.txt.
 If you plan to use JP2 images, enable MATLAB Engine for Python
 
 Credits
 Abhinav Agarwalla
-agarwallaabhinav@gmail.com
+
+agarwallaabhinav@gmail.com,
 abhinavagarwalla@iitkgp.ac.in
 https://www.github.com/abhinavagarwalla

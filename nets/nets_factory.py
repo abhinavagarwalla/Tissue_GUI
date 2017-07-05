@@ -9,11 +9,12 @@
 # ==============================================================================
 """Contains the network factory that loads the required network."""
 
-from nets import unet_definition, inception_resnet_v2, alexnet
+from nets import unet_definition, inception_resnet_v2, alexnet, two_dimensional_lstm
 
 networks_map = {'unet': unet_definition.UNet,
                 'inception_resnet_v2': inception_resnet_v2.InceptionResnetV2,
                 'alexnet': alexnet.AlexNet,
+                '2D-LSTM': two_dimensional_lstm.LSTM_2D,
                 }
 
 

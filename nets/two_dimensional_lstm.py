@@ -88,7 +88,7 @@ class MultiDimensionalLSTMCell(RNNCell):
 
             return new_h, new_state
 
-class LSTM2D():
+class LSTM_2D():
     def multi_dimensional_rnn_while_loop(self, rnn_size, input_data, sh, dims=None, scope_n="layer1"):
         """Implements naive multi dimension recurrent neural networks
 
@@ -122,7 +122,9 @@ class LSTM2D():
             x = tf.reshape(input_data, [batch_size, h, w, features])
             if dims is not None:
                 assert dims[0] is False and dims[3] is False
-                x = tf.reverse(x, dims)
+                for i in range(len(dims)):
+                    if dims[i]:
+                        x = tf.reverse(x, [i])
             x = tf.transpose(x, [1, 2, 0, 3])
             x = tf.reshape(x, [-1, features])
             x = tf.split(axis=0, num_or_size_splits=h * w, value=x)
@@ -180,10 +182,11 @@ class LSTM2D():
             y = tf.reshape(outputs, [h, w, batch_size, rnn_size])
             y = tf.transpose(y, [2, 0, 1, 3])
             if dims is not None:
-                y = tf.reverse(y, dims)
+                for i in range(len(dims)):
+                    if dims[i]:
+                        y = tf.reverse(y, [i])
 
             return y, states
-
 
     def model(self, images, nclasses=None, is_training=False, hidden_size=LSTMTrainConfig.HIDDEN_SIZE):
         rnn_out_1, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size, input_data=images,
