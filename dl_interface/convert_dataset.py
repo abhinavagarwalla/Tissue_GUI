@@ -8,12 +8,15 @@
 # limitations under the License.
 # ==============================================================================
 
-import os
-from PyQt5.QtCore import QObject, pyqtSignal
-from dl_interface.model_config import TFRConfig
 import glob
+import os
 import random
-from dl_interface.dataset_utils import _dataset_exists, _get_filenames_and_classes, write_label_file, _convert_dataset
+
+from PyQt5.QtCore import QObject, pyqtSignal
+
+from dataio.dataset_utils import _dataset_exists, _get_filenames_and_classes, write_label_file, _convert_dataset
+from dl_interface.model_config import TFRConfig
+
 
 class TFRecordConverter(QObject):
     finished = pyqtSignal()

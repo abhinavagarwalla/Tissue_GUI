@@ -14,8 +14,8 @@ from time import time
 import tensorflow as tf
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
+from dataio.test_data_iter import Data
 from dl_interface.combine_predictions import combine
-from dl_interface.data_io import Data
 from dl_interface.model_config import *
 from nets import nets_factory
 
