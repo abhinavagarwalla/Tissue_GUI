@@ -15,7 +15,7 @@ import tensorflow as tf
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from dl_interface.model_config import LSTMTrainConfig
-from dataio.lstm_batch_iter import LSTMTrainDataIter
+from dataio.lstm_batch_iter import LSTMTrainMatDataIter
 from tensorflow.contrib.framework.python.ops.variables import get_or_create_global_step
 from tensorflow.python.platform import tf_logging as logging
 from nets import nets_factory
@@ -28,7 +28,7 @@ class LSTMTrain(QObject):
 
     def initialize(self):
         self.t0 = time()
-        self.dataloader = LSTMTrainDataIter()
+        self.dataloader = LSTMTrainMatDataIter()
 
     def attach_metrics_and_summaries(self):
         pass
@@ -58,7 +58,8 @@ class LSTMTrain(QObject):
                                              LSTMTrainConfig.PATCH_SIZE, 1])#
         cnn_preds = tf.placeholder(tf.float32, [LSTMTrainConfig.batch_size, LSTMTrainConfig.PATCH_SIZE,
                                              LSTMTrainConfig.PATCH_SIZE, LSTMTrainConfig.NUM_CLASSES])
-        model_out = nets_factory.get_network_fn('2D-LSTM', images, num_classes=LSTMTrainConfig.NUM_CLASSES, is_training=True)
+        images_alex = tf.placeholder(tf.float32, [64, 224, 224, 3])
+        model_out = nets_factory.get_network_fn('Conv-LSTM', images_alex, num_classes=LSTMTrainConfig.NUM_CLASSES, is_training=True)
 
         model_out_flat = tf.reshape(model_out, shape=(-1, LSTMTrainConfig.NUM_CLASSES))
 

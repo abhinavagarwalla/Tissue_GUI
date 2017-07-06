@@ -18,7 +18,6 @@ from dl_interface.model_config import *
 from interface.image_slide import ImageClass
 from preprocessing import preprocessing_factory
 
-
 class Data():
     def __init__(self, preprocessor, outshape):
         self.wsi = ImageClass(Config.WSI_PATH)

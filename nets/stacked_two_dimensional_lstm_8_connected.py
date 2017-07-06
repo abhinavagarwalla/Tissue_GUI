@@ -162,7 +162,7 @@ class Stacked_LSTM_2D_8c():
                                      lambda: states_ta_.read(h * w))
 
                 state_up_last = tf.cond(tf.less(zero, tf.mod(time_, tf.constant(w))),
-                                        tf.cond(tf.less_equal(tf.constant(w), time_),
+                                        lambda: tf.cond(tf.less_equal(tf.constant(w), time_),
                                                 lambda: states_ta_.read(get_up_last(time_, w)),
                                                 lambda: states_ta_.read(h * w)), lambda: states_ta_.read(h * w))
 
@@ -195,51 +195,51 @@ class Stacked_LSTM_2D_8c():
               hidden_size_1=LSTMTrainConfig.HIDDEN_SIZE,
               hidden_size_2=LSTMTrainConfig.HIDDEN_SIZE):
         rnn_out_1, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size_1, input_data=images,
-                                                             sh=[1, 1], scope_n="lstm_1")
+                                                             sh=[1, 1], scope_n="8c_lstm_1")
         rnn_out_2, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size_1, input_data=images,
                                                              sh=[1, 1], dims=[False, True, False, False],
-                                                             scope_n="lstm_2")
+                                                             scope_n="8c_lstm_2")
         rnn_out_3, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size_1, input_data=images,
                                                              sh=[1, 1], dims=[False, True, True, False],
-                                                             scope_n="lstm_3")
+                                                             scope_n="8c_lstm_3")
         rnn_out_4, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size_1, input_data=images,
                                                              sh=[1, 1], dims=[False, False, True, False],
-                                                             scope_n="lstm_4")
+                                                             scope_n="8c_lstm_4")
 
         model_out_1 = slim.conv2d(inputs=rnn_out_1, num_outputs=hidden_size_2,
-                                  kernel_size=[3, 3])
+                                  kernel_size=[3, 3], scope="8c_conv_1")
         model_out_2 = slim.conv2d(inputs=rnn_out_2, num_outputs=hidden_size_2,
-                                  kernel_size=[3, 3])
+                                  kernel_size=[3, 3], scope="8c_conv_2")
         model_out_3 = slim.conv2d(inputs=rnn_out_3, num_outputs=hidden_size_2,
-                                  kernel_size=[3, 3])
+                                  kernel_size=[3, 3], scope="8c_conv_3")
         model_out_4 = slim.conv2d(inputs=rnn_out_4, num_outputs=hidden_size_2,
-                                  kernel_size=[3, 3])
+                                  kernel_size=[3, 3], scope="8c_conv_4")
         stack_out = tf.scalar_mul(tf.constant(0.25), tf.add_n([model_out_1, model_out_2, model_out_3, model_out_4]))
 
         s2_rnn_out_1, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size_2,
                                                                 input_data=stack_out,
-                                                                sh=[1, 1], scope_n="s2_lstm_1")
+                                                                sh=[1, 1], scope_n="8c_2_lstm_1")
         s2_rnn_out_2, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size_2,
                                                                 input_data=stack_out,
                                                                 sh=[1, 1], dims=[False, True, False, False],
-                                                                scope_n="s2_lstm_2")
+                                                                scope_n="8c_2_lstm_2")
         s2_rnn_out_3, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size_2,
                                                                 input_data=stack_out,
                                                                 sh=[1, 1], dims=[False, True, True, False],
-                                                                scope_n="s2_lstm_3")
+                                                                scope_n="8c_2_lstm_3")
         s2_rnn_out_4, _ = self.multi_dimensional_rnn_while_loop(rnn_size=hidden_size_2,
                                                                 input_data=stack_out,
                                                                 sh=[1, 1], dims=[False, False, True, False],
-                                                                scope_n="s2_lstm_4")
+                                                                scope_n="8c_2_lstm_4")
 
         s2_model_out_1 = slim.conv2d(inputs=s2_rnn_out_1, num_outputs=nclasses, kernel_size=[3, 3],
-                                     activation_fn=None)
+                                     activation_fn=None, scope="8c_2_conv_1")
         s2_model_out_2 = slim.conv2d(inputs=s2_rnn_out_2, num_outputs=nclasses, kernel_size=[3, 3],
-                                     activation_fn=None)
+                                     activation_fn=None, scope="8c_2_conv_2")
         s2_model_out_3 = slim.conv2d(inputs=s2_rnn_out_3, num_outputs=nclasses, kernel_size=[3, 3],
-                                     activation_fn=None)
+                                     activation_fn=None, scope="8c_2_conv_3")
         s2_model_out_4 = slim.conv2d(inputs=s2_rnn_out_4, num_outputs=nclasses, kernel_size=[3, 3],
-                                     activation_fn=None)
+                                     activation_fn=None, scope="8c_2_conv_4")
         model_out = tf.scalar_mul(tf.constant(0.25),
                                   tf.add_n([s2_model_out_1, s2_model_out_2, s2_model_out_3, s2_model_out_4]))
         return model_out
