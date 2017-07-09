@@ -128,13 +128,13 @@ class CNN2TrainConfig():
     num_epochs_before_decay = 1
 
 class LSTMValidConfig():
-    DATA_IMAGES_PATH = 'F:\\abhinav\\patches\\lstm_data\\validation' #'F:\\abhinav\\patches\\lstm_data\\vis' #
+    DATA_IMAGES_PATH = 'F:\\abhinav\\patches\\lstm_data\\validation' #'F:\\abhinav\\patches\\lstm_data\\vis'
     DATA_LABELS_PATH = 'F:\\abhinav\\patches\\lstm_data_label'
     PATCH_SIZE = 8
     CHANNELS = 4096
     HIDDEN_SIZE = 512
     NUM_CLASSES = 2
-    log_dir = 'F:\\abhinav\\patches\\log_stacked_lstm_val_c6' #'F:\\abhinav\\patches\\lstm_data\\vis'
-    batch_size = 16
+    log_dir = 'F:\\abhinav\\patches\\log_lstm_val_c1' #'F:\\abhinav\\patches\\log_stacked_lstm_val_corrected_2' #'F:\\abhinav\\patches\\lstm_data\\vis' #
+    batch_size = 32
     num_epochs = 1 #None
-    checkpoint_file = 'F:\\abhinav\\patches\\log_lstm_stacked\\model.ckpt-66622' #66622, 83!!
+    checkpoint_file = None#'F:\\abhinav\\patches\\log_lstm_stacked\\model.ckpt-66222' #66222, 83!!

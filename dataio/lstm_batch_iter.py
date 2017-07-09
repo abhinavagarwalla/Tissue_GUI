@@ -5,7 +5,7 @@ import numpy as np
 import random
 import glob
 
-from dl_interface.model_config import LSTMTrainConfig
+from dl_interface.model_config import LSTMTrainConfig, LSTMValidConfig
 
 class LSTMTrainMatDataIter():
     def __init__(self):
@@ -63,3 +63,50 @@ class LSTMTrainPNDataIter():
             if self.iter == self.num_samples:
                 self.iter = 0
         return x, y, cnn_y, cnn_logits
+
+class LSTMValidDataIter():
+    def __init__(self):
+        self.wsi_list = glob.glob(LSTMValidConfig.DATA_IMAGES_PATH + os.sep + 'Tumor*')
+        self.images_list = []
+        for i in self.wsi_list:
+            self.images_list.extend(glob.glob(i + os.sep + '*'))
+        random.shuffle(self.images_list)
+        self.num_samples = len(self.images_list)
+        self.iter = 0
+        self.save_coor = None
+
+    def next_batch(self):
+        x = []
+        y = []
+        cnn_logits = []
+        cnn_y = []
+        self.names = []
+        for i in range(LSTMValidConfig.batch_size):
+            feat = pickle.load(open(self.images_list[self.iter], 'rb'))
+            wsi_name = self.images_list[self.iter].split(os.sep)[-1]
+            label = np.load(LSTMValidConfig.DATA_LABELS_PATH + os.sep + wsi_name.split('_(')[0] +
+                            os.sep + wsi_name.replace('features.pkl', 'label.npy'))
+            x.append(feat['fc6'].reshape(LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.CHANNELS))
+            y.append(label)
+            cnn_y.append(feat['predictions'].reshape(LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.PATCH_SIZE, 1))
+            cnn_logits.append(feat['fc8'].reshape(LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.NUM_CLASSES))
+            self.save_coor = self.images_list[self.iter].replace('_features.pkl', '_preds.npy')
+            self.names.append(self.images_list[self.iter].replace('_features.pkl', '_preds.npy').split(os.sep)[-1])
+            self.iter += 1
+            if self.iter == self.num_samples:
+                self.iter = 0
+        return x, y, cnn_y, cnn_logits
+    #
+    # def save_predictions(self, probs):
+    #     np.save(LSTMValidConfig.DATA_IMAGES_PATH + os.sep + 'predictions' + os.sep + self.save_coor.split(os.sep)[-1],
+    #             probs)
+
+    def save_predictions(self, probs):
+        for i in range(len(self.names)):
+            start = i*LSTMValidConfig.PATCH_SIZE*LSTMValidConfig.PATCH_SIZE
+            end = (i+1)*LSTMValidConfig.PATCH_SIZE*LSTMValidConfig.PATCH_SIZE
+            np.save(LSTMValidConfig.log_dir + os.sep + 'predictions' + os.sep + self.names[i], probs[start:end,])
+
+    def combine_prediction(self):
+        pred_list = glob.glob(LSTMValidConfig.DATA_IMAGES_PATH + os.sep + 'predictions' + os.sep + '*')
+        print(pred_list)
