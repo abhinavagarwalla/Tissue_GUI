@@ -57,7 +57,7 @@ class LSTMVis(QObject):
                                              LSTMValidConfig.PATCH_SIZE, 1])#
         cnn_preds = tf.placeholder(tf.float32, [LSTMValidConfig.batch_size, LSTMValidConfig.PATCH_SIZE,
                                                 LSTMValidConfig.PATCH_SIZE, LSTMValidConfig.NUM_CLASSES])
-        model_out = nets_factory.get_network_fn('Stacked-2D-LSTM', images, num_classes=LSTMValidConfig.NUM_CLASSES,
+        model_out = nets_factory.get_network_fn('Stacked-2D-LSTM-8c', images, num_classes=LSTMValidConfig.NUM_CLASSES,
                                                 is_training=False)
 
         model_out_flat = tf.reshape(model_out, shape=(-1, LSTMValidConfig.NUM_CLASSES))

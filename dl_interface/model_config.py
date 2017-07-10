@@ -134,7 +134,8 @@ class LSTMValidConfig():
     CHANNELS = 4096
     HIDDEN_SIZE = 512
     NUM_CLASSES = 2
-    log_dir = 'F:\\abhinav\\patches\\log_lstm_val_c1' #'F:\\abhinav\\patches\\log_stacked_lstm_val_corrected_2' #'F:\\abhinav\\patches\\lstm_data\\vis' #
+    log_dir = 'F:\\abhinav\\patches\\log_stacked_lstm_8c1' #'F:\\abhinav\\patches\\lstm_data\\vis' #
     batch_size = 32
     num_epochs = 1 #None
-    checkpoint_file = None#'F:\\abhinav\\patches\\log_lstm_stacked\\model.ckpt-66222' #66222, 83!!
+    # checkpoint_file = 'F:\\abhinav\\patches\\log_lstm_stacked\\model.ckpt-66222' #66222, 83!!
+    checkpoint_file = 'F:\\abhinav\\patches\\log_lstm_try\\model.ckpt-20400' #tried: 23800, 15800, 18800

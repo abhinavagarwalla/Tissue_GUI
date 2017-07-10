@@ -33,6 +33,7 @@ class ImageClass():
             self.level_count = self.wsiObj.level_count
             self.level_dimensions = self.wsiObj.level_dimensions
             self.type = "tiff"
+            print(self.level_dimensions)
         if ".jp2" in filename:
             self.filename = filename
             self.eng = me.start_matlab()
