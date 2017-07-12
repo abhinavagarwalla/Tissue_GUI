@@ -7,7 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
+"""Saves LSTM results as numpy arrays in a directory"""
 from time import time
 import os
 import numpy as np
@@ -24,6 +24,8 @@ from dataio.lstm_batch_iter import LSTMValidDataIter
 slim = tf.contrib.slim
 
 class LSTMVis(QObject):
+    """Generates predictions and saves them in a directory.
+    In essence, same as model_validation"""
     finished = pyqtSignal()
     epoch = pyqtSignal(int)
 
@@ -33,6 +35,7 @@ class LSTMVis(QObject):
 
     @pyqtSlot()
     def vis(self):
+        """Starts validation process and saves predictions"""
         # Saver and initialisation
         print("starting training")
         self.initialize()
@@ -199,6 +202,7 @@ class LSTMVis(QObject):
 
     @pyqtSlot()
     def stop_call(self):
+        """Stops generating predictions and exits"""
         print("Stopping Training..")
         self.epoch.emit(0)
         self.finished.emit()

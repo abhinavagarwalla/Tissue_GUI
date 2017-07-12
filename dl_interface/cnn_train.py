@@ -7,6 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Provides class for training a CNN"""
 
 from time import time
 import os
@@ -14,61 +15,13 @@ import os
 import tensorflow as tf
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from nets import nets_factory
-from preprocessing import preprocessing_factory
-from interface.image_slide import ImageClass
+from dataio.cnn_batch_iter import CNNDataIter
 
 from dl_interface.model_config import CNN2TrainConfig
 from tensorflow.contrib.framework.python.ops.variables import get_or_create_global_step
 from tensorflow.python.platform import tf_logging as logging
-import scipy.io as sio
-
-import numpy as np
-
 
 slim = tf.contrib.slim
-
-class DataIter():
-    def __init__(self):
-        # self.wsi_list = glob.glob(CNN2TrainConfig.DATA_IMAGES_PATH + os.sep + '*')
-        # self.images_list = []
-        # for i in self.wsi_list:
-        #     self.images_list.extend(glob.glob(i + os.sep + '*'))
-        # random.shuffle(self.images_list)
-        plist = sio.loadmat('resource/wsi_names_list.mat')['wsi_names']
-        self.images_list = [CNN2TrainConfig.DATA_IMAGES_PATH + os.sep + i[:9] + os.sep + i for i in plist]
-        self.num_samples = len(self.images_list)
-        self.iter = 0
-        self.preprocessor = preprocessing_factory.get_preprocessing_fn(name='camelyon')
-
-    def next_batch(self):
-        x = []
-        y = []
-        prev_wsi_id = 0
-        while len(x) != CNN2TrainConfig.batch_size:
-            patch_id = self.images_list[self.iter]
-            wsi_id = patch_id.split(os.sep)[-2]
-            if prev_wsi_id!=wsi_id:
-                self.wsi_obj = ImageClass(CNN2TrainConfig.WSI_BASE_PATH + os.sep + wsi_id + '.tif')
-            coors = patch_id.split('(')[1].split(')')[0]
-            w, h = list(map(int, coors.split(',')))
-            im = np.array(
-                self.wsi_obj.read_region((w, h), 0, (CNN2TrainConfig.PATCH_SIZE * CNN2TrainConfig.IMAGE_SIZE,
-                                                      CNN2TrainConfig.PATCH_SIZE * CNN2TrainConfig.IMAGE_SIZE)).convert('RGB'))
-
-            for i in range(0, CNN2TrainConfig.IMAGE_SIZE * CNN2TrainConfig.PATCH_SIZE, CNN2TrainConfig.IMAGE_SIZE):
-                for j in range(0, CNN2TrainConfig.IMAGE_SIZE * CNN2TrainConfig.PATCH_SIZE, CNN2TrainConfig.IMAGE_SIZE):
-                    img = im[j:j + CNN2TrainConfig.IMAGE_SIZE, i:i + CNN2TrainConfig.IMAGE_SIZE]/255 # - 1.0
-                    x.append(img)
-
-            label = np.load(CNN2TrainConfig.DATA_LABELS_PATH + os.sep + wsi_id +
-                            os.sep + patch_id.split(os.sep)[-1].replace('features.pkl', 'label.npy')).reshape(-1)
-            label_inv = 1-label
-            label = np.vstack((label_inv, label)).T
-            y.extend(label)
-            self.iter += 1
-            if self.iter == self.num_samples:
-                self.iter = 0
-        return x, y
 
 class CNN2Train(QObject):
     finished = pyqtSignal()
@@ -76,10 +29,11 @@ class CNN2Train(QObject):
 
     def initialize(self):
         self.t0 = time()
-        self.dataloader = DataIter()
+        self.dataloader = CNNDataIter()
 
     @pyqtSlot()
     def train(self):
+        """Start training of CNN"""
         # Saver and initialisation
         print("starting CNN training")
         self.initialize()
@@ -203,6 +157,7 @@ class CNN2Train(QObject):
 
     @pyqtSlot()
     def stop_call(self):
+        """Stop training process and exit"""
         print("Stopping Training..")
         self.epoch.emit(0)
         self.finished.emit()

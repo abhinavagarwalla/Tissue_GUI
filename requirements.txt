@@ -7,5 +7,4 @@ numpy
 matplotlib
 shapely
 
-Only for jp2 images:
-Matlab-Engine API for python
+# Matlab-Engine API for python (support for JP2 Images)

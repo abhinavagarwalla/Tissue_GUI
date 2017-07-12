@@ -7,6 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Fetches data batches for CNN training by using Tissue Mask"""
 
 from itertools import product
 
@@ -19,7 +20,14 @@ from interface.image_slide import ImageClass
 from preprocessing import preprocessing_factory
 
 class Data():
+    """Reads WSI region according to coordinates extracted from Tissue Mask
+    """
     def __init__(self, preprocessor, outshape):
+        """Data Class Constructor
+        Args:
+            preprocessor: Name of preprocessing function to be used
+            outshape: shape of output tensor
+        """
         self.wsi = ImageClass(Config.WSI_PATH)
         self.output_size = int(outshape[1])
         Config.DIFF_SIZE = Config.PATCH_SIZE - self.output_size
@@ -32,6 +40,8 @@ class Data():
         self.write_to_folder_flag = True
 
     def delete_inside(self, boxes):
+        """Delete coordinate box inside another box, i.e. remove duplicity in coordinates
+        """
         boxes = np.array(boxes)
         boxes_new = []
         for i in range(len(boxes)):
@@ -45,6 +55,9 @@ class Data():
         return np.array(boxes_new)
 
     def get_coordinates(self):
+        """Gets coordinates from Tissue Mask.
+        After finding contours, it rejects very small contours and contruct bounding boxes for remaining
+        """
         img = ndimage.imread(Config.MASK_PATH)
         contours = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         a = np.array([cv2.contourArea(i) for i in contours[1]])
@@ -72,6 +85,8 @@ class Data():
         return coors
 
     def get_image_from_coor(self):
+        """Fetches image region from WSI with the coordinates extracted by get_coordinates function
+        """
         image_batch = []
         coor_batch = []
         while len(coor_batch) != Config.BATCH_SIZE:
@@ -94,6 +109,12 @@ class Data():
         return image_batch, coor_batch
 
     def save_predictions(self, preds, coors_batch, images=None):
+        """Saves predictions as images
+        Args:
+            preds: Probabilites from network
+            coors_batch: Coordinates for each position at WSI level
+            images: secondary images to be save, if any
+        """
         preds = (np.array(preds) * 100).astype(np.uint8)
         for i in range(Config.BATCH_SIZE):
             if self.write_to_folder_flag:

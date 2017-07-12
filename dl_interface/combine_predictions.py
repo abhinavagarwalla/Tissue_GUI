@@ -7,7 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
+"""Combines prediction of images and saves at various levels"""
 import glob
 
 import cv2
@@ -19,6 +19,8 @@ from interface.image_slide import ImageClass
 
 
 def combine():
+    """Reads data with all image tiles and WSI.
+    Maps filenames to coordinates in WSI and saves at multiple resolutions"""
     ilist = glob.glob(Config.RESULT_PATH+"\\*)_tumor.png")
 
     # (48896, 110336)

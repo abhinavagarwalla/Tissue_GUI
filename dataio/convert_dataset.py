@@ -7,6 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Converts Image directory into TFRecords"""
 
 import glob
 import os
@@ -16,7 +17,6 @@ from PyQt5.QtCore import QObject, pyqtSignal
 
 from dataio.dataset_utils import _dataset_exists, _get_filenames_and_classes, write_label_file, _convert_dataset
 from dl_interface.model_config import TFRConfig
-
 
 class TFRecordConverter(QObject):
     finished = pyqtSignal()
@@ -31,6 +31,8 @@ class TFRecordConverter(QObject):
         # [os.mkdir(PatchConfig.RESULT_PATH + os.sep + i) for i in self.classes]
 
     def run(self):
+        """Splits dataset into training and validation set at WSI level.
+        Saves data as TFRecords with training and validation prefix"""
         self.initialize()
         if not TFRConfig.tfrecord_filename:
             raise ValueError('tfrecord_filename is empty. Please state a tfrecord_filename argument.')
@@ -66,9 +68,6 @@ class TFRecordConverter(QObject):
         trainWSI = [i.split(os.sep)[-1].split('_coors')[0] for i in trainWSI]
         validWSI = [i.split(os.sep)[-1].split('_coors')[0] for i in validWSI]
 
-        # training_filenames = photo_filenames[num_validation:]
-        # validation_filenames = photo_filenames[:num_validation]
-
         training_filenames = [i for i in photo_filenames if i.split(')_')[-1].split('.')[0] in trainWSI]
         validation_filenames = [i for i in photo_filenames if i.split(')_')[-1].split('.')[0] in validWSI]
 
@@ -88,8 +87,3 @@ class TFRecordConverter(QObject):
         write_label_file(labels_to_class_names, TFRConfig.dataset_dir)
 
         print('\nFinished converting the %s dataset!' % (TFRConfig.tfrecord_filename))
-
-    # @pyqtSlot()
-    # def stop_call(self):
-    #     self.continue_flag = False
-    #     self.finished.emit()

@@ -9,30 +9,31 @@
 # ==============================================================================
 """Contains all UI elements, along with signals/slots, threads, web engine"""
 
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5 import QtWebEngineWidgets
-
-from dl_interface.model_config import *
-from dl_interface.model_test import Test
-from interface.image_ops import DisplayImage
-from interface.image_slide import ImageClass
-from dl_interface.gen_patch import PatchGenerator
-from dl_interface.convert_dataset import TFRecordConverter
-from dl_interface.model_train import Train
-from dl_interface.model_validation import Validate
-from dl_interface.lstm_data_generation import TestLSTMSave, TestLSTMLabelSave
-from dl_interface.model_lstm_train import LSTMTrain
-from dl_interface.model_lstm_validation import LSTMValidation
-from dl_interface.cnn_train import CNN2Train
-from dl_interface.lstm_visualisation import LSTMVis
-from dl_interface.model_stacked_lstm_train import StackedLSTMTrain
-from dl_interface.model_stacked_lstm_validation import StackedLSTMValidation
-
 import os
 import subprocess
 from time import sleep
+
+from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtWebEngineWidgets
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QFileDialog
+
+from dataio.convert_dataset import TFRecordConverter
+from dl_interface.cnn_train import CNN2Train
+from dl_interface.gen_patch import PatchGenerator
+from dl_interface.lstm_data_generation import TestLSTMSave
+from dl_interface.lstm_visualisation import LSTMVis
+from dl_interface.model_config import *
+from dl_interface.model_lstm_train import LSTMTrain
+from dl_interface.model_lstm_validation import LSTMValidation
+from dl_interface.model_stacked_lstm_train import StackedLSTMTrain
+from dl_interface.model_stacked_lstm_validation import StackedLSTMValidation
+from dl_interface.model_test import Test
+from dl_interface.model_train import Train
+from dl_interface.model_validation import Validate
+from interface.image_ops import DisplayImage
+from interface.image_slide import ImageClass
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):

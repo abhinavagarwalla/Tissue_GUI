@@ -7,7 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
+"""Generates patches from WSI using Tissue Mask to be converted to TFRecords for training"""
 import os
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from itertools import product
@@ -50,11 +50,12 @@ class PatchGenerator(QObject):
         # [os.mkdir(PatchConfig.RESULT_PATH + os.sep + i) for i in self.classes]
 
     def run(self):
+        """Runs patch generation on a list of WSIs"""
         self.initialize()
         while(self.continue_flag):
             time.sleep(3)
             print(PatchConfig.WSI_FOLDER_PATH, self.classes)
-            for i in range(50, 70):#, len(self.wsi_list["Tumor"])):
+            for i in range(len(self.wsi_list["Tumor"])):
                 self.wsi_iter = i
                 self.wsi = ImageClass(self.wsi_list["Tumor"][self.wsi_iter])
                 self.tumor_wsi = ImageClass(PatchConfig.WSI_FOLDER_PATH + os.sep + "Tumor" + os.sep + "Mask_Tumor" +\
@@ -76,6 +77,12 @@ class PatchGenerator(QObject):
             self.data_completed = True
 
     def get_and_save_batch(self):
+        """Reads patches from WSI and batch them for processing.
+        Tumor Mask is utilised to label patches.
+        Tumor: Area > 0.5, All are selected
+        Ambibuous: Area > 0.01 & Area < 0.5, All selected
+        Normal: Area < 0.01, if mean pixel value < 180, selected with prob 0.10, otherwise 0.001
+        """
         image_batch = []
         coor_batch = []
         folder_list = []
@@ -124,6 +131,12 @@ class PatchGenerator(QObject):
         self.save_predictions(image_batch, coor_batch, folder_list)
 
     def save_predictions(self, images, coors_batch, folder_name):
+        """Saves predictions as images
+        Args:
+            images: list of images to be saved
+            coors_batch: Coordinates at WSI level for each image
+            folder_name: folder in which predictions must be saved
+        """
         print("Saving Predictions..", self.wsi_iter, '/', len(self.wsi_list["Tumor"]), self.iter, '/', self.nsamples)
         for i in range(len(images)):
             if self.write_to_folder_flag:
@@ -133,6 +146,7 @@ class PatchGenerator(QObject):
                               self.wsi_list["Tumor"][self.wsi_iter].split(os.sep)[-1].split('.')[0] + ".png")
 
     def delete_inside(self, boxes):
+        """Delete coordinate box inside another box, i.e. remove duplicity in coordinates"""
         boxes = np.array(boxes)
         boxes_new = []
         for i in range(len(boxes)):
@@ -154,6 +168,9 @@ class PatchGenerator(QObject):
         return np.array(boxes_new)
 
     def get_coordinates(self):
+        """Gets coordinates from Tissue Mask.
+        After finding contours, it rejects very small contours and contruct bounding boxes for remaining
+        """
         img = ndimage.imread(PatchConfig.WSI_FOLDER_PATH + os.sep + "Tumor" + os.sep + "Mask_Tissue" + os.sep +\
                              self.wsi_list["Tumor"][self.wsi_iter].split(os.sep)[-1])
         contours = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -182,5 +199,6 @@ class PatchGenerator(QObject):
 
     @pyqtSlot()
     def stop_call(self):
+        """Stops the patch-generation process and exits the thread"""
         self.continue_flag = False
         self.finished.emit()
