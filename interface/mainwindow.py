@@ -25,9 +25,7 @@ from dl_interface.lstm_data_generation import TestLSTMSave
 from dl_interface.lstm_visualisation import LSTMVis
 from dl_interface.model_config import *
 from dl_interface.model_lstm_train import LSTMTrain
-from dl_interface.model_lstm_validation import LSTMValidation
 from dl_interface.model_stacked_lstm_train import StackedLSTMTrain
-from dl_interface.model_stacked_lstm_validation import StackedLSTMValidation
 from dl_interface.model_test import Test
 from dl_interface.model_train import Train
 from dl_interface.model_validation import Validate
@@ -230,6 +228,7 @@ class Ui_MainWindow(object):
         self.orig_image.setSizePolicy(sizePolicy)
         self.orig_image.setMinimumSize(QtCore.QSize(0, 0))
         self.orig_image.setMouseTracking(True)
+        self.orig_image.setToolTip("")
         self.orig_image.setAutoFillBackground(False)
         self.orig_image.setScaledContents(True)
         self.orig_image.setObjectName("orig_image")
@@ -244,6 +243,7 @@ class Ui_MainWindow(object):
         self.overlay_image.setSizePolicy(sizePolicy)
         self.overlay_image.setMinimumSize(QtCore.QSize(0, 0))
         self.overlay_image.setMouseTracking(True)
+        self.overlay_image.setToolTip("")
         self.overlay_image.setToolTipDuration(-1)
         self.overlay_image.setScaledContents(True)
         self.overlay_image.setObjectName("overlay_image")
@@ -318,7 +318,7 @@ class Ui_MainWindow(object):
         self.plainTextEdit.setReadOnly(True)
         self.plainTextEdit.setObjectName("plainTextEdit")
         self.trainBox = QtWidgets.QGroupBox(self.training)
-        self.trainBox.setGeometry(QtCore.QRect(40, 30, 491, 281))
+        self.trainBox.setGeometry(QtCore.QRect(40, 30, 491, 241))
         self.trainBox.setObjectName("trainBox")
         self.label_5 = QtWidgets.QLabel(self.trainBox)
         self.label_5.setGeometry(QtCore.QRect(40, 70, 71, 16))
@@ -366,10 +366,10 @@ class Ui_MainWindow(object):
         self.start_train.setGeometry(QtCore.QRect(60, 200, 121, 23))
         self.start_train.setObjectName("start_train")
         self.stop_train = QtWidgets.QPushButton(self.trainBox)
-        self.stop_train.setGeometry(QtCore.QRect(300, 200, 121, 23))
+        self.stop_train.setGeometry(QtCore.QRect(340, 200, 121, 23))
         self.stop_train.setObjectName("stop_train")
         self.start_validation = QtWidgets.QPushButton(self.trainBox)
-        self.start_validation.setGeometry(QtCore.QRect(180, 240, 121, 23))
+        self.start_validation.setGeometry(QtCore.QRect(200, 200, 121, 23))
         self.start_validation.setObjectName("start_validation")
         self.patchBox = QtWidgets.QGroupBox(self.training)
         self.patchBox.setGeometry(QtCore.QRect(550, 30, 531, 151))
@@ -414,27 +414,15 @@ class Ui_MainWindow(object):
         self.start_lstm_model_train = QtWidgets.QPushButton(self.training)
         self.start_lstm_model_train.setGeometry(QtCore.QRect(920, 270, 161, 23))
         self.start_lstm_model_train.setObjectName("start_lstm_model_train")
-        self.start_lstm_model_validation = QtWidgets.QPushButton(self.training)
-        self.start_lstm_model_validation.setGeometry(QtCore.QRect(920, 300, 161, 23))
-        self.start_lstm_model_validation.setObjectName("start_lstm_model_validation")
         self.start_cnn2_train = QtWidgets.QPushButton(self.training)
         self.start_cnn2_train.setGeometry(QtCore.QRect(920, 360, 161, 23))
         self.start_cnn2_train.setObjectName("start_cnn2_train")
         self.start_lstm_vis = QtWidgets.QPushButton(self.training)
         self.start_lstm_vis.setGeometry(QtCore.QRect(920, 390, 161, 23))
         self.start_lstm_vis.setObjectName("start_lstm_vis")
-        self.start_end_to_end_train = QtWidgets.QPushButton(self.training)
-        self.start_end_to_end_train.setGeometry(QtCore.QRect(920, 560, 161, 23))
-        self.start_end_to_end_train.setObjectName("start_end_to_end_train")
         self.start_stacked_lstm_train = QtWidgets.QPushButton(self.training)
         self.start_stacked_lstm_train.setGeometry(QtCore.QRect(920, 450, 161, 23))
         self.start_stacked_lstm_train.setObjectName("start_stacked_lstm_train")
-        self.start_conv_lstm_train = QtWidgets.QPushButton(self.training)
-        self.start_conv_lstm_train.setGeometry(QtCore.QRect(920, 490, 161, 21))
-        self.start_conv_lstm_train.setObjectName("start_conv_lstm_train")
-        self.start_stacked_lstm_valid = QtWidgets.QPushButton(self.training)
-        self.start_stacked_lstm_valid.setGeometry(QtCore.QRect(1090, 450, 161, 23))
-        self.start_stacked_lstm_valid.setObjectName("start_stacked_lstm_valid")
         self.tabs.addTab(self.training, "")
         self.tensorboard = QtWidgets.QWidget()
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
@@ -545,9 +533,7 @@ class Ui_MainWindow(object):
         self.check_heatmap.setText(_translate("MainWindow", "HeatMap"))
         self.check_nuclei.setText(_translate("MainWindow", "Nuclei Position"))
         self.check_others.setText(_translate("MainWindow", "Others"))
-        self.orig_image.setToolTip(_translate("MainWindow", "\"Over the Original Image\""))
         self.orig_image.setText(_translate("MainWindow", "Original Image"))
-        self.overlay_image.setToolTip(_translate("MainWindow", "\"Overlay Image\""))
         self.overlay_image.setText(_translate("MainWindow", "Overlay Image"))
         self.tabs.setTabText(self.tabs.indexOf(self.vis), _translate("MainWindow", "Visualisation"))
         self.testBox.setTitle(_translate("MainWindow", "Testing"))
@@ -579,13 +565,9 @@ class Ui_MainWindow(object):
         self.start_tf_record.setText(_translate("MainWindow", "Convert to TFRecord"))
         self.start_lstm_data_generation.setText(_translate("MainWindow", "Start LSTM Data Generation"))
         self.start_lstm_model_train.setText(_translate("MainWindow", "Start LSTM Model Training"))
-        self.start_lstm_model_validation.setText(_translate("MainWindow", "Start LSTM Model Validation"))
         self.start_cnn2_train.setText(_translate("MainWindow", "Start CNN Training - Phase II"))
         self.start_lstm_vis.setText(_translate("MainWindow", "Get Visual Results"))
-        self.start_end_to_end_train.setText(_translate("MainWindow", "Start End-to-End Training"))
         self.start_stacked_lstm_train.setText(_translate("MainWindow", "Start Stacked LSTM Training"))
-        self.start_conv_lstm_train.setText(_translate("MainWindow", "Start ConvLSTM Training"))
-        self.start_stacked_lstm_valid.setText(_translate("MainWindow", "Start Stacked LSTM Validation"))
         self.tabs.setTabText(self.tabs.indexOf(self.training), _translate("MainWindow", "Training"))
         self.select_tensorboard_directory.setText(_translate("MainWindow", "Specify Tensorboard Directory"))
         self.tensorboard_dir.setText(_translate("MainWindow", "TextLabel"))
@@ -656,11 +638,9 @@ class Ui_MainWindow(object):
         self.start_validation.clicked.connect(self.start_validating)
         self.start_lstm_data_generation.clicked.connect(self.start_lstm_data_generating)
         self.start_lstm_model_train.clicked.connect(self.start_lstm_model_training)
-        self.start_lstm_model_validation.clicked.connect(self.start_lstm_model_validating)
         self.start_cnn2_train.clicked.connect(self.start_cnn2_training)
         self.start_lstm_vis.clicked.connect(self.start_lstm_visualisation)
         self.start_stacked_lstm_train.clicked.connect(self.start_stacked_lstm_training)
-        self.start_stacked_lstm_valid.clicked.connect(self.start_stacked_lstm_validating)
 
         self.select_tensorboard_directory.clicked.connect(self.get_tensorboard_dir)
         self.stop_tensorboard.clicked.connect(lambda: self.tensorboard_process.kill())
@@ -715,12 +695,6 @@ class Ui_MainWindow(object):
         self.train_lstm.finished.connect(self.thread_lstm_train.quit)
         self.thread_lstm_train.started.connect(self.train_lstm.train)
 
-        self.valid_lstm = LSTMValidation()
-        self.thread_lstm_valid = QtCore.QThread()
-        self.valid_lstm.moveToThread(self.thread_lstm_valid)
-        self.valid_lstm.finished.connect(self.thread_lstm_valid.quit)
-        self.thread_lstm_valid.started.connect(self.valid_lstm.train)
-
         self.train_cnn2 = CNN2Train()
         self.thread_cnn2_train = QtCore.QThread()
         self.train_cnn2.moveToThread(self.thread_cnn2_train)
@@ -738,12 +712,6 @@ class Ui_MainWindow(object):
         self.train_stacked_lstm.moveToThread(self.thread_stacked_lstm_train)
         self.train_stacked_lstm.finished.connect(self.thread_stacked_lstm_train.quit)
         self.thread_stacked_lstm_train.started.connect(self.train_stacked_lstm.train)
-
-        self.valid_stacked_lstm = StackedLSTMValidation()
-        self.thread_stacked_lstm_valid = QtCore.QThread()
-        self.valid_stacked_lstm.moveToThread(self.thread_stacked_lstm_valid)
-        self.valid_stacked_lstm.finished.connect(self.thread_stacked_lstm_valid.quit)
-        self.thread_stacked_lstm_valid.started.connect(self.valid_stacked_lstm.valid)
 
     def update_test_progress(self, i):
         """Updates the progress bar, to reflect the percentage work done"""
@@ -1086,9 +1054,6 @@ class Ui_MainWindow(object):
     def start_lstm_model_training(self):
         self.thread_lstm_train.start()
 
-    def start_lstm_model_validating(self):
-        self.thread_lstm_valid.start()
-
     def start_cnn2_training(self):
         self.thread_cnn2_train.start()
 
@@ -1097,9 +1062,6 @@ class Ui_MainWindow(object):
 
     def start_stacked_lstm_training(self):
         self.thread_stacked_lstm_train.start()
-
-    def start_stacked_lstm_validating(self):
-        self.thread_stacked_lstm_valid.start()
 
     def update_coordinates(self):
         w, h = self.ImageView.get_current_coordinates()

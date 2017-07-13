@@ -7,7 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
+"""Implementation for training 2D-LSTM"""
 from time import time
 import os
 
