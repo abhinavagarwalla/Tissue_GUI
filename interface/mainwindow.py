@@ -45,6 +45,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
         MainWindow.setMouseTracking(True)
+        MainWindow.setToolTip("")
         self.centralWidget = QtWidgets.QWidget(MainWindow)
         self.centralWidget.setMouseTracking(True)
         self.centralWidget.setObjectName("centralWidget")
@@ -184,7 +185,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.overlay_method = QtWidgets.QComboBox(self.vis)
         self.overlay_method.setObjectName("overlay_method")
-        self.overlay_method.addItem("")
         self.overlay_method.addItem("")
         self.overlay_method.addItem("")
         self.overlay_method.addItem("")
@@ -507,7 +507,6 @@ class Ui_MainWindow(object):
         """
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        MainWindow.setToolTip(_translate("MainWindow", "Inside Main Window"))
         self.load_image.setText(_translate("MainWindow", "Load Image"))
         self.info.setText(_translate("MainWindow", "TextLabel"))
         self.file_name.setText(_translate("MainWindow", "TextLabel"))
@@ -520,11 +519,10 @@ class Ui_MainWindow(object):
         self.class_5.setText(_translate("MainWindow", "CheckBox"))
         self.current_level.setPlaceholderText(_translate("MainWindow", "NA"))
         self.current_level_label.setText(_translate("MainWindow", "Current Level"))
-        self.overlay_method.setItemText(0, _translate("MainWindow", "Segmentation Mask (by Pixel)"))
+        self.overlay_method.setItemText(0, _translate("MainWindow", "Segmentation Mask"))
         self.overlay_method.setItemText(1, _translate("MainWindow", "Tumor Region"))
         self.overlay_method.setItemText(2, _translate("MainWindow", "Heatmap"))
         self.overlay_method.setItemText(3, _translate("MainWindow", "Nuclei Position"))
-        self.overlay_method.setItemText(4, _translate("MainWindow", "Segmentation Mask (By Patch)"))
         self.load_overlay.setText(_translate("MainWindow", "Load Overlay"))
         self.overlay_side_by_side.setText(_translate("MainWindow", "Overlay Side-by-Side"))
         self.check_segmentation.setText(_translate("MainWindow", "Segmentation"))
@@ -744,7 +742,7 @@ class Ui_MainWindow(object):
         """
         print("Reached Overlay Callback")
         if self.if_image:
-            if self.overlay_method.currentText()=="Segmentation Mask (by Pixel)":
+            if self.overlay_method.currentText()=="Segmentation Mask":
                 fname = QFileDialog.getOpenFileName(self.menuWindow, "Open File", self.default_open_location, "(*.tif *.png)")
                 if fname[0]:
                     tim = self.ImageView.read_first_overlay(fname[0], method=self.overlay_method.currentText(),

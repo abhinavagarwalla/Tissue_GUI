@@ -326,7 +326,7 @@ class DisplayImage():
             Overlayed RGBA Image
         """
         print(method)
-        if method=="Segmentation Mask (by Pixel)":
+        if method=="Segmentation Mask":
             print("Inside Segmentation")
             self.overlayObj["Seg"] = SegMaskByPixel(filename, self.wsiObj, self.bb_height, self.bb_width)
             self.overlayim["Seg"] = self.overlayObj["Seg"].get_overlay(self.level, self.coor_cur_w, self.coor_cur_h, self.imwidth,

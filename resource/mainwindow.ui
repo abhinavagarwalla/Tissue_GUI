@@ -23,7 +23,7 @@
    <string>MainWindow</string>
   </property>
   <property name="toolTip">
-   <string>Inside Main Window</string>
+   <string/>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="mouseTracking">
@@ -36,7 +36,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="movable">
        <bool>false</bool>
@@ -290,7 +290,7 @@
               </property>
               <item>
                <property name="text">
-                <string>Segmentation Mask (by Pixel)</string>
+                <string>Segmentation Mask</string>
                </property>
               </item>
               <item>
@@ -306,11 +306,6 @@
               <item>
                <property name="text">
                 <string>Nuclei Position</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Segmentation Mask (By Patch)</string>
                </property>
               </item>
              </widget>
@@ -404,7 +399,7 @@
                <bool>true</bool>
               </property>
               <property name="toolTip">
-               <string>&quot;Over the Original Image&quot;</string>
+               <string/>
               </property>
               <property name="autoFillBackground">
                <bool>false</bool>
@@ -438,7 +433,7 @@
                <bool>true</bool>
               </property>
               <property name="toolTip">
-               <string>&quot;Overlay Image&quot;</string>
+               <string/>
               </property>
               <property name="toolTipDuration">
                <number>-1</number>
@@ -703,7 +698,7 @@
           <x>40</x>
           <y>30</y>
           <width>491</width>
-          <height>281</height>
+          <height>241</height>
          </rect>
         </property>
         <property name="title">
@@ -886,7 +881,7 @@
         <widget class="QPushButton" name="stop_train">
          <property name="geometry">
           <rect>
-           <x>300</x>
+           <x>340</x>
            <y>200</y>
            <width>121</width>
            <height>23</height>
@@ -899,8 +894,8 @@
         <widget class="QPushButton" name="start_validation">
          <property name="geometry">
           <rect>
-           <x>180</x>
-           <y>240</y>
+           <x>200</x>
+           <y>200</y>
            <width>121</width>
            <height>23</height>
           </rect>
@@ -1079,19 +1074,6 @@
          <string>Start LSTM Model Training</string>
         </property>
        </widget>
-       <widget class="QPushButton" name="start_lstm_model_validation">
-        <property name="geometry">
-         <rect>
-          <x>920</x>
-          <y>300</y>
-          <width>161</width>
-          <height>23</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Start LSTM Model Validation</string>
-        </property>
-       </widget>
        <widget class="QPushButton" name="start_cnn2_train">
         <property name="geometry">
          <rect>
@@ -1116,19 +1098,6 @@
         </property>
         <property name="text">
          <string>Get Visual Results</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="start_end_to_end_train">
-        <property name="geometry">
-         <rect>
-          <x>920</x>
-          <y>530</y>
-          <width>161</width>
-          <height>23</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Start End-to-End Training</string>
         </property>
        </widget>
        <widget class="QPushButton" name="start_stacked_lstm_train">
@@ -1208,19 +1177,6 @@
              </property>
              <property name="text">
               <string>TextLabel</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="start_tensorboard">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Start</string>
              </property>
             </widget>
            </item>

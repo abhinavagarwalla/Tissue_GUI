@@ -7,7 +7,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Contains class for overlaying segmentation maps"""
+"""Contains class for overlaying segmentation maps.
+Also contains unused functions for preloading image regions"""
 
 import openslide as ops
 from PIL import Image
