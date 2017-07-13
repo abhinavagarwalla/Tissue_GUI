@@ -7,7 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
+"""Implements slim pattern for validation networks"""
 from time import time
 import os
 import glob
@@ -32,9 +32,6 @@ class Validate(QObject):
 
     def initialize(self):
         self.t0 = time()
-        # self.images_test = tf.placeholder(tf.float32, shape=(None, Config.PATCH_SIZE, Config.PATCH_SIZE, 3))
-        # self.output = nets_factory.get_network_fn(name='unet', images=self.images_test, is_training=False)
-        # self.dataloader = Data(preprocessor='stain_norm', outshape=self.output.shape)
         self.preprocessor = preprocessing_factory.get_preprocessing_fn(name='camelyon')
 
         labels = open(ValidConfig.labels_file, 'r')
@@ -54,19 +51,19 @@ class Validate(QObject):
         }
 
     def get_split(self, split_name):
-        '''
+        """
         Obtains the split - training or validation - to create a Dataset class for feeding the examples into a queue later on. This function will
         set up the decoder and dataset information all into one Dataset class so that you can avoid the brute work later on.
         Your file_pattern is very important in locating the files later. 
 
-        INPUTS:
-        - split_name(str): 'train' or 'validation'. Used to get the correct data split of tfrecord files
-        - dataset_dir(str): the dataset directory where the tfrecord files are located
-        - file_pattern(str): the file name structure of the tfrecord files in order to get the correct data
+        Args:
+            split_name(str): 'train' or 'validation'. Used to get the correct data split of tfrecord files
+            dataset_dir(str): the dataset directory where the tfrecord files are located
+            file_pattern(str): the file name structure of the tfrecord files in order to get the correct data
 
-        OUTPUTS:
-        - dataset (Dataset): A Dataset class object where we can read its various components for easier batch creation later.
-        '''
+        Returns:
+            dataset (Dataset): A Dataset class object where we can read its various components for easier batch creation later.
+        """
 
         # First check whether the split_name is train or validation
         if split_name not in ['train', 'validation']:
@@ -124,21 +121,21 @@ class Validate(QObject):
         return dataset
 
     def load_batch(self, dataset, batch_size, height=ValidConfig.image_size, width=ValidConfig.image_size, is_training=True):
-        '''
+        """
         Loads a batch for training.
 
-        INPUTS:
-        - dataset(Dataset): a Dataset class object that is created from the get_split function
-        - batch_size(int): determines how big of a batch to train
-        - height(int): the height of the image to resize to during preprocessing
-        - width(int): the width of the image to resize to during preprocessing
-        - is_training(bool): to determine whether to perform a training or evaluation preprocessing
+        Args:
+            dataset(Dataset): a Dataset class object that is created from the get_split function
+            batch_size(int): determines how big of a batch to train
+            height(int): the height of the image to resize to during preprocessing
+            width(int): the width of the image to resize to during preprocessing
+            is_training(bool): to determine whether to perform a training or evaluation preprocessing
 
-        OUTPUTS:
-        - images(Tensor): a Tensor of the shape (batch_size, height, width, channels) that contain one batch of images
-        - labels(Tensor): the batch's labels with the shape (batch_size,) (requires one_hot_encoding).
+        Returns:
+            images(Tensor): a Tensor of the shape (batch_size, height, width, channels) that contain one batch of images
+            labels(Tensor): the batch's labels with the shape (batch_size,) (requires one_hot_encoding).
 
-        '''
+        """
         # First create the data_provider object
         data_provider = slim.dataset_data_provider.DatasetDataProvider(
             dataset,
@@ -170,6 +167,7 @@ class Validate(QObject):
 
     @pyqtSlot()
     def run(self):
+        """Runs validation for all checkpoints in the log_dir"""
         mlist = glob.glob(ValidConfig.log_dir + os.sep + "model.ckpt-*.meta")
         mlist = [i[:-5] for i in mlist]
         for i in range(len(mlist)):
@@ -179,6 +177,7 @@ class Validate(QObject):
 
     @pyqtSlot()
     def run_once(self):
+        """Runs validation once for a single checkpoint"""
         # Saver and initialisation
         print("started validation")
         self.initialize()
@@ -296,6 +295,7 @@ class Validate(QObject):
 
     @pyqtSlot()
     def stop_call(self):
+        """Stops validation process and exits"""
         print("Stopping Validation..")
         self.epoch.emit(0)
         self.finished.emit()

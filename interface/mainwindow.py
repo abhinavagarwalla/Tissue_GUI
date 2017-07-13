@@ -9,7 +9,6 @@
 # ==============================================================================
 """Contains all UI elements, along with signals/slots, threads, web engine"""
 
-import os
 import subprocess
 from time import sleep
 

@@ -7,7 +7,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
+"""Implements slim pattern for training networks"""
 from time import time
 import os
 
@@ -55,19 +55,19 @@ class Train(QObject):
         }
 
     def get_split(self, split_name):
-        '''
+        """
         Obtains the split - training or validation - to create a Dataset class for feeding the examples into a queue later on. This function will
         set up the decoder and dataset information all into one Dataset class so that you can avoid the brute work later on.
         Your file_pattern is very important in locating the files later. 
 
-        INPUTS:
-        - split_name(str): 'train' or 'validation'. Used to get the correct data split of tfrecord files
-        - dataset_dir(str): the dataset directory where the tfrecord files are located
-        - file_pattern(str): the file name structure of the tfrecord files in order to get the correct data
+        Args:
+            split_name(str): 'train' or 'validation'. Used to get the correct data split of tfrecord files
+            dataset_dir(str): the dataset directory where the tfrecord files are located
+            file_pattern(str): the file name structure of the tfrecord files in order to get the correct data
 
-        OUTPUTS:
-        - dataset (Dataset): A Dataset class object where we can read its various components for easier batch creation later.
-        '''
+        Returns:
+            dataset (Dataset): A Dataset class object where we can read its various components for easier batch creation later.
+        """
 
         # First check whether the split_name is train or validation
         if split_name not in ['train', 'validation']:
@@ -124,21 +124,21 @@ class Train(QObject):
         return dataset
 
     def load_batch(self, dataset, batch_size, height=TrainConfig.image_size, width=TrainConfig.image_size, is_training=True):
-        '''
+        """
         Loads a batch for training.
 
-        INPUTS:
-        - dataset(Dataset): a Dataset class object that is created from the get_split function
-        - batch_size(int): determines how big of a batch to train
-        - height(int): the height of the image to resize to during preprocessing
-        - width(int): the width of the image to resize to during preprocessing
-        - is_training(bool): to determine whether to perform a training or evaluation preprocessing
+        Args:
+            dataset(Dataset): a Dataset class object that is created from the get_split function
+            batch_size(int): determines how big of a batch to train
+            height(int): the height of the image to resize to during preprocessing
+            width(int): the width of the image to resize to during preprocessing
+            is_training(bool): to determine whether to perform a training or evaluation preprocessing
 
-        OUTPUTS:
-        - images(Tensor): a Tensor of the shape (batch_size, height, width, channels) that contain one batch of images
-        - labels(Tensor): the batch's labels with the shape (batch_size,) (requires one_hot_encoding).
+        Returns:
+            images(Tensor): a Tensor of the shape (batch_size, height, width, channels) that contain one batch of images
+            labels(Tensor): the batch's labels with the shape (batch_size,) (requires one_hot_encoding).
 
-        '''
+        """
         # First create the data_provider object
         data_provider = slim.dataset_data_provider.DatasetDataProvider(
             dataset,
@@ -170,6 +170,7 @@ class Train(QObject):
 
     @pyqtSlot()
     def train(self):
+        """Starts training process"""
         # Saver and initialisation
         print("starting training")
         self.initialize()
@@ -195,12 +196,6 @@ class Train(QObject):
             # Create the model inference
             logits, end_points = nets_factory.get_network_fn(name='alexnet', images=images,
                                                              num_classes=dataset.num_classes, is_training=True)
-
-            # logits, end_points = nets_factory.get_network_fn(name='inception_resnet_v2', images=images,
-            #                                                  num_classes=dataset.num_classes, is_training=True)
-
-            # with slim.arg_scope(inception_resnet_v2_arg_scope()):
-            #     logits, end_points = inception_resnet_v2(images, num_classes=dataset.num_classes, is_training=True)
 
             # Define the scopes that you want to exclude for restoration
             # exclude = ['InceptionResnetV2/Logits', 'InceptionResnetV2/AuxLogits']
@@ -295,18 +290,6 @@ class Train(QObject):
                         logging.info('Current Learning Rate: %s', learning_rate_value)
                         logging.info('Current Streaming Accuracy: %s', accuracy_value)
 
-                        # optionally, print your logits and predictions for a sanity check that things are going fine.
-                        # logits_value, probabilities_value, predictions_value, labels_value = sess.run(
-                        #     [logits, probabilities, predictions, labels])
-                        # print
-                        # 'logits: \n', logits_value
-                        # print
-                        # 'Probabilities: \n', probabilities_value
-                        # print
-                        # 'predictions: \n', predictions_value
-                        # print
-                        # 'Labels:\n:', labels_value
-
                     # Log the summaries every 10 step.
                     if step % 100 == 0:
                         loss, _ = train_step(sess, train_op, sv.global_step)
@@ -331,6 +314,7 @@ class Train(QObject):
 
     @pyqtSlot()
     def stop_call(self):
+        """Stop training process and exit thread"""
         print("Stopping Training..")
         # if os.path.exists(TrainConfig.RESULT_PATH):
         #     try:

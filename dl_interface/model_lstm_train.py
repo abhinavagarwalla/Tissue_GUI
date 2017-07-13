@@ -31,10 +31,12 @@ class LSTMTrain(QObject):
         self.dataloader = LSTMTrainMatDataIter()
 
     def attach_metrics_and_summaries(self):
+        """Shift metrics and summaries here"""
         pass
 
     @pyqtSlot()
     def train(self):
+        """Starts training process"""
         print("starting simple LSTM training")
         self.initialize()
         self.epoch.emit(0)
@@ -99,8 +101,6 @@ class LSTMTrain(QObject):
                               recall_batch_update, precision_batch_update, accuracy_batch_update,
                                   recall_streaming_cnn_update, precision_streaming_cnn_update, accuracy_streaming_cnn_update,
                               recall_batch_cnn_update, precision_batch_cnn_update, accuracy_batch_cnn_update)
-        # loss = 1e4 * tf.reduce_mean(tf.abs(tf.subtract(labels, model_out)))
-        # loss_cnn = 1e4 * tf.reduce_mean(tf.abs(tf.subtract(labels, cnn_preds)))
 
         # Create the global step for monitoring the learning_rate and training.
         global_step = get_or_create_global_step()
@@ -183,6 +183,7 @@ class LSTMTrain(QObject):
 
     @pyqtSlot()
     def stop_call(self):
+        """Stop training process and exit thread"""
         print("Stopping Training..")
         self.epoch.emit(0)
         self.finished.emit()
