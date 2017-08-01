@@ -33,7 +33,7 @@ class ImageClass():
             self.level_count = self.wsiObj.level_count
             self.level_dimensions = self.wsiObj.level_dimensions
             self.type = "tiff"
-            print(self.level_dimensions)
+            print(self.level_dimensions)#, self.level_scale)
         if ".jp2" in filename:
             self.filename = filename
             self.eng = me.start_matlab()
@@ -61,6 +61,11 @@ class ImageClass():
             self.wsiObj = list(np.array(self.wsiObj)[inds])
             self.type = "png_folder"
             print(self.level_count, self.level_dimensions, type(self.level_dimensions), type(self.wsiObj), len(self.wsiObj))
+        self.set_scale_multipliers()
+
+    def set_scale_multipliers(self):
+        self.level_scale = int(self.level_dimensions[0][0] / self.level_dimensions[1][0])
+        self.level_scales = [int(self.level_dimensions[0][0] / self.level_dimensions[i][0]) for i in range(len(self.level_dimensions))]
 
     def read_region(self, coor_low, level, dim):
         """Reads the specified region
@@ -77,8 +82,8 @@ class ImageClass():
         if self.type=="tiff":
             return self.wsiObj.read_region(coor_low, level, dim)
         elif self.type=="jp2":
-            coor_cur_w = int(coor_low[0] / pow(2, level))
-            coor_cur_h = int(coor_low[1] / pow(2, level))
+            coor_cur_w = int(coor_low[0] / pow(self.level_scale, level))
+            coor_cur_h = int(coor_low[1] / pow(self.level_scale, level))
             hleft = max(1, coor_cur_h+1)
             hdown = min(self.level_dimensions[level][1], hleft + dim[1])
             wleft = max(1, coor_cur_w+1)

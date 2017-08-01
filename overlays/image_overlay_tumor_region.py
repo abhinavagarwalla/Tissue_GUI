@@ -32,6 +32,8 @@ class TumorRegion():
         self.overlayim = None
         self.low_polygons = [Polygon(np.vstack((i[0][:,1],i[0][:,0])).T) for i in self.ovObj if i[0].shape[0]>3]
         self.npolygons = len(self.low_polygons)
+        self.level_scale = wsiObj.level_scale
+        self.level_scales = wsiObj.level_scales
 
     def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None, class_states=None):
         """Fetches tumor region overlay for the specified region, and level
@@ -49,10 +51,10 @@ class TumorRegion():
         """
         print("Started Getting Overlay in Tumor Region")
         self.clevel = level-1
-        self.coor_low_w = pow(2, self.clevel) * coorw
-        self.coor_low_h = pow(2, self.clevel) * coorh
-        self.low_width = pow(2, self.clevel) * width
-        self.low_height = pow(2, self.clevel) * height
+        self.coor_low_w = self.level_scales[self.clevel] * coorw
+        self.coor_low_h = self.level_scales[self.clevel] * coorh
+        self.low_width = self.level_scales[self.clevel] * width
+        self.low_height = self.level_scales[self.clevel] * height
         imp = Polygon([(self.coor_low_w, self.coor_low_h), (self.coor_low_w + self.low_width, self.coor_low_h),
                        (self.coor_low_w + self.low_width, self.coor_low_h + self.low_height),
                        (self.coor_low_w, self.coor_low_h + self.low_height)])
@@ -67,11 +69,11 @@ class TumorRegion():
                     if isinstance(region_intersect, MultiPolygon):
                         for kp in range(len(region_intersect)):
                             rel_img_coords = np.array(region_intersect[kp].exterior.coords)-(self.coor_low_w, self.coor_low_h)
-                            pcoors = np.array(rel_img_coords/pow(2, self.clevel)).astype(np.int32).reshape((-1, 1, 2))
+                            pcoors = np.array(rel_img_coords/self.level_scales[self.clevel]).astype(np.int32).reshape((-1, 1, 2))
                             pim = cv.polylines(pim, [pcoors], True, (0, 255, 0, 255), 3)
                     elif isinstance(region_intersect, Polygon):
                         rel_img_coords = np.array(region_intersect.exterior.coords) - (self.coor_low_w, self.coor_low_h)
-                        pcoors = np.array(rel_img_coords/pow(2, self.clevel)).astype(np.int32).reshape((-1, 1, 2))
+                        pcoors = np.array(rel_img_coords/self.level_scales[self.clevel]).astype(np.int32).reshape((-1, 1, 2))
                         pim = cv.polylines(pim, [pcoors], True, (0, 255, 0, 255), 3)
                     else:
                         pass

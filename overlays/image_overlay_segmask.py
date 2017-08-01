@@ -50,6 +50,8 @@ class SegMaskByPixel():
         self.hratio, self.wratio = None, None
         self.wsidim = [wsiObj.level_dimensions[i] for i in range(len(wsiObj.level_dimensions))]
         self.overlayim = None
+        self.level_scale = wsiObj.level_scale
+        self.level_scales = wsiObj.level_scales
         if self.type=="Image":
             for i in range(len(self.wsidim)):
                 if self.wsidim[i] == self.leveldim[0]:
@@ -59,8 +61,8 @@ class SegMaskByPixel():
             self.levelfetch = self.nlevel - 1
 
     def get_overlay_simple(self, level, coorw, coorh, width, height):
-        coor_low_w = pow(2, level) * coorw
-        coor_low_h = pow(2, level) * coorh
+        coor_low_w = self.level_scales[level] * coorw
+        coor_low_h = self.level_scales[level] * coorh
         self.overlayim = self.ovObj.read_region((coor_low_w, coor_low_h), level, (width, height))
         return self.overlayim
 
@@ -89,12 +91,12 @@ class SegMaskByPixel():
             return 1
 
     def get_overlay_image(self, level, coorw, coorh, width, height, method, step):
-        self.coor_low_w = int(pow(2, level - self.levelfetch) * coorw)
-        self.coor_low_h = int(pow(2, level - self.levelfetch) * coorh)
-        self.cur_width = int(pow(2, level - self.levelfetch) * width)
-        self.cur_height = int(pow(2, level - self.levelfetch) * height)
-        self.low_width = int(pow(2, level - self.levelfetch) * width)
-        self.low_height = int(pow(2, level - self.levelfetch) * height)
+        self.coor_low_w = int(self.level_scales[level]/self.level_scales[self.levelfetch] * coorw)
+        self.coor_low_h = int(self.level_scales[level]/self.level_scales[self.levelfetch] * coorh)
+        self.cur_width = int(self.level_scales[level]/self.level_scales[self.levelfetch] * width)
+        self.cur_height = int(self.level_scales[level]/self.level_scales[self.levelfetch] * height)
+        self.low_width = int(self.level_scales[level]/self.level_scales[self.levelfetch] * width)
+        self.low_height = int(self.level_scales[level]/self.level_scales[self.levelfetch] * height)
         print("Getting Image Overlay ", method)
         if method == "init":
             print("Inside init method")
@@ -202,12 +204,12 @@ class SegMaskByPixel():
                 return self.get_overlay_simple(level, coorw, coorh, width, height)
             # Write here as else condition for handling missing alignment cases
 
-        self.coor_low_w = pow(2, level) * coorw
-        self.coor_low_h = pow(2, level) * coorh
-        self.cur_width = int(pow(2, level - self.levelfetch) * width)
-        self.cur_height = int(pow(2, level - self.levelfetch) * height)
-        self.low_width = pow(2, level) * width
-        self.low_height = pow(2, level) * height
+        self.coor_low_w = self.level_scales[level] * coorw
+        self.coor_low_h = self.level_scales[level] * coorh
+        self.cur_width = int(self.level_scales[level]/self.level_scales[self.levelfetch] * width)
+        self.cur_height = int(self.level_scales[level]/self.level_scales[self.levelfetch] * height)
+        self.low_width = self.level_scales[level] * width
+        self.low_height = self.level_scales[level] * height
         print("Getting Overlay ", method)
         if method=="init":
             print("Inside init method")

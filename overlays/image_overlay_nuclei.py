@@ -38,6 +38,8 @@ class NucleiPoints():
         self.colors = [(255,0,255,255), (255,0,0,255), (0,255,0,255),
                        (255,128,0,255), (0,0,0,255), (0,0,255,255)]
         self.clsdict = {0: False, 1: False, 2: False, 3: False, 4: False, 5: False}
+        self.level_scale = wsiObj.level_scale
+        self.level_scales = wsiObj.level_scales
 
     def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None, class_states=None):
         """Fetches nuclei position overlay for the specified region, and level
@@ -55,17 +57,17 @@ class NucleiPoints():
         """
         print("Started Getting Overlay inside Nuclei position")
         self.clevel = level-1
-        self.coor_low_w = pow(2, self.clevel) * (coorw)
-        self.coor_low_h = pow(2, self.clevel) * (coorh)
-        self.low_width = pow(2, self.clevel) * (width)
-        self.low_height = pow(2, self.clevel) * (height)
+        self.coor_low_w = self.level_scales[self.clevel] * (coorw)
+        self.coor_low_h = self.level_scales[self.clevel] * (coorh)
+        self.low_width = self.level_scales[self.clevel] * (width)
+        self.low_height = self.level_scales[self.clevel] * (height)
         imp = [(self.coor_low_w, self.coor_low_h),
                (self.coor_low_w + self.low_width, self.coor_low_h + self.low_height)]
 
         points = self.ovObj[(self.ovObj[:,0] > imp[0][1]) & (self.ovObj[:,0] < imp[1][1]) &
                             (self.ovObj[:,1] > imp[0][0]) & (self.ovObj[:,1] < imp[1][0])]
-        pointsW = ((points[:,1]-self.coor_low_w)/pow(2, self.clevel)).astype(np.int16)
-        pointsH = ((points[:,0]-self.coor_low_h)/pow(2, self.clevel)).astype(np.int16)
+        pointsW = ((points[:,1]-self.coor_low_w)/self.level_scales[self.clevel]).astype(np.int16)
+        pointsH = ((points[:,0]-self.coor_low_h)/self.level_scales[self.clevel]).astype(np.int16)
         pim = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         d = ImageDraw.Draw(pim)
         if class_states:

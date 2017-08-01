@@ -95,8 +95,8 @@ class DisplayImage():
                     self.level -= 1
                     self.coor_cur_h = 2 * top
                     self.coor_cur_w = 2 * left
-                    self.coor_low_h = int(pow(2, self.level) * self.coor_cur_h)
-                    self.coor_low_w = int(pow(2, self.level) * self.coor_cur_w)
+                    self.coor_low_h = int(self.wsiObj.level_scales[self.level] * self.coor_cur_h)
+                    self.coor_low_w = int(self.wsiObj.level_scales[self.level] * self.coor_cur_w)
                     # self.curim.show()
                     self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                          (self.bb_width, self.bb_height))
@@ -118,8 +118,8 @@ class DisplayImage():
                     self.level -= 1
                     self.coor_cur_h = 2 * top
                     self.coor_cur_w = 2 * left
-                    self.coor_low_h = int(pow(2, self.level) * self.coor_cur_h)
-                    self.coor_low_w = int(pow(2, self.level) * self.coor_cur_w)
+                    self.coor_low_h = int(self.wsiObj.level_scales[self.level] * self.coor_cur_h)
+                    self.coor_low_w = int(self.wsiObj.level_scales[self.level] * self.coor_cur_w)
                     self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                          (self.imwidth*2, self.bb_height))
 
@@ -138,10 +138,10 @@ class DisplayImage():
                 left = centerw - int(self.bb_width / 4)
                 top = 0
                 self.level -= 1
-                self.coor_cur_h = 2 * top
-                self.coor_cur_w = 2 * left
-                self.coor_low_h = int(pow(2, self.level) * self.coor_cur_h)
-                self.coor_low_w = int(pow(2, self.level) * self.coor_cur_w)
+                self.coor_cur_h = 2* top
+                self.coor_cur_w = 2* left
+                self.coor_low_h = int(self.wsiObj.level_scales[self.level] * self.coor_cur_h)
+                self.coor_low_w = int(self.wsiObj.level_scales[self.level] * self.coor_cur_w)
                 self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                      (self.bb_width, 2*self.im_height))
 
@@ -179,8 +179,8 @@ class DisplayImage():
                     self.level += 1
                     self.coor_cur_h = int(centerh/2 - self.bb_height/2)
                     self.coor_cur_w = int(centerw/2 - self.bb_width/2)
-                    self.coor_low_h = int(pow(2, self.level) * self.coor_cur_h)
-                    self.coor_low_w = int(pow(2, self.level) * self.coor_cur_w)
+                    self.coor_low_h = int(self.wsiObj.level_scales[self.level] * self.coor_cur_h)
+                    self.coor_low_w = int(self.wsiObj.level_scales[self.level] * self.coor_cur_w)
                     self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                          (self.bb_width, self.bb_height))
                     print("REgion Processing Complete")
@@ -201,8 +201,8 @@ class DisplayImage():
                     self.level += 1
                     self.coor_cur_h = int(centerh / 2 - self.bb_height / 2)
                     self.coor_cur_w = int(centerw / 2 - self.imwidth / 4)
-                    self.coor_low_h = pow(2, self.level) * self.coor_cur_h
-                    self.coor_low_w = pow(2, self.level) * self.coor_cur_w
+                    self.coor_low_h = self.wsiObj.level_scales[self.level] * self.coor_cur_h
+                    self.coor_low_w = self.wsiObj.level_scales[self.level] * self.coor_cur_w
                     self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                          (int(self.imwidth/2), self.bb_height))
 
@@ -222,8 +222,8 @@ class DisplayImage():
                 self.level += 1
                 self.coor_cur_h = int(centerh / 2 - self.imheight / 4)
                 self.coor_cur_w = int(centerw / 2 - self.bb_width / 2)
-                self.coor_low_h = pow(2, self.level) * self.coor_cur_h
-                self.coor_low_w = pow(2, self.level) * self.coor_cur_w
+                self.coor_low_h = self.wsiObj.level_scales[self.level] * self.coor_cur_h
+                self.coor_low_w = self.wsiObj.level_scales[self.level] * self.coor_cur_w
                 self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                      (self.bb_width, int(self.imheight/2)))
 
@@ -297,10 +297,10 @@ class DisplayImage():
                                      self.leveldim[self.level][0], self.leveldim[self.level][1],
                                      self.bb_width, self.bb_height):
                     self.coor_cur_w = int(self.coor_cur_w + value_x)
-                    self.coor_low_w = pow(2, self.level) * self.coor_cur_w
+                    self.coor_low_w = self.wsiObj.level_scales[self.level] * self.coor_cur_w
 
                     self.coor_cur_h = int(self.coor_cur_h + value_y)
-                    self.coor_low_h = pow(2, self.level) * self.coor_cur_h
+                    self.coor_low_h = self.wsiObj.level_scales[self.level] * self.coor_cur_h
                     if_updated = True
         self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                                  (self.bb_width, self.bb_height))
@@ -444,10 +444,10 @@ class DisplayImage():
             WSI Image at the highest level (lowest resolution)
         """
         ocvim = cv.cvtColor(np.array(self.orim), cv.COLOR_RGB2BGR)
-        left = int(pow(2, self.level-len(self.leveldim)+1) * self.coor_cur_w)
-        top = int(pow(2, self.level-len(self.leveldim)+1) * self.coor_cur_h)
-        width = int(pow(2, self.level-len(self.leveldim)+1) * self.imwidth)
-        height = int(pow(2, self.level-len(self.leveldim)+1) * self.imheight)
+        left = int(self.wsiObj.level_scales[self.level]/self.wsiObj.level_scales[len(self.leveldim)-1] * self.coor_cur_w)
+        top = int(self.wsiObj.level_scales[self.level]/self.wsiObj.level_scales[len(self.leveldim)-1] * self.coor_cur_h)
+        width = int(self.wsiObj.level_scales[self.level]/self.wsiObj.level_scales[len(self.leveldim)-1] * self.imwidth)
+        height = int(self.wsiObj.level_scales[self.level]/self.wsiObj.level_scales[len(self.leveldim)-1] * self.imheight)
         cv.rectangle(ocvim, (left, top), (left+width, top+height),(0,0,0),1)
         ocvim = cv.cvtColor(np.array(ocvim), cv.COLOR_BGR2RGB)
         return ImageQt(Image.fromarray(ocvim).convert("RGBA"))
@@ -464,15 +464,14 @@ class DisplayImage():
             return ImageQt(self.curim)
         if int(h - (isize.height()-self.leveldim[-1][1])/2) > self.leveldim[-1][1]:
             return ImageQt(self.curim)
-        width = int(pow(2, self.level - len(self.leveldim) + 1) * self.imwidth)
-        height = int(pow(2, self.level - len(self.leveldim) + 1) * self.imheight)
-        self.coor_cur_w = pow(2, len(self.leveldim) - 1 - self.level) * int(w - (width/2))
-        self.coor_cur_h = pow(2, len(self.leveldim) - 1 - self.level) * \
-                          int(h - (height/2) - (isize.height()-self.leveldim[-1][1])/2)
+        width = int(self.wsiObj.level_scales[self.level] / self.wsiObj.level_scales[len(self.leveldim) - 1] * self.imwidth)
+        height = int(self.wsiObj.level_scales[self.level] / self.wsiObj.level_scales[len(self.leveldim) - 1] * self.imheight)
+        self.coor_cur_w = int(self.wsiObj.level_scales[len(self.leveldim) - 1] / self.wsiObj.level_scales[self.level]) * int(w - (width/2))
+        self.coor_cur_h =  int(self.wsiObj.level_scales[len(self.leveldim) - 1] / self.wsiObj.level_scales[self.level]) * int(h - (height/2) - (isize.height()-self.leveldim[-1][1])/2)
         self.coor_cur_w = 0 if self.coor_cur_w < 0 else self.coor_cur_w
         self.coor_cur_h = 0 if self.coor_cur_h < 0 else self.coor_cur_h
-        self.coor_low_w = pow(2, self.level) * self.coor_cur_w
-        self.coor_low_h = pow(2, self.level) * self.coor_cur_h
+        self.coor_low_w = self.wsiObj.level_scales[self.level] * self.coor_cur_w
+        self.coor_low_h = self.wsiObj.level_scales[self.level] * self.coor_cur_h
         self.curim = self.wsiObj.read_region((self.coor_low_w, self.coor_low_h), self.level,
                                              (self.bb_width, self.bb_height))
         self.imheight = self.curim.size[1]

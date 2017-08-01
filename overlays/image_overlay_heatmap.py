@@ -35,6 +35,8 @@ class HeatMap():
         self.type = "Image"
         self.overlayim = None
         self.cmap = plt.get_cmap("jet")
+        self.level_scale = wsiObj.level_scale
+        self.level_scales = wsiObj.level_scales
 
     def get_overlay(self, level, coorw, coorh, width, height, method=None, step=None, class_states=None):
         """Fetches heatmap overlay for the specified region, and level
@@ -54,10 +56,10 @@ class HeatMap():
             self.overlayim = self.ovObj.read_region((coorw, coorh), level - self.level_fetch, (width, height))
         else:
             level_diff = level - self.level_fetch
-            coor_low_w = int(pow(2, level_diff) * coorw)
-            coor_low_h = int(pow(2, level_diff) * coorh)
-            width_low = int(pow(2, level_diff) * width)
-            height_low = int(pow(2, level_diff) * height)
+            coor_low_w = int(self.level_scales[level]/self.level_scale[self.level_fetch] * coorw)
+            coor_low_h = int(self.level_scales[level]/self.level_scale[self.level_fetch] * coorh)
+            width_low = int(self.level_scales[level]/self.level_scale[self.level_fetch] * width)
+            height_low = int(self.level_scales[level]/self.level_scale[self.level_fetch] * height)
             self.overlayim = self.ovObj.read_region((coor_low_w, coor_low_h), 0, (width_low, height_low))
             self.overlayim = self.overlayim.resize((width, height), Image.BILINEAR)
 
