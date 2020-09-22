@@ -12,7 +12,9 @@ If you want to:
 then this software is for you.
 
 This repository also contains the implementation for [Representation-Aggregation Networks for Segmentation of Multi-Gigapixel Histology Images](https://arxiv.org/abs/1707.08814), published at Workshop on Deep Learning in Irregular Domains (DLID) in BMVC2017.
+
 Refer to [this presentation](Abhinav_Summer_Internship_Summary.pptx) for a quick walkthrough.
+
 For any queries, contact me or create an issue.
 
 ## Installation Instructions
@@ -27,4 +29,4 @@ If you plan to use JP2 images, enable MATLAB Engine for Python.
 ![Nuclei Position](imgs/nuclei_position.png)
 
 ## RAN-LSTM Results
-![RAN-LSTM Visualisation](results_ran_lstm.png)
+![RAN-LSTM Visualisation](imgs/results_ran_lstm.png)
