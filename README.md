@@ -22,11 +22,30 @@ Install all packages mentioned in requirements.txt.
 If you plan to use JP2 images, enable MATLAB Engine for Python.
 
 ## Sample Visualisation
-![Visualisation Pane](imgs/visualisation.png)
-![Segmentation Mask](imgs/segmentation.png)
-![Tumor Region](imgs/tumor_region.png)
-![Heatmap](imgs/heatmap.png)
-![Nuclei Position](imgs/nuclei_position.png)
+<table>
+  <tr>
+    <td>Visualisation Pane</td>
+    <td>Segmentation Mask</td>
+  </tr>
+  <tr>
+    <td><img src="imgs/visualisation.png" width=400></td>
+    <td><img src="imgs/segmentation.png" width=400></td>
+  </tr>
+  <tr>
+    <td>Tumor Region</td>
+    <td>Heatmap</td>
+  </tr>
+  <tr>
+    <td><img src="imgs/tumor_region.png" width=400></td>
+    <td><img src="imgs/heatmap.png" width=400></td>
+  </tr>
+  <tr>
+    <td>Nuclei Position</td>
+  </tr>
+  <tr>
+    <td><img src="imgs/nuclei_position.png" width=400></td>
+  </tr>
+</table>
 
 ## RAN-LSTM Results
 ![RAN-LSTM Visualisation](imgs/results_ran_lstm.png)
